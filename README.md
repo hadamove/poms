@@ -5,10 +5,13 @@ This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-
 ## Setup
 
 The project is currently built with Rust version `1.59.0`.
+Setup instructions:
 
-1. Install `rustup` (Rust toolchain managment): [rustup.rs - The Rust toolchain installer](https://rustup.rs/#), this should also install `rustc` - (Rust compiler) and `cargo` (Rust package manager).
+1. Install `rustup` - Rust toolchain managment: [rustup.rs - The Rust toolchain installer](https://rustup.rs/#), this should also install all necessary tools for building `rustc` - Rust compiler and `cargo` - Rust package manager.
 
-2. Simply build and run application with `cargo run`.
+2. The large `.pdb` files are for obvious reasons not included in the repo, you will have download them manually from the [archive](https://www.rcsb.org/structure/1AON) and put them into `src/molecules` folder.
+
+3. Simply build and run application with `cargo run`.
 
 ## Demo
 
