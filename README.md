@@ -1,6 +1,6 @@
 # WebGPU in Rust
 
-This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-rs/wgpu) to implement simple frameworks that is capable of rending protein molecules both on native and the web (WebAssembly). The project also aims to benchmark the API's maturity and performance and see if it is adequate for large molecule rendering.
+This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-rs/wgpu) to implement simple framework that is capable of rending protein molecules both on native and the web (WebAssembly). The project also aims to benchmark the API's maturity and performance and see if it is adequate for large molecule rendering.
 
 ## Setup
 
@@ -13,9 +13,19 @@ Setup instructions:
 
 3. Simply build and run application with `cargo run`.
 
+## Build status
+
+Currently, the project can be built and run on these platforms:
+
+- MacOS Monterey
+
+- Ubuntu 20.04
+
+- Windows 10
+
 ## Demo
 
-TODO: add demo gif
+![demo](media/demo.gif)
 
 ## Todo list
 
@@ -25,6 +35,7 @@ TODO: add demo gif
 - [ ] compile for web using `run-wasm` crate
 - [ ] clean up codebase, separate components into files
 - [ ] fix depth buffer quad clipping
+- [ ] use depth buffer texture in the shader to visualize depth
 - [ ] implement proper lighting in the shader
 - [ ] implement simple GUI
 - [ ] sticks and balls rendering shader
