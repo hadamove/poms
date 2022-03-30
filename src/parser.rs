@@ -1,8 +1,3 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-};
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Atom {
@@ -40,14 +35,31 @@ impl Molecule {
     }
 }
 
-pub fn parse_pdb_file(filename: String) -> Molecule {
+pub async fn load_pdb_file(filename: String) -> String {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::fs::read_to_string(filename).expect("file could not be read")
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        // Since it is more difficult to access the filesystem in the browser,
+        // we will fetch the file from local storage using http protocol and open port
+        // Configure the port if needed based on server running the index.html file
+        let url = format!("http://localhost:8000/{}", filename);
+        let resp = reqwest_wasm::get(&url).await.expect("request failed");
+        resp.text().await.expect("failed to read body")
+    }
+}
+
+pub async fn parse_pdb_file(filename: String) -> Molecule {
     let mut atoms: Vec<Atom> = vec![];
-    let file = File::open(filename).unwrap();
-    let reader = BufReader::new(file);
+    let content = load_pdb_file(filename).await;
 
-    for line in reader.lines() {
-        let line = line.unwrap();
-
+    for line in content.split("\n") {
+        if line.len() < 80 {
+            continue;
+        }
         if &line[0..4] == "ATOM" {
             let element = &line[77..78];
             atoms.push(Atom {

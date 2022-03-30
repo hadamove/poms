@@ -99,7 +99,7 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let molecule = parser::parse_pdb_file(MOLECULE_FILE.to_string());
+        let molecule = parser::parse_pdb_file(MOLECULE_FILE.to_string()).await;
 
         let atoms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Atoms Buffer"),
@@ -325,12 +325,8 @@ impl State {
     }
 }
 
-fn main() {
-    env_logger::init();
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
-
-    let mut state = pollster::block_on(State::new(&window));
+async fn run_loop(event_loop: EventLoop<()>, window: Window) {
+    let mut state = State::new(&window).await;
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
@@ -375,4 +371,32 @@ fn main() {
         }
         _ => {}
     });
+}
+
+fn main() {
+    env_logger::init();
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new().build(&event_loop).unwrap();
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        futures::executor::block_on(run_loop(event_loop, window));
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        // Log detailed error info to browser's dev console
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+        // Append window to document body
+        use winit::platform::web::WindowExtWebSys;
+        web_sys::window()
+            .and_then(|win| win.document())
+            .and_then(|doc| doc.body())
+            .and_then(|body| {
+                body.append_child(&web_sys::Element::from(window.canvas()))
+                    .ok()
+            })
+            .expect("Failed to append canvas to body");
+        wasm_bindgen_futures::spawn_local(run_loop(event_loop, window));
+    }
 }
