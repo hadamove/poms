@@ -68,7 +68,7 @@ pub async fn parse_pdb_file(filename: String) -> Molecule {
                     line[38..45].trim().parse::<f32>().unwrap(),
                     line[46..53].trim().parse::<f32>().unwrap(),
                 ],
-                radius: 0.7,
+                radius: 2.0,
                 color: get_atom_color(element),
             });
         }

@@ -54,8 +54,8 @@ Alternatively, you can use `build-web.sh` script to run these three commands.
 - [x] parse molecule file into data for shader
 - [x] render atoms using `wgsl` sphere impostor quad shader
 - [x] compilation for web browsers
+- [x] fix depth buffer quad clipping
 - [ ] implement proper lighting in the shader
-- [ ] fix depth buffer quad clipping
 - [ ] use depth buffer texture in the shader to visualize depth
 - [ ] implement simple GUI
 - [ ] sticks and balls rendering shader

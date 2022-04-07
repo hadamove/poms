@@ -21,6 +21,8 @@ struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) color: vec4<f32>,
     @location(1) uv: vec2<f32>,
+    @location(2) proj_position: vec4<f32>,
+    @location(3) atom_radius: f32,
 };
 
 
@@ -59,20 +61,37 @@ fn vs_main(
 
     var out: VertexOutput;
     out.color = atom.color;
-    out.clip_position = camera.proj * camera.view * worldspace_pos;
     out.uv = quad_pos;
+    out.proj_position = camera.proj * camera.view * worldspace_pos;
+    out.atom_radius = atom.radius;
+    out.clip_position = out.proj_position;
 
     return out;
 }
 
-@stage(fragment)
-fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+struct FragmentOutput {
+    @builtin(frag_depth) depth: f32,
+    @location(0) color: vec4<f32>,
+};
 
-    if ((pow(in.uv.x, 2.0) + pow(in.uv.y, 2.0)) > 1.0) {
+@stage(fragment)
+fn fs_main(in: VertexOutput) -> FragmentOutput {
+
+    var dist_xy = pow(in.uv.x, 2.0) + pow(in.uv.y, 2.0);
+
+    if (dist_xy > 1.0) {
         discard;
     }
 
-    // Temporary before proper lighting uniform is set up
+    var z = sqrt(1.0 - dist_xy);
+    var offset_z = camera.proj * in.atom_radius * vec4<f32>(0.0, 0.0, z, 1.0);
+    var proj_surface_position = in.proj_position + offset_z;
+
     var shading = vec4<f32>(in.uv, 1.0, 1.0) * 0.2;
-    return in.color + shading;
+
+    var out: FragmentOutput;
+    out.color = in.color + shading;
+    out.depth = proj_surface_position.z / proj_surface_position.w;
+
+    return out;
 }
