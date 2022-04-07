@@ -56,14 +56,17 @@ To target web browsers, Rust code needs to be compiled to [WebAssembly](https://
 `cargo build --features legacy-shader`
 If you use `build-web.sh` you must add this flag to the script manually (this is a temporary solution before all browsers support the new shader syntax).
 
-## Todo list
+## Checkpoints
 
 - [x] basic rendering pipeline setup
 - [x] parse molecule file into data for shader
 - [x] render atoms using `wgsl` sphere impostor quad shader
 - [x] compilation for web browsers
 - [x] fix depth buffer quad clipping
+- [ ] fix colors in web build
+- [ ] profile both native and web build
+- [ ] electron build
+- [ ] implement simple GUI in electron
 - [ ] implement proper lighting in the shader
 - [ ] use depth buffer texture in the shader to visualize depth
-- [ ] implement simple GUI
 - [ ] sticks and balls rendering shader
