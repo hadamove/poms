@@ -36,17 +36,21 @@ Running in Firefox Nightly fails due to Firefox's outdated shader syntax (Chrome
 
 To target web browsers, Rust code needs to be compiled to [WebAssembly](https://webassembly.org/), a common language supported by browsers. For this purpose, we use `wasm32-unknown-unknown` as target and use crate `wasm-bindgen` that generates the needed JavaScript glue. Finally, we set up a simple web server that will host our application, which uses `index.html` as an entry point to our WebAssembly bytecode. To put in simple steps:
 
-1. Compile to wasm: `cargo build --target wasm32-unknown-unknown`
+> Alternatively, you can use `build-web.sh` script to run the following five commands for you.
 
-2. Add JS glue: `wasm-bindgen --out-dir target/generated/ --web target/wasm32-unknown-unknown/debug/visitlab-wgpu.wasm`
+1. Add wasm compilation target: `rustup target add wasm32-unknown-unknown`
 
-3. Host the application: `python3 -m http.server` (you can use any other http server implementation, although it is important to run the server on port `8000`, see `parser.rs` for detailed information).
+2. Compile to wasm: `cargo build --target wasm32-unknown-unknown`
 
-4. The application should be accessible at `http://localhost:8000/` in a browser with WebGPU support (e.g., Chrome Canary).
+3. Install `wasm-bindgen` for generating JS glue: `cargo install -f wasm-bindgen-cli`
+
+4. Generate JS glue: `wasm-bindgen --out-dir target/generated/ --web target/wasm32-unknown-unknown/debug/visitlab-wgpu.wasm`
+
+5. Host the application: `python3 -m http.server` (you can use any other http server implementation, although it is important to run the server on port `8000`, see `parser.rs` for detailed information).
+
+6. The application should be accessible at `http://localhost:8000/` in a browser with WebGPU support (e.g., Chrome Canary).
 
 ![Chrome Canary](media/chrome-canary.png)
-
-Alternatively, you can use `build-web.sh` script to run these three commands.
 
 ## Todo list
 
