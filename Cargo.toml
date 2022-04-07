@@ -21,3 +21,6 @@ wasm-bindgen-futures = "0.4"
 # New shader syntax required by Chrome Canary has not been officially released.
 # Patch wgpu dependency to use the latest version of the shader compiler.
 wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "58f318550dedaec6ed901c83131e424cf39ee648" }
+
+[features]
+legacy-shader = []
