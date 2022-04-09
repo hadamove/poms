@@ -39,6 +39,10 @@ impl Camera {
         }
     }
 
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.aspect = width as f32 / height as f32;
+    }
+
     pub fn get_view_matrix(&self) -> cgmath::Matrix4<f32> {
         cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up)
     }
