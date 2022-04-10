@@ -379,18 +379,19 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
 }
 
 fn main() {
-    env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     #[cfg(not(target_arch = "wasm32"))]
     {
+        simple_logger::init().unwrap();
         futures::executor::block_on(run_loop(event_loop, window));
     }
     #[cfg(target_arch = "wasm32")]
     {
         // Log detailed error info to browser's dev console
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+        wasm_logger::init(wasm_logger::Config::default());
 
         // Append window to document body
         use winit::platform::web::WindowExtWebSys;

@@ -6,15 +6,17 @@ edition = "2021"
 [dependencies]
 winit = "0.26"
 cgmath = "0.18"
-env_logger = "0.9"
+simple_logger = "2.1"
 wgpu = "0.12"
 bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
 futures = "0.3"
 reqwest-wasm = "0.11"
+log = "0.4"
 
 [target.wasm32-unknown-unknown.dependencies]
 console_error_panic_hook = "0.1"
 web-sys = "0.3"
+wasm-logger = "0.2.0"
 wasm-bindgen-futures = "0.4"
 
 [patch.crates-io]
