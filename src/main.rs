@@ -417,8 +417,12 @@ fn main() {
             .and_then(|win| win.document())
             .and_then(|doc| doc.body())
             .and_then(|body| {
-                body.append_child(&web_sys::Element::from(window.canvas()))
-                    .ok()
+                let canvas = window.canvas();
+                let style = canvas.style();
+                // Set canvas to fill the whole window
+                style.set_property("width", "100%").unwrap();
+                style.set_property("height", "100%").unwrap();
+                body.append_child(&web_sys::Element::from(canvas)).ok()
             })
             .expect("Failed to append canvas to body");
         wasm_bindgen_futures::spawn_local(run_loop(event_loop, window));
