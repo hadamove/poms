@@ -361,6 +361,24 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
             }
         }
         Event::RedrawRequested(window_id) if window_id == window.id() => {
+            #[cfg(target_arch = "wasm32")]
+            {
+                use winit::platform::web::WindowExtWebSys;
+
+                let canvas = window.canvas();
+                let (width, height) = (canvas.client_width(), canvas.client_height());
+                let factor = window.scale_factor();
+
+                let logical = winit::dpi::LogicalSize { width, height };
+                let new_size = logical.to_physical(factor);
+
+                // Dynamically change the size of the canvas in the browser window
+                if new_size != state.size {
+                    canvas.set_width(new_size.width);
+                    canvas.set_height(new_size.height);
+                    state.resize(new_size);
+                }
+            }
             state.update();
             match state.render() {
                 Ok(_) => {}
