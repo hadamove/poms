@@ -25,6 +25,8 @@ Currently, the project can be built and run on these platforms:
 
 - Chrome Canary 102.0.4972
 
+- (Electron v20.0.0-nightly.20220330)
+
 Note:
 Running in Firefox Nightly fails due to Firefox's outdated shader syntax (Chrome Canary has recently abandoned the old wgsl syntax completely).
 
@@ -63,9 +65,12 @@ If you use `build-web.sh` you must add this flag to the script manually (this is
 - [x] render atoms using `wgsl` sphere impostor quad shader
 - [x] compilation for web browsers
 - [x] fix depth buffer quad clipping
+- [x] fix window resizing in browser
+- [x] electron build
+- [ ] add docs for electron build
+- [ ] fix console warnings in browser
 - [ ] fix colors in web build
 - [ ] profile both native and web build
-- [ ] electron build
 - [ ] implement simple GUI in electron
 - [ ] implement proper lighting in the shader
 - [ ] use depth buffer texture in the shader to visualize depth
