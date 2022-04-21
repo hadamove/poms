@@ -38,7 +38,7 @@ Running in Firefox Nightly fails due to Firefox's outdated shader syntax (Chrome
 
 To target web browsers, Rust code needs to be compiled to [WebAssembly](https://webassembly.org/), a common language supported by browsers. For this purpose, we use `wasm32-unknown-unknown` as target and use crate `wasm-bindgen` that generates the needed JavaScript glue. Finally, we set up a simple web server that will host our application, which uses `index.html` as an entry point to our WebAssembly bytecode. To put in simple steps:
 
-> Alternatively, you can use `build-web.sh` script to run the following five commands for you.
+> Alternatively, you can use `scripts/build-web.sh` script to run the following five commands for you.
 
 1. Add wasm compilation target: `rustup target add wasm32-unknown-unknown`
 
@@ -58,6 +58,16 @@ To target web browsers, Rust code needs to be compiled to [WebAssembly](https://
 `cargo build --features legacy-shader`
 If you use `build-web.sh` you must add this flag to the script manually (this is a temporary solution before all browsers support the new shader syntax).
 
+## Building Electron Application
+
+Building the Electron Application requires `Node.js`, which can be downloded from <https://nodejs.org/en/download/>.
+
+> Alternatively, you can use `scripts/build-electron.sh` script to run the following five commands for you.
+
+1. Build and host the web application either manually as described amove in **Building for the web** section or using `scripts/build-web.sh` script.
+2. In a new terminal window navigate to `src/electron` and run `npm i` to install Electron dependencies.
+3. Run `npm start` to run the Electron application.
+
 ## Checkpoints
 
 - [x] basic rendering pipeline setup
@@ -67,7 +77,7 @@ If you use `build-web.sh` you must add this flag to the script manually (this is
 - [x] fix depth buffer quad clipping
 - [x] fix window resizing in browser
 - [x] electron build
-- [ ] add docs for electron build
+- [x] add docs for electron build
 - [ ] fix console warnings in browser
 - [ ] fix colors in web build
 - [ ] profile both native and web build
