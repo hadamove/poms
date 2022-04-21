@@ -251,7 +251,7 @@
     "@electron-forge/template-base" "6.0.0-beta.63"
     "fs-extra" "^10.0.0"
 
-"@electron/get@^1.13.0", "@electron/get@^1.6.0", "@electron/get@^1.9.0":
+"@electron/get@^1.14.1", "@electron/get@^1.6.0", "@electron/get@^1.9.0":
   "integrity" "sha512-BrZYyL/6m0ZXz/lDxy/nlVhQz+WF+iPS6qXolEU8atw7h6v1aYkjwJZ63m+bJMBTxDE66X+r2tPS4a/8C82sZw=="
   "resolved" "https://registry.npmjs.org/@electron/get/-/get-1.14.1.tgz"
   "version" "1.14.1"
@@ -1116,6 +1116,15 @@
     "word-wrap" "^1.2.3"
     "yargs" "^16.0.2"
 
+"electron-nightly@20.0.0-nightly.20220420":
+  "integrity" "sha512-wEsxxV5RG5ASOH9rL2En5uasElTlWULM55epe7m3vSdBdgWtZQdCpxO04OiMXCxdMxRvUU2uZWnY6+qqbfeOIw=="
+  "resolved" "https://registry.npmjs.org/electron-nightly/-/electron-nightly-20.0.0-nightly.20220420.tgz"
+  "version" "20.0.0-nightly.20220420"
+  dependencies:
+    "@electron/get" "^1.14.1"
+    "@types/node" "^16.11.26"
+    "extract-zip" "^1.0.3"
+
 "electron-notarize@^1.1.1":
   "integrity" "sha512-u/ECWhIrhkSQpZM4cJzVZ5TsmkaqrRo5LDC/KMbGF0sPkm53Ng59+M0zp8QVaql0obfJy9vlVT+4iOkAi2UDlA=="
   "resolved" "https://registry.npmjs.org/electron-notarize/-/electron-notarize-1.2.1.tgz"
@@ -1197,15 +1206,6 @@
     "fs-extra" "^7.0.1"
     "lodash.template" "^4.2.2"
     "temp" "^0.9.0"
-
-"electron@18.0.3":
-  "integrity" "sha512-QRUZkGL8O/8CyDmTLSjBeRsZmGTPlPVeWnnpkdNqgHYYaOc/A881FKMiNzvQ9Cj0a+rUavDdwBUfUL82U3Ay7w=="
-  "resolved" "https://registry.npmjs.org/electron/-/electron-18.0.3.tgz"
-  "version" "18.0.3"
-  dependencies:
-    "@electron/get" "^1.13.0"
-    "@types/node" "^16.11.26"
-    "extract-zip" "^1.0.3"
 
 "emoji-regex@^8.0.0":
   "integrity" "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="
