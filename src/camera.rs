@@ -1,5 +1,7 @@
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 
+use crate::parser::Molecule;
+
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     1.0, 0.0, 0.0, 0.0,
@@ -19,23 +21,15 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(
-        eye: cgmath::Point3<f32>,
-        target: cgmath::Point3<f32>,
-        up: cgmath::Vector3<f32>,
-        aspect: f32,
-        fovy: f32,
-        znear: f32,
-        zfar: f32,
-    ) -> Self {
+    pub fn new(target: cgmath::Point3<f32>, offset: cgmath::Vector3<f32>, aspect: f32) -> Self {
         Self {
-            eye,
-            target,
-            up,
-            aspect,
-            fovy,
-            znear,
-            zfar,
+            eye: target + offset,
+            target: target,
+            up: cgmath::Vector3::unit_y(),
+            aspect: aspect,
+            fovy: 45.0,
+            znear: 0.1,
+            zfar: 1000.0,
         }
     }
 
