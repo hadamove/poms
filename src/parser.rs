@@ -52,11 +52,16 @@ pub async fn load_pdb_file(filename: String) -> String {
     }
 }
 
-pub async fn parse_pdb_file(filename: String) -> Molecule {
+// Change this to see other molecules
+const MOLECULE_FILE: &str = "./molecules/1aon.pdb";
+
+pub async fn parse_pdb_file() -> Molecule {
+    let filename = MOLECULE_FILE.to_string();
+
     let mut atoms: Vec<Atom> = vec![];
     let content = load_pdb_file(filename).await;
 
-    for line in content.split("\n") {
+    for line in content.split('\n') {
         if line.len() < 80 {
             continue;
         }
