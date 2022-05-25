@@ -9,6 +9,7 @@ use winit::{
 };
 
 mod camera;
+mod gui;
 mod parser;
 mod renderer;
 mod texture;
@@ -98,72 +99,81 @@ impl State {
         self.camera_controller.update_camera(&mut self.camera);
         self.camera_render.update(&self.queue, &self.camera);
     }
-
-    fn render(&mut self, frame: &wgpu::SurfaceTexture) {
-        let view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-
-        self.atom_render_pass
-            .render(&view, &mut encoder, &self.camera_render);
-
-        self.queue.submit(std::iter::once(encoder.finish()));
-    }
 }
 
 async fn run_loop(event_loop: EventLoop<()>, window: Window) {
     let mut state = State::new(&window).await;
+    let mut gui = gui::Gui::new(&window, &state.device, &state.queue, &state.config);
 
-    event_loop.run(move |event, _, control_flow| match event {
-        Event::WindowEvent {
-            ref event,
-            window_id,
-        } if window_id == window.id() => {
-            if !state.input(event) {
-                match event {
-                    WindowEvent::CloseRequested
-                    | WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => *control_flow = ControlFlow::Exit,
-                    WindowEvent::Resized(physical_size) => {
-                        state.resize(*physical_size);
+    event_loop.run(move |event, _, control_flow| {
+        gui.handle_event(&window, &event);
+        match event {
+            Event::WindowEvent {
+                ref event,
+                window_id,
+            } if window_id == window.id() => {
+                if !state.input(event) {
+                    match event {
+                        WindowEvent::CloseRequested
+                        | WindowEvent::KeyboardInput {
+                            input:
+                                KeyboardInput {
+                                    state: ElementState::Pressed,
+                                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                                    ..
+                                },
+                            ..
+                        } => *control_flow = ControlFlow::Exit,
+                        WindowEvent::Resized(physical_size) => {
+                            state.resize(*physical_size);
+                        }
+                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                            state.resize(**new_inner_size);
+                        }
+                        _ => {}
                     }
-                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                        state.resize(**new_inner_size);
-                    }
-                    _ => {}
                 }
             }
-        }
-        Event::RedrawRequested(window_id) if window_id == window.id() => {
-            state.update();
-            #[cfg(target_arch = "wasm32")]
-            {
-                // Dynamically change the size of the canvas in the browser window
-                match web_utils::update_canvas_size(&window) {
-                    None => {}
-                    Some(new_size) => state.resize(new_size),
+            Event::RedrawRequested(window_id) if window_id == window.id() => {
+                state.update();
+                #[cfg(target_arch = "wasm32")]
+                {
+                    // Dynamically change the size of the canvas in the browser window
+                    match web_utils::update_canvas_size(&window) {
+                        None => {}
+                        Some(new_size) => state.resize(new_size),
+                    }
                 }
-            }
 
-            let frame = state.surface.get_current_texture().unwrap();
-            state.render(&frame);
-            frame.present();
+                let surface_texture = state.surface.get_current_texture().unwrap();
+
+                let view = surface_texture
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
+
+                let mut encoder: wgpu::CommandEncoder = state
+                    .device
+                    .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
+                // Render atoms
+                state
+                    .atom_render_pass
+                    .render(&view, &mut encoder, &state.camera_render);
+
+                // Render GUI
+                gui.render(&view, &mut encoder, &window, &state.device, &state.queue);
+
+                // Submit commands to the GPU
+                state.queue.submit(Some(encoder.finish()));
+
+                // Draw a frame
+                surface_texture.present();
+            }
+            Event::MainEventsCleared => {
+                window.request_redraw();
+            }
+            _ => {}
         }
-        Event::MainEventsCleared => {
-            window.request_redraw();
-        }
-        _ => {}
     });
 }
 
