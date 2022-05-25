@@ -54,10 +54,6 @@ To target web browsers, Rust code needs to be compiled to [WebAssembly](https://
 
 ![Chrome Canary](media/chrome-canary.png)
 
-> As of now, Firefox and Chromium builds support different version of wgsl shaders. The default build command `cargo build` / `cargo run` will build the application with the new shader syntax supported by the latest Chrome Canary release. If you want to build for Firefox or older Chromium release (e.g., used by Electron) this can be done via a feature flag:
-`cargo build --features legacy-shader`
-If you use `build-web.sh` you must add this flag to the script manually (this is a temporary solution before all browsers support the new shader syntax).
-
 ## Building Electron Application
 
 Building the Electron Application requires `Node.js`, which can be downloded from <https://nodejs.org/en/download/>.

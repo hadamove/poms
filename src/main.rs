@@ -189,10 +189,6 @@ impl State {
                 push_constant_ranges: &[],
             });
 
-        #[cfg(feature = "legacy-shader")]
-        let shader = device.create_shader_module(&include_wgsl!("shaders/atom.legacy.wgsl"));
-
-        #[cfg(not(feature = "legacy-shader"))]
         let shader = device.create_shader_module(&include_wgsl!("shaders/atom.wgsl"));
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
