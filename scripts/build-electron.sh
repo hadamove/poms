@@ -1,6 +1,6 @@
 #!/bin/bash
 SOURCE_DIR=`dirname "$0"`
-ELECTRON_DIR=${SOURCE_DIR}/../src/electron
+ELECTRON_DIR=${SOURCE_DIR}/../src-electron
 
 source ${SOURCE_DIR}/build-web.sh &
 server_pid=$!
