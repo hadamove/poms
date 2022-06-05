@@ -12,18 +12,22 @@ bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
 futures = "0.3"
 reqwest-wasm = "0.11"
 log = "0.4"
-imgui = "0.8"
-imgui-wgpu = "0.19"
-imgui-winit-support = { version = "0.8", features = ["winit-26"] }
+egui = "0.17"
+egui_wgpu_backend = "0.17"
+egui-winit = "0.17"
+egui_demo_lib = "0.17"
+epi = "0.17"
 
 [target.wasm32-unknown-unknown.dependencies]
 console_error_panic_hook = "0.1"
 web-sys = "0.3"
 wasm-logger = "0.2.0"
+wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 
 [patch.crates-io]
 # New shader syntax required by Chrome Canary has not been officially released.
 # Patch wgpu dependency to use the latest version of the shader compiler.
 wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "58f318550dedaec6ed901c83131e424cf39ee648" }
-imgui-wgpu = { git = "https://github.com/hadamove/imgui-wgpu-rs" }
+egui = { git = "https://github.com/hadamove/egui" }
+egui_wgpu_backend = { git = "https://github.com/hadamove/egui_wgpu_backend" }

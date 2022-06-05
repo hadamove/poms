@@ -1,10 +1,11 @@
 use camera::{Camera, CameraController};
 use cgmath::Vector3;
+use gui::egui;
 use renderer::atom_pass::AtomRenderPass;
 use renderer::camera::CameraRender;
 use winit::{
     event::*,
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::{ControlFlow, EventLoop, EventLoopProxy},
     window::{Window, WindowBuilder},
 };
 
@@ -25,10 +26,12 @@ struct State {
     camera_render: CameraRender,
     camera_controller: CameraController,
     atom_render_pass: AtomRenderPass,
+
+    gui: egui::Gui,
 }
 
 impl State {
-    async fn new(window: &Window) -> Self {
+    async fn new(window: &Window, event_loop_proxy: EventLoopProxy<egui::Event>) -> Self {
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
@@ -67,6 +70,8 @@ impl State {
         let camera_render = CameraRender::new(&device);
         let atom_render_pass = AtomRenderPass::new(&device, &config, &camera_render, &molecule);
 
+        let gui = egui::Gui::new(&window, &device, &config, event_loop_proxy);
+
         Self {
             surface,
             device,
@@ -77,6 +82,7 @@ impl State {
             camera_render,
             camera_controller,
             atom_render_pass,
+            gui,
         }
     }
 
@@ -92,7 +98,7 @@ impl State {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        self.camera_controller.process_events(event)
+        self.camera_controller.process_events(event) || self.gui.handle_events(event)
     }
 
     fn update(&mut self) {
@@ -101,18 +107,14 @@ impl State {
     }
 }
 
-async fn run_loop(event_loop: EventLoop<()>, window: Window) {
-    let mut state = State::new(&window).await;
-    let mut gui = gui::Gui::new(&window, &state.device, &state.queue, &state.config);
+async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
+    let event_loop_proxy = event_loop.create_proxy();
+    let mut state = State::new(&window, event_loop_proxy).await;
 
     event_loop.run(move |event, _, control_flow| {
-        gui.handle_event(&window, &event);
         match event {
-            Event::WindowEvent {
-                ref event,
-                window_id,
-            } if window_id == window.id() => {
-                if !state.input(event) {
+            Event::WindowEvent { event, .. } => {
+                if !state.input(&event) {
                     match event {
                         WindowEvent::CloseRequested
                         | WindowEvent::KeyboardInput {
@@ -125,10 +127,10 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
                             ..
                         } => *control_flow = ControlFlow::Exit,
                         WindowEvent::Resized(physical_size) => {
-                            state.resize(*physical_size);
+                            state.resize(physical_size);
                         }
                         WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                            state.resize(**new_inner_size);
+                            state.resize(*new_inner_size);
                         }
                         _ => {}
                     }
@@ -161,7 +163,14 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
                     .render(&view, &mut encoder, &state.camera_render);
 
                 // Render GUI
-                gui.render(&view, &mut encoder, &window, &state.device, &state.queue);
+                state.gui.render(
+                    &view,
+                    &mut encoder,
+                    &window,
+                    &state.device,
+                    &state.queue,
+                    &state.config,
+                );
 
                 // Submit commands to the GPU
                 state.queue.submit(Some(encoder.finish()));
@@ -178,7 +187,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
 }
 
 fn main() {
-    let event_loop = EventLoop::new();
+    let event_loop = winit::event_loop::EventLoop::with_user_event();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     #[cfg(not(target_arch = "wasm32"))]
