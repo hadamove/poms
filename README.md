@@ -9,9 +9,7 @@ Setup instructions:
 
 1. Install `rustup` - Rust toolchain management: [rustup.rs - The Rust toolchain installer](https://rustup.rs/#), this should also install all necessary tools for building `rustc` - Rust compiler and `cargo` - Rust package manager.
 
-2. The large `.pdb` files are, for obvious reasons, not included in the repo; you will have to download them manually from the [archive](https://www.rcsb.org/structure/1AON) and put them into `src/molecules` folder.
-
-3. Build and run the application with `cargo run`.
+2. Build and run the application with `cargo run`.
 
 ## Build status
 
@@ -23,9 +21,9 @@ Currently, the project can be built and run on these platforms:
 
 - Windows 10
 
-- Chrome Canary 102.0.4972
+- Chrome Canary >102
 
-- (Electron v20.0.0-nightly.20220330)
+- (Electron >v20.0.0)
 
 Note:
 Running in Firefox Nightly fails due to Firefox's outdated shader syntax (Chrome Canary has recently abandoned the old wgsl syntax completely).
@@ -58,7 +56,7 @@ To target web browsers, Rust code needs to be compiled to [WebAssembly](https://
 
 Building the Electron Application requires `Node.js`, which can be downloded from <https://nodejs.org/en/download/>.
 
-> Alternatively, you can use `scripts/build-electron.sh` script to run the following five commands for you.
+> Alternatively, you can use `scripts/build-electron.sh` script to run the following commands for you.
 
 1. Build and host the web application either manually as described amove in **Building for the web** section or using `scripts/build-web.sh` script.
 2. In a new terminal window navigate to `src/electron` and run `npm i` to install Electron dependencies.
@@ -74,10 +72,10 @@ Building the Electron Application requires `Node.js`, which can be downloded fro
 - [x] fix window resizing in browser
 - [x] electron build
 - [x] add docs for electron build
+- [x] profile both native and web build
+- [x] implement simple GUI
+- [ ] sticks and balls rendering shader
 - [ ] fix console warnings in browser
 - [ ] fix colors in web build
-- [ ] profile both native and web build
-- [ ] implement simple GUI in electron
 - [ ] implement proper lighting in the shader
 - [ ] use depth buffer texture in the shader to visualize depth
-- [ ] sticks and balls rendering shader
