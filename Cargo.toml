@@ -10,7 +10,6 @@ simple_logger = "2.1"
 wgpu = "0.12"
 bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
 futures = "0.3"
-reqwest-wasm = "0.11"
 log = "0.4"
 egui = "0.17"
 egui_wgpu_backend = "0.17"

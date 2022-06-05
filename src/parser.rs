@@ -37,19 +37,10 @@ impl Molecule {
 
 pub async fn load_pdb_file(filename: String) -> String {
     #[cfg(not(target_arch = "wasm32"))]
-    {
-        std::fs::read_to_string(filename).expect("file could not be read")
-    }
+    return std::fs::read_to_string(filename).expect("file could not be read");
 
     #[cfg(target_arch = "wasm32")]
-    {
-        // Since it is more difficult to access the filesystem in the browser,
-        // we will fetch the file from local storage using http protocol and open port
-        // Configure the port if needed based on server running the index.html file
-        let url = format!("http://localhost:8000/{}", filename);
-        let resp = reqwest_wasm::get(&url).await.expect("request failed");
-        resp.text().await.expect("failed to read body")
-    }
+    crate::web_utils::fetch_file(filename).await
 }
 
 // Change this to see other molecules
