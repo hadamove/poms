@@ -4,6 +4,7 @@ use wgpu::util::DeviceExt;
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct CameraUniform {
+    position: [f32; 4],
     view_matrix: [[f32; 4]; 4],
     proj_matrix: [[f32; 4]; 4],
 }
@@ -11,12 +12,14 @@ struct CameraUniform {
 impl CameraUniform {
     fn default() -> Self {
         Self {
+            position: [0.0, 0.0, 0.0, 0.0],
             view_matrix: cgmath::Matrix4::identity().into(),
             proj_matrix: cgmath::Matrix4::identity().into(),
         }
     }
 
-    fn update_view_projection(&mut self, camera: &crate::Camera) {
+    fn update_uniform(&mut self, camera: &crate::Camera) {
+        self.position = camera.get_position();
         self.view_matrix = camera.get_view_matrix().into();
         self.proj_matrix = camera.get_projection_matrix().into();
     }
@@ -80,7 +83,7 @@ impl CameraRender {
     }
 
     pub fn update(&mut self, queue: &wgpu::Queue, camera: &crate::Camera) {
-        self.camera_uniform.update_view_projection(camera);
+        self.camera_uniform.update_uniform(camera);
         queue.write_buffer(
             &self.camera_buffer,
             0,
