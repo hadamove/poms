@@ -35,7 +35,7 @@ impl Molecule {
     }
 }
 
-pub async fn load_pdb_file(filename: String) -> String {
+pub fn load_pdb_file(filename: &String) -> String {
     #[cfg(not(target_arch = "wasm32"))]
     return std::fs::read_to_string(filename).expect("file could not be read");
 
@@ -43,14 +43,9 @@ pub async fn load_pdb_file(filename: String) -> String {
     crate::web_utils::fetch_file(filename).await
 }
 
-// Change this to see other molecules
-const MOLECULE_FILE: &str = "./molecules/1aon.pdb";
-
-pub async fn parse_pdb_file() -> Molecule {
-    let filename = MOLECULE_FILE.to_string();
-
+pub fn parse_pdb_file(filename: &String) -> Molecule {
     let mut atoms: Vec<Atom> = vec![];
-    let content = load_pdb_file(filename).await;
+    let content = load_pdb_file(filename);
 
     for line in content.split('\n') {
         if line.len() < 80 {

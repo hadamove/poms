@@ -6,6 +6,8 @@ const MAX_TEXTURE_SIZE: usize = 4096;
 use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
 use epi::*;
 
+use super::my_app::MyApp;
+
 #[derive(Debug)]
 pub enum Event {
     RequestRedraw,
@@ -28,7 +30,7 @@ pub struct Gui {
     render_pass: egui_wgpu_backend::RenderPass,
     repaint_signal: Arc<RepaintSignal>,
 
-    demo_app: egui_demo_lib::WrapApp,
+    pub my_app: MyApp,
 }
 
 impl Gui {
@@ -43,14 +45,15 @@ impl Gui {
         let render_pass = RenderPass::new(&device, config.format, 1);
         let repaint_signal =
             std::sync::Arc::new(RepaintSignal(std::sync::Mutex::new(event_loop_proxy)));
-        let demo_app = egui_demo_lib::WrapApp::default();
+
+        let my_app = MyApp::default();
 
         Self {
             render_pass,
             state,
             context,
             repaint_signal,
-            demo_app,
+            my_app,
         }
     }
 
@@ -85,7 +88,7 @@ impl Gui {
         });
 
         // Draw the demo application.
-        self.demo_app.update(&self.context, &frame);
+        self.my_app.update(&self.context, &frame);
 
         // End the UI frame. We could now handle the output and draw the UI with the backend.
         let output = self.context.end_frame();

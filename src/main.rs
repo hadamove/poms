@@ -58,7 +58,7 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let molecule = parser::parse_pdb_file().await;
+        let molecule = parser::parse_pdb_file(&"./molecules/1cqw.pdb".to_string());
 
         let camera = Camera::new(
             molecule.calculate_centre().into(),
@@ -86,6 +86,21 @@ impl State {
         }
     }
 
+    fn update_molecule(&mut self) {
+        if let Some(path) = &self.gui.my_app.file_to_load {
+            let molecule = parser::parse_pdb_file(path);
+            self.atom_render_pass =
+                AtomRenderPass::new(&self.device, &self.config, &self.camera_render, &molecule);
+            self.gui.my_app.file_to_load = None;
+
+            self.camera = Camera::new(
+                molecule.calculate_centre().into(),
+                Vector3::new(0.0, 0.0, 50.0),
+                self.config.width as f32 / self.config.height as f32,
+            );
+        }
+    }
+
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.config.width = new_size.width;
@@ -104,6 +119,7 @@ impl State {
     fn update(&mut self) {
         self.camera_controller.update_camera(&mut self.camera);
         self.camera_render.update(&self.queue, &self.camera);
+        self.update_molecule();
     }
 }
 
