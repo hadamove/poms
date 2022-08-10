@@ -78,7 +78,7 @@ struct FragmentOutput {
 @stage(fragment)
 fn fs_main(in: VertexOutput) -> FragmentOutput {
 
-    var dist_xy = pow(in.uv.x, 2.0) + pow(in.uv.y, 2.0);
+    var dist_xy = dot(in.uv, in.uv);
 
     if (dist_xy > 1.0) {
         discard;
