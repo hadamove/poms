@@ -85,7 +85,7 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     }
 
     var z = sqrt(1.0 - dist_xy);
-    var offset_z = camera.proj * in.atom_radius * vec4<f32>(0.0, 0.0, z, 1.0);
+    var offset_z = camera.proj * vec4<f32>(0.0, 0.0, z * in.atom_radius, 0.0);
     var proj_surface_position = in.proj_position + offset_z;
 
     var shading = vec4<f32>(in.uv, 1.0, 1.0) * 0.2;
