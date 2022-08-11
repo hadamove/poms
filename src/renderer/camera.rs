@@ -7,6 +7,8 @@ struct CameraUniform {
     position: [f32; 4],
     view_matrix: [[f32; 4]; 4],
     proj_matrix: [[f32; 4]; 4],
+    view_inverse_matrix: [[f32; 4]; 4],
+    proj_inverse_matrix: [[f32; 4]; 4],
 }
 
 impl CameraUniform {
@@ -15,6 +17,8 @@ impl CameraUniform {
             position: [0.0, 0.0, 0.0, 0.0],
             view_matrix: cgmath::Matrix4::identity().into(),
             proj_matrix: cgmath::Matrix4::identity().into(),
+            view_inverse_matrix: cgmath::Matrix4::identity().into(),
+            proj_inverse_matrix: cgmath::Matrix4::identity().into(),
         }
     }
 
@@ -22,6 +26,8 @@ impl CameraUniform {
         self.position = camera.get_position();
         self.view_matrix = camera.get_view_matrix().into();
         self.proj_matrix = camera.get_projection_matrix().into();
+        self.view_inverse_matrix = camera.get_view_matrix().invert().unwrap().into();
+        self.proj_inverse_matrix = camera.get_projection_matrix().invert().unwrap().into();
     }
 }
 
