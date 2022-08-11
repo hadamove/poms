@@ -22,12 +22,15 @@ impl CameraUniform {
         }
     }
 
-    fn update_uniform(&mut self, camera: &crate::Camera) {
-        self.position = camera.get_position();
-        self.view_matrix = camera.get_view_matrix().into();
-        self.proj_matrix = camera.get_projection_matrix().into();
-        self.view_inverse_matrix = camera.get_view_matrix().invert().unwrap().into();
-        self.proj_inverse_matrix = camera.get_projection_matrix().invert().unwrap().into();
+    fn update_uniform(&mut self, camera: &crate::Camera, projection: &crate::Projection) {
+        self.position = camera.position.to_homogeneous().into();
+        let view_matrix = camera.calc_matrix();
+        let proj_matrix = projection.calc_matrix();
+
+        self.view_matrix = view_matrix.into();
+        self.proj_matrix = proj_matrix.into();
+        self.view_inverse_matrix = view_matrix.invert().unwrap().into();
+        self.proj_inverse_matrix = proj_matrix.invert().unwrap().into();
     }
 }
 
@@ -88,8 +91,13 @@ impl CameraRender {
         &self.camera_bind_group_layout
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue, camera: &crate::Camera) {
-        self.camera_uniform.update_uniform(camera);
+    pub fn update(
+        &mut self,
+        queue: &wgpu::Queue,
+        camera: &crate::Camera,
+        projection: &crate::Projection,
+    ) {
+        self.camera_uniform.update_uniform(camera, projection);
         queue.write_buffer(
             &self.camera_buffer,
             0,

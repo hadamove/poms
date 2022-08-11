@@ -1,4 +1,4 @@
-use camera::{Camera, CameraController};
+use camera::{Camera, CameraController, Projection};
 use cgmath::Vector3;
 use gui::egui;
 use renderer::camera::CameraRender;
@@ -23,6 +23,7 @@ struct State {
     config: wgpu::SurfaceConfiguration,
 
     camera: Camera,
+    projection: Projection,
     camera_render: CameraRender,
     camera_controller: CameraController,
 
@@ -64,13 +65,16 @@ impl State {
 
         let molecule = parser::parse_pdb_file(&"./molecules/1aon.pdb".to_string());
 
-        let camera = Camera::new(
-            molecule.calculate_centre().into(),
-            Vector3::new(0.0, 0.0, 70.0),
-            config.width as f32 / config.height as f32,
-        );
+        let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
+        let offset = Vector3::new(0.0, 0.0, 50.0);
 
-        let camera_controller = CameraController::new(2.0);
+        let camera = camera::Camera::new(camera_eye + offset, cgmath::Deg(-90.0), cgmath::Deg(0.0));
+
+        let projection =
+            camera::Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 1000.0);
+
+        let camera_controller = camera::CameraController::new(100.0, 0.3);
+
         let camera_render = CameraRender::new(&device);
         let atom_render_pass = AtomRenderPass::new(&device, &config, &camera_render, &molecule);
         let ses_render_pass = SESRenderPass::new(&device, &config, &camera_render, &molecule);
@@ -86,6 +90,7 @@ impl State {
             config,
 
             camera,
+            projection,
             camera_render,
             camera_controller,
 
@@ -104,11 +109,11 @@ impl State {
                 AtomRenderPass::new(&self.device, &self.config, &self.camera_render, &molecule);
             self.gui.my_app.file_to_load = None;
 
-            self.camera = Camera::new(
-                molecule.calculate_centre().into(),
-                Vector3::new(0.0, 0.0, 50.0),
-                self.config.width as f32 / self.config.height as f32,
-            );
+            let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
+            let offset = Vector3::new(0.0, 0.0, 50.0);
+
+            self.camera =
+                camera::Camera::new(camera_eye - offset, cgmath::Deg(-90.0), cgmath::Deg(-20.0));
         }
     }
 
@@ -119,7 +124,7 @@ impl State {
             self.surface.configure(&self.device, &self.config);
         }
 
-        self.camera.resize(new_size.width, new_size.height);
+        self.projection.resize(new_size.width, new_size.height);
         self.depth_texture = texture::Texture::create_depth_texture(&self.device, &self.config)
     }
 
@@ -127,9 +132,12 @@ impl State {
         self.camera_controller.process_events(event) || self.gui.handle_events(event)
     }
 
-    fn update(&mut self) {
-        self.camera_controller.update_camera(&mut self.camera);
-        self.camera_render.update(&self.queue, &self.camera);
+    fn update(&mut self, time_delta: std::time::Duration) {
+        self.camera_controller
+            .update_camera(&mut self.camera, time_delta);
+
+        self.camera_render
+            .update(&self.queue, &self.camera, &self.projection);
         self.update_molecule();
     }
 }
@@ -137,6 +145,8 @@ impl State {
 async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
     let event_loop_proxy = event_loop.create_proxy();
     let mut state = State::new(&window, event_loop_proxy).await;
+
+    let mut last_render_time = instant::Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -164,7 +174,11 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                 }
             }
             Event::RedrawRequested(window_id) if window_id == window.id() => {
-                state.update();
+                let now = instant::Instant::now();
+                let time_delta = now - last_render_time;
+                last_render_time = now;
+                state.update(time_delta);
+
                 #[cfg(target_arch = "wasm32")]
                 {
                     // Dynamically change the size of the canvas in the browser window
@@ -222,6 +236,12 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
             }
             Event::MainEventsCleared => {
                 window.request_redraw();
+            }
+            Event::DeviceEvent {
+                event: DeviceEvent::MouseMotion{ delta, },
+                .. // We're not using device_id currently
+            } => if state.camera_controller.is_mouse_pressed() {
+                state.camera_controller.process_mouse(delta.0, delta.1)
             }
             _ => {}
         }
