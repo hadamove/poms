@@ -1,8 +1,8 @@
 use camera::{Camera, CameraController};
 use cgmath::Vector3;
 use gui::egui;
-use renderer::atom_pass::AtomRenderPass;
 use renderer::camera::CameraRender;
+use renderer::{atom_pass::AtomRenderPass, ses_pass::SESRenderPass};
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop, EventLoopProxy},
@@ -25,7 +25,11 @@ struct State {
     camera: Camera,
     camera_render: CameraRender,
     camera_controller: CameraController,
+
     atom_render_pass: AtomRenderPass,
+    ses_render_pass: SESRenderPass,
+
+    depth_texture: texture::Texture,
 
     gui: egui::Gui,
 }
@@ -58,7 +62,7 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let molecule = parser::parse_pdb_file(&"./molecules/1cqw.pdb".to_string());
+        let molecule = parser::parse_pdb_file(&"./molecules/1aon.pdb".to_string());
 
         let camera = Camera::new(
             molecule.calculate_centre().into(),
@@ -69,6 +73,9 @@ impl State {
         let camera_controller = CameraController::new(2.0);
         let camera_render = CameraRender::new(&device);
         let atom_render_pass = AtomRenderPass::new(&device, &config, &camera_render, &molecule);
+        let ses_render_pass = SESRenderPass::new(&device, &config, &camera_render, &molecule);
+
+        let depth_texture = texture::Texture::create_depth_texture(&device, &config);
 
         let gui = egui::Gui::new(&window, &device, &config, event_loop_proxy);
 
@@ -81,7 +88,11 @@ impl State {
             camera,
             camera_render,
             camera_controller,
+
             atom_render_pass,
+            ses_render_pass,
+            depth_texture,
+
             gui,
         }
     }
@@ -109,7 +120,7 @@ impl State {
         }
 
         self.camera.resize(new_size.width, new_size.height);
-        self.atom_render_pass.resize(&self.device, &self.config);
+        self.depth_texture = texture::Texture::create_depth_texture(&self.device, &self.config)
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
@@ -173,10 +184,25 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     .device
                     .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
+                let depth_view = state
+                    .depth_texture
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
+
                 // Render atoms
-                state
-                    .atom_render_pass
-                    .render(&view, &mut encoder, &state.camera_render);
+                state.atom_render_pass.render(
+                    &view,
+                    &depth_view,
+                    &mut encoder,
+                    &state.camera_render,
+                );
+
+                state.ses_render_pass.render(
+                    &view,
+                    &depth_view,
+                    &mut encoder,
+                    &state.camera_render,
+                );
 
                 // Render GUI
                 state.gui.render(

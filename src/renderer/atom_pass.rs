@@ -1,6 +1,5 @@
 use super::camera::CameraRender;
 use crate::parser::Molecule;
-use crate::texture;
 use wgpu::util::DeviceExt;
 
 const CLEAR_COLOR: wgpu::Color = wgpu::Color {
@@ -13,7 +12,6 @@ const CLEAR_COLOR: wgpu::Color = wgpu::Color {
 pub struct AtomRenderPass {
     pub render_pipeline: wgpu::RenderPipeline,
     pub atoms_bind_group: wgpu::BindGroup,
-    pub depth_texture: texture::Texture,
     pub vertex_count: u32,
 }
 
@@ -107,13 +105,11 @@ impl AtomRenderPass {
             multiview: None,
         });
 
-        let depth_texture = texture::Texture::create_depth_texture(device, config);
         let vertex_count = molecule.atoms.len() as u32 * 6;
 
         Self {
             atoms_bind_group,
             render_pipeline,
-            depth_texture,
             vertex_count,
         }
     }
@@ -121,6 +117,7 @@ impl AtomRenderPass {
     pub fn render(
         &self,
         view: &wgpu::TextureView,
+        depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         camera_render: &CameraRender,
     ) {
@@ -135,7 +132,7 @@ impl AtomRenderPass {
                 },
             }],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                view: &self.depth_texture.view,
+                view: &depth_view,
                 depth_ops: Some(wgpu::Operations {
                     load: wgpu::LoadOp::Clear(1.0),
                     store: true,
@@ -148,9 +145,5 @@ impl AtomRenderPass {
         render_pass.set_bind_group(0, camera_render.get_bind_group(), &[]);
         render_pass.set_bind_group(1, &self.atoms_bind_group, &[]);
         render_pass.draw(0..self.vertex_count, 0..1);
-    }
-
-    pub fn resize(&mut self, device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
-        self.depth_texture = texture::Texture::create_depth_texture(device, config)
     }
 }
