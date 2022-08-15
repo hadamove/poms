@@ -27,6 +27,8 @@ impl epi::App for MyApp {
 
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
+                // TODO: make this async
+                // https://github.com/emilk/egui/issues/270#issuecomment-869069186
                 ui.menu_button("File", |ui| {
                     if ui.button("Organize windows").clicked() {
                         ui.ctx().memory().reset_areas();

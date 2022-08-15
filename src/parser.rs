@@ -78,6 +78,8 @@ pub fn load_pdb_file(filename: &String) -> String {
     return std::fs::read_to_string(filename).expect("file could not be read");
 
     #[cfg(target_arch = "wasm32")]
+    // TODO: make this function async to work with wasm
+    // https://github.com/dabreegster/minimal_websys_winit_glow_demo
     crate::web_utils::fetch_file(filename).await
 }
 

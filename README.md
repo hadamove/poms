@@ -4,7 +4,7 @@ This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-
 
 ## Setup
 
-The project is currently built with Rust version `1.59.0`.
+The project is currently built with Rust version `1.63.0`.
 Setup instructions:
 
 1. Install `rustup` - Rust toolchain management: [rustup.rs - The Rust toolchain installer](https://rustup.rs/#), this should also install all necessary tools for building `rustc` - Rust compiler and `cargo` - Rust package manager.
@@ -26,13 +26,15 @@ Currently, the project can be built and run on these platforms:
 - (Electron >v20.0.0)
 
 Note:
-Running in Firefox Nightly fails due to Firefox's outdated shader syntax (Chrome Canary has recently abandoned the old wgsl syntax completely).
+Running in Firefox Nightly fails due to Firefox's outdated shader syntax (Chrome Canary has recently abandoned the old wgsl syntax completely for now).
 
 ## Demo
 
 ![demo](media/demo.gif)
 
 ## Building for the web
+
+> Disclaimer: HEAD commit might not compile for the web as of moment (due to missing async features), if you wish to compile for the web, first checkout at the last "web-stable" commit: `git checkout e77dae478ce709572876d3c50d66b59b073e3471`.
 
 To target web browsers, Rust code needs to be compiled to [WebAssembly](https://webassembly.org/), a common language supported by browsers. For this purpose, we use `wasm32-unknown-unknown` as target and use crate `wasm-bindgen` that generates the needed JavaScript glue. Finally, we set up a simple web server that will host our application, which uses `index.html` as an entry point to our WebAssembly bytecode. To put in simple steps:
 
@@ -74,8 +76,10 @@ Building the Electron Application requires `Node.js`, which can be downloded fro
 - [x] add docs for electron build
 - [x] profile both native and web build
 - [x] implement simple GUI
-- [ ] sticks and balls rendering shader
+- [x] use depth buffer texture in the shader to visualize depth
+- [x] raytracing rendering
+- [ ] SES rendering with fixed resolution
+- [ ] SES rendering with iterative refinement
 - [ ] fix console warnings in browser
 - [ ] fix colors in web build
 - [ ] implement proper lighting in the shader
-- [ ] use depth buffer texture in the shader to visualize depth
