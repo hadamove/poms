@@ -16,7 +16,7 @@ egui_wgpu_backend = "0.17"
 egui-winit = "0.17"
 egui_demo_lib = "0.17"
 epi = "0.17"
-rfd = "0.8"
+rfd = "0.9.1"
 instant = "0.1"
 
 [target.wasm32-unknown-unknown.dependencies]
