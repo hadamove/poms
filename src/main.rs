@@ -10,6 +10,7 @@ use winit::{
 };
 
 mod camera;
+mod grid;
 mod gui;
 mod parser;
 mod renderer;

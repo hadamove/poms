@@ -6,7 +6,16 @@ struct CameraUniform {
     proj_inverse: mat4x4<f32>,
 };
 
+struct GridUniform {
+    origin: vec3<f32>,
+    resolution: u32,
+    offset: f32,
+    // Add 8 bytes padding to avoid alignment issues.
+    _padding: vec2<f32>,
+};
+
 @group(0) @binding(0) var<uniform> camera: CameraUniform;
+@group(1) @binding(1) var<uniform> grid: GridUniform;
 
 fn distance_from_sphere(point: vec3<f32>, center: vec3<f32>, radius: f32) -> f32 {
     return length(point  - center) - radius;
@@ -19,19 +28,14 @@ struct RayHit {
 };
 
 fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
-    var MAX_STEPS: i32 = 32;
+    var MAX_STEPS = 32u;
     var MINIMUM_HIT_DISTANCE: f32 = 0.01;
     var SPHERE_CENTER = vec3<f32>(79.17576, -51.610718, -5.8748875);
 
     var rayhit: RayHit;
     var total_distance: f32 = 0.0;
 
-    var i: i32 = 0;
-    loop {
-        if (i >= MAX_STEPS) {
-            break;
-        }
-
+    for (var i: u32 = 0u; i < MAX_STEPS; i += 1u) {
         var current_position: vec3<f32> = origin + total_distance * direction;
         var current_distance: f32 = distance_from_sphere(current_position, SPHERE_CENTER, 5.0);
 
@@ -40,12 +44,7 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
             rayhit.point = current_position;
             return rayhit;
         }
-
         total_distance += current_distance;
-
-        continuing {
-            i += 1;
-        }
     }
     rayhit.hit = false;
     return rayhit;
@@ -95,7 +94,7 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     // Apply inverse view matrix to get the ray in world space.
     var ray_direction_world = camera.view_inverse * ray_direction_view;
 
-    var rayhit = ray_march(ray_origin, ray_direction_world.xyz);
+    var rayhit = ray_march(ray_origin, normalize(ray_direction_world.xyz));
     if (!rayhit.hit) {
         // Ray missed.
         discard;
