@@ -3,7 +3,7 @@ use cgmath::Point3;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Atom {
-    position: [f32; 3],
+    pub position: [f32; 3],
     radius: f32,
     color: [f32; 4],
 }

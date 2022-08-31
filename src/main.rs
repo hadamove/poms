@@ -64,7 +64,7 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let molecule = parser::parse_pdb_file(&"./molecules/1aon.pdb".to_string());
+        let molecule = parser::parse_pdb_file(&"./molecules/1cqw.pdb".to_string());
 
         let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
         let offset = Vector3::new(0.0, 0.0, 50.0);
