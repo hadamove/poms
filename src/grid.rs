@@ -1,6 +1,6 @@
 use cgmath::Vector3;
 
-use crate::parser::Molecule;
+use crate::parser::{Atom, Molecule};
 
 const PROBE_RADIUS: f32 = 1.2;
 const MAX_ATOM_RADIUS: f32 = 1.5;
@@ -43,14 +43,14 @@ impl GridUniform {
 }
 
 pub struct SESGrid {
-    pub uniform: GridUniform,
+    pub grid: GridUniform,
 }
 
 impl SESGrid {
     pub fn from_molecule(molecule: &Molecule) -> Self {
         const DEFAULT_SES_GRID_RESOLUTION: u32 = 64;
         Self {
-            uniform: GridUniform::from_molecule(
+            grid: GridUniform::from_molecule(
                 molecule,
                 GridSpacing::Resolution(DEFAULT_SES_GRID_RESOLUTION),
             ),
@@ -58,18 +58,65 @@ impl SESGrid {
     }
 }
 
+fn compute_grid_cell_index(position: [f32; 3], grid: &GridUniform) -> usize {
+    let res = grid.resolution as usize;
+    let x = ((position[0] - grid.origin[0]) / grid.offset).floor() as usize;
+    let y = ((position[1] - grid.origin[1]) / grid.offset).floor() as usize;
+    let z = ((position[2] - grid.origin[2]) / grid.offset).floor() as usize;
+    return x + y * res + z * res * res;
+}
+
 pub struct NeighborAtomGrid {
-    uniform: GridUniform,
+    // Origin, resolution, and offset of the grid.
+    pub grid: GridUniform,
+    // Atoms sorted by grid cell index.
+    pub sorted_atoms: Vec<Atom>,
+    // Lookup table for start of the grid cells. Grid cell index -> first atom index in the cell.
+    pub grid_cell_start_indices: Vec<u32>,
 }
 
 impl NeighborAtomGrid {
     pub fn from_molecule(molecule: &Molecule) -> Self {
         const NEIGHBOR_ATOM_GRID_OFFSET: f32 = PROBE_RADIUS + MAX_ATOM_RADIUS;
+
+        let grid =
+            GridUniform::from_molecule(molecule, GridSpacing::Offset(NEIGHBOR_ATOM_GRID_OFFSET));
+
+        let mut atoms_with_cell_indices = molecule
+            .atoms
+            .clone()
+            .into_iter()
+            .map(|atom| {
+                let cell_index = compute_grid_cell_index(atom.position, &grid);
+                (atom, cell_index)
+            })
+            .collect::<Vec<_>>();
+
+        // Sort the atoms by cell index.
+        atoms_with_cell_indices.sort_by_key(|(_, cell_index)| *cell_index);
+
+        // Compute grid cell start indices in the atoms vector
+        let grid_cell_count = usize::pow(grid.resolution as usize, 3);
+        let mut grid_cell_start_indices = vec![0u32; grid_cell_count];
+
+        atoms_with_cell_indices
+            .iter()
+            .enumerate()
+            .for_each(|(i, (_, cell_index))| {
+                if grid_cell_start_indices[*cell_index] == 0 {
+                    grid_cell_start_indices[*cell_index] = i as u32;
+                }
+            });
+
+        let sorted_atoms = atoms_with_cell_indices
+            .into_iter()
+            .map(|(atom, _)| atom)
+            .collect::<Vec<Atom>>();
+
         Self {
-            uniform: GridUniform::from_molecule(
-                molecule,
-                GridSpacing::Offset(NEIGHBOR_ATOM_GRID_OFFSET),
-            ),
+            grid,
+            sorted_atoms,
+            grid_cell_start_indices,
         }
     }
 }
