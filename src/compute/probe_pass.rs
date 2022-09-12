@@ -1,39 +1,59 @@
-use super::camera::CameraRender;
+use crate::grid::{NeighborAtomGrid, SESGrid};
 use crate::parser::Molecule;
-use wgpu::util::DeviceExt;
+use crate::renderer::camera::CameraRender;
 
-const CLEAR_COLOR: wgpu::Color = wgpu::Color {
-    r: 0.03,
-    g: 0.03,
-    b: 0.04,
-    a: 1.00,
-};
+use super::bind_group::{ProbePassBindGroup, ProbePassBindGroupLayout};
+use super::buffer::ProbeComputePassBuffers;
 
-pub struct AtomRenderPass {
-    pub render_pipeline: wgpu::RenderPipeline,
-    pub atoms_bind_group: wgpu::BindGroup,
-    pub vertex_count: u32,
+pub struct ProbeComputePass {
+    ses_grid: SESGrid,
+    bind_group: wgpu::BindGroup,
+
+    grid_points_bind_group: wgpu::BindGroup,
+
+    compute_pipeline: wgpu::ComputePipeline,
+    // TODO: temp this will be removed
+    render_pipeline: wgpu::RenderPipeline,
 }
 
-impl AtomRenderPass {
+impl ProbeComputePass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
         camera_render: &CameraRender,
         molecule: &Molecule,
     ) -> Self {
-        let atoms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Atoms Buffer"),
-            contents: bytemuck::cast_slice(&molecule.atoms),
-            usage: wgpu::BufferUsages::STORAGE,
+        let ses_grid = SESGrid::from_molecule(&molecule);
+        let neighbor_atom_grid = NeighborAtomGrid::from_molecule(&molecule);
+
+        let buffers = ProbeComputePassBuffers::new(device, &ses_grid, &neighbor_atom_grid);
+        let bind_group_layout = ProbePassBindGroupLayout::new(device);
+        let bind_group = ProbePassBindGroup::new(device, &bind_group_layout, &buffers);
+
+        let compute_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Compute Pipeline Layout"),
+                bind_group_layouts: &[&bind_group_layout],
+                push_constant_ranges: &[],
+            });
+
+        let compute_shader =
+            device.create_shader_module(&wgpu::include_wgsl!("shaders/probe.wgsl"));
+
+        let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: Some("Compute Pipeline"),
+            layout: Some(&compute_pipeline_layout),
+            module: &compute_shader,
+            entry_point: "main",
         });
 
-        let atoms_bind_group_layout =
+        // TODO: TEMP WILL BE REMOVED
+        // --------------------
+        let grid_points_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("Atoms Bind Group Layout"),
                 entries: &[wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStages::VERTEX,
+                    visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::VERTEX,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { read_only: false },
                         has_dynamic_offset: false,
@@ -41,39 +61,41 @@ impl AtomRenderPass {
                     },
                     count: None,
                 }],
+                label: None,
             });
 
-        let atoms_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Atoms Bind Group"),
-            layout: &atoms_bind_group_layout,
+        let grid_points_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &grid_points_bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 1,
-                resource: atoms_buffer.as_entire_binding(),
+                resource: buffers.grid_points_buffer.as_entire_binding(),
             }],
+            label: None,
         });
+
+        let render_shader =
+            device.create_shader_module(&wgpu::include_wgsl!("../renderer/shaders/atom.wgsl"));
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
                     camera_render.get_bind_group_layout(),
-                    &atoms_bind_group_layout,
+                    &grid_points_bind_group_layout,
                 ],
                 push_constant_ranges: &[],
             });
 
-        let shader = device.create_shader_module(&wgpu::include_wgsl!("shaders/atom.wgsl"));
-
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
+            label: Some("Render Pipeline Probe"),
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
-                module: &shader,
+                module: &render_shader,
                 entry_point: "vs_main",
                 buffers: &[],
             },
             fragment: Some(wgpu::FragmentState {
-                module: &shader,
+                module: &render_shader,
                 entry_point: "fs_main",
                 targets: &[wgpu::ColorTargetState {
                     format: config.format,
@@ -104,14 +126,25 @@ impl AtomRenderPass {
             },
             multiview: None,
         });
-
-        let vertex_count = molecule.atoms.len() as u32 * 6;
+        // --------------------
 
         Self {
-            atoms_bind_group,
+            ses_grid,
+            bind_group,
+            grid_points_bind_group,
+            compute_pipeline,
             render_pipeline,
-            vertex_count,
         }
+    }
+
+    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder) {
+        let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
+        compute_pass.set_pipeline(&self.compute_pipeline);
+        compute_pass.set_bind_group(0, &self.bind_group, &[]);
+
+        let num_work_groups = f32::ceil(self.ses_grid.get_num_grid_points() as f32 / 64.0) as u32;
+
+        compute_pass.dispatch(num_work_groups, 1, 1);
     }
 
     pub fn render(
@@ -127,14 +160,14 @@ impl AtomRenderPass {
                 view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
+                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                     store: true,
                 },
             }],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                 view: &depth_view,
                 depth_ops: Some(wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
+                    load: wgpu::LoadOp::Clear(1.0),
                     store: true,
                 }),
                 stencil_ops: None,
@@ -143,7 +176,7 @@ impl AtomRenderPass {
 
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_bind_group(0, camera_render.get_bind_group(), &[]);
-        render_pass.set_bind_group(1, &self.atoms_bind_group, &[]);
-        render_pass.draw(0..self.vertex_count, 0..1);
+        render_pass.set_bind_group(1, &self.grid_points_bind_group, &[]);
+        render_pass.draw(0..self.ses_grid.get_num_grid_points() * 6, 0..1);
     }
 }

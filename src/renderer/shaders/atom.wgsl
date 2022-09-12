@@ -17,7 +17,7 @@ struct AtomBuffer {
 };
 
 @group(0) @binding(0) var<uniform> camera: CameraUniform;
-@group(1) @binding(1) var<storage, read> atoms: AtomBuffer;
+@group(1) @binding(1) var<storage, read_write> atoms: AtomBuffer;
 
 
 struct VertexOutput {
@@ -94,6 +94,10 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
 
     var out: FragmentOutput;
     out.color = in.color + shading;
+    if (in.color.x == 1.0 && in.color.y == 1.0) {
+        discard;
+    }
+
     out.depth = proj_surface_position.z / proj_surface_position.w;
 
     return out;

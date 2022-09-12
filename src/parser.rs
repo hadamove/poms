@@ -8,8 +8,26 @@ pub struct Atom {
     color: [f32; 4],
 }
 
+impl Default for Atom {
+    fn default() -> Self {
+        Self {
+            position: [0.0; 3],
+            radius: 1.0,
+            color: [1.0; 4],
+        }
+    }
+}
+
 pub struct Molecule {
     pub atoms: Vec<Atom>,
+}
+
+impl Default for Molecule {
+    fn default() -> Self {
+        Self {
+            atoms: vec![Atom::default()],
+        }
+    }
 }
 
 // TODO: store color pallete in a separate file

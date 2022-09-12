@@ -1,5 +1,6 @@
 use camera::{Camera, CameraController, Projection};
 use cgmath::Vector3;
+use compute::probe_pass::ProbeComputePass;
 use gui::egui;
 use renderer::camera::CameraRender;
 use renderer::{atom_pass::AtomRenderPass, ses_pass::SESRenderPass};
@@ -10,6 +11,7 @@ use winit::{
 };
 
 mod camera;
+mod compute;
 mod grid;
 mod gui;
 mod parser;
@@ -30,6 +32,7 @@ struct State {
 
     atom_render_pass: AtomRenderPass,
     ses_render_pass: SESRenderPass,
+    probe_compute_pass: ProbeComputePass,
 
     depth_texture: texture::Texture,
 
@@ -49,8 +52,16 @@ impl State {
             .await
             .unwrap();
 
+        // TODO: remove feature requirement
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
+            .request_device(
+                &wgpu::DeviceDescriptor {
+                    label: None,
+                    features: wgpu::Features::VERTEX_WRITABLE_STORAGE,
+                    limits: adapter.limits(),
+                },
+                None,
+            )
             .await
             .unwrap();
 
@@ -79,6 +90,7 @@ impl State {
         let camera_render = CameraRender::new(&device);
         let atom_render_pass = AtomRenderPass::new(&device, &config, &camera_render, &molecule);
         let ses_render_pass = SESRenderPass::new(&device, &config, &camera_render, &molecule);
+        let probe_compute_pass = ProbeComputePass::new(&device, &config, &camera_render, &molecule);
 
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
 
@@ -97,6 +109,7 @@ impl State {
 
             atom_render_pass,
             ses_render_pass,
+            probe_compute_pass,
             depth_texture,
 
             gui,
@@ -204,6 +217,16 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     .texture
                     .create_view(&wgpu::TextureViewDescriptor::default());
 
+                state.probe_compute_pass.execute(&mut encoder);
+                state.probe_compute_pass.render(
+                    &view,
+                    &depth_view,
+                    &mut encoder,
+                    &state.camera_render,
+                );
+
+                // Copy data from the probe compute pass to cpu
+
                 // Render atoms
                 state.atom_render_pass.render(
                     &view,
@@ -212,12 +235,12 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     &state.camera_render,
                 );
 
-                state.ses_render_pass.render(
-                    &view,
-                    &depth_view,
-                    &mut encoder,
-                    &state.camera_render,
-                );
+                // state.ses_render_pass.render(
+                //     &view,
+                //     &depth_view,
+                //     &mut encoder,
+                //     &state.camera_render,
+                // );
 
                 // Render GUI
                 state.gui.render(

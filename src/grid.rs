@@ -56,6 +56,10 @@ impl SESGrid {
             ),
         }
     }
+
+    pub fn get_num_grid_points(&self) -> u32 {
+        u32::pow(self.grid.resolution, 3)
+    }
 }
 
 fn compute_grid_cell_index(position: [f32; 3], grid: &GridUniform) -> usize {
@@ -71,8 +75,10 @@ pub struct NeighborAtomGrid {
     pub grid: GridUniform,
     // Atoms sorted by grid cell index.
     pub sorted_atoms: Vec<Atom>,
-    // Lookup table for start of the grid cells. Grid cell index -> first atom index in the cell.
-    pub grid_cell_start_indices: Vec<u32>,
+    // LUT; for given `cell_index` returns the index of cell's first atom in `sorted_atoms`.
+    pub grid_cell_start: Vec<u32>,
+    // LUT; for given `cell_index` returns the number of atoms in the cell from `sorted_atoms`.
+    pub grid_cell_size: Vec<u32>,
 }
 
 impl NeighborAtomGrid {
@@ -96,17 +102,16 @@ impl NeighborAtomGrid {
         atoms_with_cell_indices.sort_by_key(|(_, cell_index)| *cell_index);
 
         // Compute grid cell start indices in the atoms vector
-        let grid_cell_count = usize::pow(grid.resolution as usize, 3);
-        let mut grid_cell_start_indices = vec![0u32; grid_cell_count];
+        let grid_cell_count = u32::pow(grid.resolution, 3) as usize;
+        let mut grid_cell_start = vec![0u32; grid_cell_count];
+        let mut grid_cell_size = vec![0u32; grid_cell_count];
 
-        atoms_with_cell_indices
-            .iter()
-            .enumerate()
-            .for_each(|(i, (_, cell_index))| {
-                if grid_cell_start_indices[*cell_index] == 0 {
-                    grid_cell_start_indices[*cell_index] = i as u32;
-                }
-            });
+        for (atom_index, (_, cell_index)) in atoms_with_cell_indices.iter().enumerate() {
+            if grid_cell_start[*cell_index] == 0 {
+                grid_cell_start[*cell_index] = atom_index as u32;
+            }
+            grid_cell_size[*cell_index] += 1;
+        }
 
         let sorted_atoms = atoms_with_cell_indices
             .into_iter()
@@ -116,7 +121,8 @@ impl NeighborAtomGrid {
         Self {
             grid,
             sorted_atoms,
-            grid_cell_start_indices,
+            grid_cell_start,
+            grid_cell_size,
         }
     }
 }
