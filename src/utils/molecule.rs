@@ -34,8 +34,8 @@ impl Molecule {
     pub fn calculate_centre(&self) -> [f32; 3] {
         let mut centre = [0.0, 0.0, 0.0];
         for atom in &self.atoms {
-            for i in 0..3 {
-                centre[i] += atom.position[i];
+            for (i, position) in atom.position.iter().enumerate() {
+                centre[i] += position;
             }
         }
         centre.map(|v| v / self.atoms.len() as f32)
@@ -66,14 +66,8 @@ impl Molecule {
     }
 
     pub fn get_max_distance(&self) -> f32 {
-        let min_position = self.get_min_position();
-        let max_position = self.get_max_position();
-        return f32::max(
-            max_position.x - min_position.x,
-            f32::max(
-                max_position.y - min_position.y,
-                max_position.z - min_position.z,
-            ),
-        );
+        let min = self.get_min_position();
+        let max = self.get_max_position();
+        f32::max(max.x - min.x, f32::max(max.y - min.y, max.z - min.z))
     }
 }

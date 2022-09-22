@@ -23,12 +23,12 @@ impl ProbePass {
         camera_resource: &CameraResource,
         molecule: &Molecule,
     ) -> Self {
-        let ses_grid = SESGrid::from_molecule(&molecule);
-        let neighbor_atom_grid = NeighborAtomGrid::from_molecule(&molecule);
+        let ses_grid = SESGrid::from_molecule(molecule);
+        let neighbor_atom_grid = NeighborAtomGrid::from_molecule(molecule);
 
         let buffers = ProbePassBuffers::new(device, &ses_grid, &neighbor_atom_grid);
-        let bind_group_layout = ProbePassBindGroupLayout::new(device);
-        let bind_group = ProbePassBindGroup::new(device, &bind_group_layout, &buffers);
+        let bind_group_layout = ProbePassBindGroupLayout::init(device);
+        let bind_group = ProbePassBindGroup::init(device, &bind_group_layout, &buffers);
 
         let compute_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -165,7 +165,7 @@ impl ProbePass {
                 },
             }],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                view: &depth_view,
+                view: depth_view,
                 depth_ops: Some(wgpu::Operations {
                     load: wgpu::LoadOp::Clear(1.0),
                     store: true,

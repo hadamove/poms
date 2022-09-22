@@ -1,15 +1,9 @@
+#![allow(dead_code)]
+
+#[derive(Default)]
 pub struct MyApp {
     pub colors: ColorWidgets,
     pub file_to_load: Option<String>,
-}
-
-impl Default for MyApp {
-    fn default() -> Self {
-        Self {
-            colors: Default::default(),
-            file_to_load: None,
-        }
-    }
 }
 
 impl epi::App for MyApp {
@@ -81,27 +75,27 @@ impl ColorWidgets {
 
         ui.horizontal(|ui| {
             ui.color_edit_button_rgba_unmultiplied(h_color);
-            ui.label(format!("Hydrogen",));
+            ui.label("Hydrogen".to_string());
         });
 
         ui.horizontal(|ui| {
             ui.color_edit_button_rgba_unmultiplied(c_color);
-            ui.label(format!("Carbon",));
+            ui.label("Carbon".to_string());
         });
 
         ui.horizontal(|ui| {
             ui.color_edit_button_rgba_unmultiplied(o_color);
-            ui.label(format!("Oxygen"));
+            ui.label("Oxygen".to_string());
         });
 
         ui.horizontal(|ui| {
             ui.color_edit_button_rgba_unmultiplied(n_color);
-            ui.label(format!("Nitrogen"));
+            ui.label("Nitrogen".to_string());
         });
 
         ui.horizontal(|ui| {
             ui.color_edit_button_rgba_unmultiplied(s_color);
-            ui.label(format!("Sulfur"));
+            ui.label("Sulfur".to_string());
         });
     }
 }

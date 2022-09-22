@@ -37,9 +37,9 @@ impl Gui {
         config: &wgpu::SurfaceConfiguration,
         event_loop_proxy: EventLoopProxy<Event>,
     ) -> Self {
-        let state = egui_winit::State::new(MAX_TEXTURE_SIZE, &window);
+        let state = egui_winit::State::new(MAX_TEXTURE_SIZE, window);
         let context = egui::Context::default();
-        let render_pass = RenderPass::new(&device, config.format, 1);
+        let render_pass = RenderPass::new(device, config.format, 1);
         let repaint_signal =
             std::sync::Arc::new(RepaintSignal(std::sync::Mutex::new(event_loop_proxy)));
 
@@ -67,7 +67,7 @@ impl Gui {
         queue: &wgpu::Queue,
         config: &wgpu::SurfaceConfiguration,
     ) {
-        let input = self.state.take_egui_input(&window);
+        let input = self.state.take_egui_input(window);
         self.context.begin_frame(input);
 
         let app_output = epi::backend::AppOutput::default();
@@ -98,7 +98,7 @@ impl Gui {
             scale_factor: window.scale_factor() as f32,
         };
         self.render_pass
-            .add_textures(&device, &queue, &output.textures_delta)
+            .add_textures(device, queue, &output.textures_delta)
             .unwrap();
 
         self.render_pass
@@ -106,10 +106,10 @@ impl Gui {
             .unwrap();
 
         self.render_pass
-            .update_buffers(&device, &queue, &paint_jobs, &screen_descriptor);
+            .update_buffers(device, queue, &paint_jobs, &screen_descriptor);
 
         self.render_pass
-            .execute(encoder, &view, &paint_jobs, &screen_descriptor, None)
+            .execute(encoder, view, &paint_jobs, &screen_descriptor, None)
             .unwrap();
     }
 }

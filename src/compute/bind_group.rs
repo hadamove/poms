@@ -5,7 +5,7 @@ use super::buffer::ProbePassBuffers;
 pub struct ProbePassBindGroupLayout(wgpu::BindGroupLayout);
 
 impl ProbePassBindGroupLayout {
-    pub fn new(device: &Device) -> wgpu::BindGroupLayout {
+    pub fn init(device: &Device) -> BindGroupLayout {
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
@@ -77,13 +77,13 @@ impl ProbePassBindGroupLayout {
 pub struct ProbePassBindGroup(pub wgpu::BindGroup);
 
 impl ProbePassBindGroup {
-    pub fn new(
+    pub fn init(
         device: &Device,
         layout: &BindGroupLayout,
         buffers: &ProbePassBuffers,
     ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: layout,
+            layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,

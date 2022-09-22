@@ -93,7 +93,7 @@ impl State {
 
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
 
-        let gui = egui::Gui::new(&window, &device, &config, event_loop_proxy);
+        let gui = egui::Gui::new(window, &device, &config, event_loop_proxy);
 
         Self {
             surface,
@@ -103,7 +103,7 @@ impl State {
 
             camera,
             projection,
-            camera_resource: camera_resource,
+            camera_resource,
             camera_controller,
 
             atom_render_pass,
@@ -148,13 +148,10 @@ impl State {
             || match event {
                 WindowEvent::KeyboardInput { input, .. } => {
                     if let Some(keycode) = input.virtual_keycode {
-                        match keycode {
-                            VirtualKeyCode::X => {
-                                println!("X pressed");
-                                self.draw_atoms = !self.draw_atoms;
-                                return true;
-                            }
-                            _ => {}
+                        if keycode == VirtualKeyCode::X {
+                            println!("X pressed");
+                            self.draw_atoms = !self.draw_atoms;
+                            return true;
                         }
                     }
                     false

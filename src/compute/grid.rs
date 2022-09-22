@@ -67,7 +67,7 @@ fn compute_grid_cell_index(position: [f32; 3], grid: &GridUniform) -> usize {
     let x = ((position[0] - grid.origin[0]) / grid.offset).floor() as usize;
     let y = ((position[1] - grid.origin[1]) / grid.offset).floor() as usize;
     let z = ((position[2] - grid.origin[2]) / grid.offset).floor() as usize;
-    return x + y * res + z * res * res;
+    x + y * res + z * res * res
 }
 
 pub struct NeighborAtomGrid {
