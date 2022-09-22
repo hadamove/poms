@@ -2,7 +2,7 @@ use wgpu::util::DeviceExt;
 
 use super::camera::CameraRender;
 use crate::{
-    grid::{NeighborAtomGrid, SESGrid},
+    compute::grid::{NeighborAtomGrid, SESGrid},
     parser::Molecule,
 };
 

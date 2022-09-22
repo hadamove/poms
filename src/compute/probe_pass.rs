@@ -1,4 +1,4 @@
-use crate::grid::{NeighborAtomGrid, SESGrid};
+use super::grid::{NeighborAtomGrid, SESGrid};
 use crate::parser::Molecule;
 use crate::renderer::camera::CameraRender;
 

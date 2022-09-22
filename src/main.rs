@@ -12,7 +12,6 @@ use winit::{
 
 mod camera;
 mod compute;
-mod grid;
 mod gui;
 mod parser;
 mod renderer;
@@ -35,6 +34,7 @@ struct State {
     probe_compute_pass: ProbeComputePass,
 
     depth_texture: texture::Texture,
+    draw_atoms: bool,
 
     gui: egui::Gui,
 }
@@ -113,6 +113,7 @@ impl State {
             depth_texture,
 
             gui,
+            draw_atoms: true,
         }
     }
 
@@ -143,7 +144,24 @@ impl State {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        self.camera_controller.process_events(event) || self.gui.handle_events(event)
+        self.camera_controller.process_events(event)
+            || self.gui.handle_events(event)
+            || match event {
+                WindowEvent::KeyboardInput { input, .. } => {
+                    if let Some(keycode) = input.virtual_keycode {
+                        match keycode {
+                            VirtualKeyCode::X => {
+                                println!("X pressed");
+                                self.draw_atoms = !self.draw_atoms;
+                                return true;
+                            }
+                            _ => {}
+                        }
+                    }
+                    false
+                }
+                _ => false,
+            }
     }
 
     fn update(&mut self, time_delta: std::time::Duration) {
@@ -228,12 +246,14 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                 // Copy data from the probe compute pass to cpu
 
                 // Render atoms
-                state.atom_render_pass.render(
-                    &view,
-                    &depth_view,
-                    &mut encoder,
-                    &state.camera_render,
-                );
+                if state.draw_atoms {
+                    state.atom_render_pass.render(
+                        &view,
+                        &depth_view,
+                        &mut encoder,
+                        &state.camera_render,
+                    );
+                }
 
                 // state.ses_render_pass.render(
                 //     &view,
