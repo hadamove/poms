@@ -3,7 +3,7 @@ use cgmath::Vector3;
 use compute::probe_pass::ProbeComputePass;
 use gui::egui;
 use renderer::camera::CameraRender;
-use renderer::{atom_pass::AtomRenderPass, ses_pass::SESRenderPass};
+use renderer::{ball_and_stick_pass::BallAndStickPass, ses_pass::SESRenderPass};
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop, EventLoopProxy},
@@ -29,7 +29,7 @@ struct State {
     camera_render: CameraRender,
     camera_controller: CameraController,
 
-    atom_render_pass: AtomRenderPass,
+    atom_render_pass: BallAndStickPass,
     ses_render_pass: SESRenderPass,
     probe_compute_pass: ProbeComputePass,
 
@@ -88,7 +88,7 @@ impl State {
         let camera_controller = camera::CameraController::new(100.0, 0.3);
 
         let camera_render = CameraRender::new(&device);
-        let atom_render_pass = AtomRenderPass::new(&device, &config, &camera_render, &molecule);
+        let atom_render_pass = BallAndStickPass::new(&device, &config, &camera_render, &molecule);
         let ses_render_pass = SESRenderPass::new(&device, &config, &camera_render, &molecule);
         let probe_compute_pass = ProbeComputePass::new(&device, &config, &camera_render, &molecule);
 
@@ -121,7 +121,7 @@ impl State {
         if let Some(path) = &self.gui.my_app.file_to_load {
             let molecule = parser::parse_pdb_file(path);
             self.atom_render_pass =
-                AtomRenderPass::new(&self.device, &self.config, &self.camera_render, &molecule);
+                BallAndStickPass::new(&self.device, &self.config, &self.camera_render, &molecule);
             self.gui.my_app.file_to_load = None;
 
             let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();

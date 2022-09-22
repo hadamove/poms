@@ -9,13 +9,13 @@ const CLEAR_COLOR: wgpu::Color = wgpu::Color {
     a: 1.00,
 };
 
-pub struct AtomRenderPass {
+pub struct BallAndStickPass {
     pub render_pipeline: wgpu::RenderPipeline,
     pub atoms_bind_group: wgpu::BindGroup,
     pub vertex_count: u32,
 }
 
-impl AtomRenderPass {
+impl BallAndStickPass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
