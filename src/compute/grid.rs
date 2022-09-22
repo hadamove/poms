@@ -1,6 +1,6 @@
 use cgmath::Vector3;
 
-use crate::parser::{Atom, Molecule};
+use crate::utils::molecule::{Atom, Molecule};
 
 const PROBE_RADIUS: f32 = 1.2;
 const MAX_ATOM_RADIUS: f32 = 1.5;

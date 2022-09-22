@@ -1,13 +1,6 @@
-use super::camera::CameraRender;
-use crate::parser::Molecule;
+use crate::render::resources::camera::CameraResource;
+use crate::utils::molecule::Molecule;
 use wgpu::util::DeviceExt;
-
-const CLEAR_COLOR: wgpu::Color = wgpu::Color {
-    r: 0.03,
-    g: 0.03,
-    b: 0.04,
-    a: 1.00,
-};
 
 pub struct BallAndStickPass {
     pub render_pipeline: wgpu::RenderPipeline,
@@ -19,7 +12,7 @@ impl BallAndStickPass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        camera_render: &CameraRender,
+        camera_resource: &CameraResource,
         molecule: &Molecule,
     ) -> Self {
         let atoms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -56,13 +49,13 @@ impl BallAndStickPass {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
-                    camera_render.get_bind_group_layout(),
+                    camera_resource.get_bind_group_layout(),
                     &atoms_bind_group_layout,
                 ],
                 push_constant_ranges: &[],
             });
 
-        let shader = device.create_shader_module(&wgpu::include_wgsl!("shaders/atom.wgsl"));
+        let shader = device.create_shader_module(&wgpu::include_wgsl!("../shaders/atom.wgsl"));
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Render Pipeline"),
@@ -119,7 +112,7 @@ impl BallAndStickPass {
         view: &wgpu::TextureView,
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        camera_render: &CameraRender,
+        camera_resource: &CameraResource,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
@@ -142,7 +135,7 @@ impl BallAndStickPass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, camera_render.get_bind_group(), &[]);
+        render_pass.set_bind_group(0, camera_resource.get_bind_group(), &[]);
         render_pass.set_bind_group(1, &self.atoms_bind_group, &[]);
         render_pass.draw(0..self.vertex_count, 0..1);
     }

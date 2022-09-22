@@ -21,9 +21,6 @@ impl epi::backend::RepaintSignal for RepaintSignal {
     }
 }
 
-unsafe impl Sync for RepaintSignal {}
-unsafe impl Send for RepaintSignal {}
-
 pub struct Gui {
     state: egui_winit::State,
     context: egui::Context,

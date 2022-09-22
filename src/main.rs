@@ -1,22 +1,21 @@
-use camera::{Camera, CameraController, Projection};
 use cgmath::Vector3;
-use compute::probe_pass::ProbeComputePass;
+use compute::probe_pass::ProbePass;
 use gui::egui;
-use renderer::camera::CameraRender;
-use renderer::{ball_and_stick_pass::BallAndStickPass, ses_pass::SESRenderPass};
+use render::passes::{ball_and_stick_pass::BallAndStickPass, ses_pass::SESRenderPass};
+use render::resources::camera::CameraResource;
+use render::resources::texture;
+use utils::camera::{self, Camera, CameraController, Projection};
+use utils::parser;
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop, EventLoopProxy},
     window::{Window, WindowBuilder},
 };
 
-mod camera;
 mod compute;
 mod gui;
-mod parser;
-mod renderer;
-mod texture;
-mod web_utils;
+mod render;
+mod utils;
 
 struct State {
     surface: wgpu::Surface,
@@ -26,12 +25,12 @@ struct State {
 
     camera: Camera,
     projection: Projection,
-    camera_render: CameraRender,
+    camera_resource: CameraResource,
     camera_controller: CameraController,
 
     atom_render_pass: BallAndStickPass,
     ses_render_pass: SESRenderPass,
-    probe_compute_pass: ProbeComputePass,
+    probe_compute_pass: ProbePass,
 
     depth_texture: texture::Texture,
     draw_atoms: bool,
@@ -75,7 +74,7 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let molecule = parser::parse_pdb_file(&"./molecules/1cqw.pdb".to_string());
+        let molecule = parser::parse_pdb_file(&"./molecules/1aon.pdb".to_string());
 
         let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
         let offset = Vector3::new(0.0, 0.0, 50.0);
@@ -87,10 +86,10 @@ impl State {
 
         let camera_controller = camera::CameraController::new(100.0, 0.3);
 
-        let camera_render = CameraRender::new(&device);
-        let atom_render_pass = BallAndStickPass::new(&device, &config, &camera_render, &molecule);
-        let ses_render_pass = SESRenderPass::new(&device, &config, &camera_render, &molecule);
-        let probe_compute_pass = ProbeComputePass::new(&device, &config, &camera_render, &molecule);
+        let camera_resource = CameraResource::new(&device);
+        let atom_render_pass = BallAndStickPass::new(&device, &config, &camera_resource, &molecule);
+        let ses_render_pass = SESRenderPass::new(&device, &config, &camera_resource);
+        let probe_compute_pass = ProbePass::new(&device, &config, &camera_resource, &molecule);
 
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
 
@@ -104,7 +103,7 @@ impl State {
 
             camera,
             projection,
-            camera_render,
+            camera_resource: camera_resource,
             camera_controller,
 
             atom_render_pass,
@@ -121,7 +120,7 @@ impl State {
         if let Some(path) = &self.gui.my_app.file_to_load {
             let molecule = parser::parse_pdb_file(path);
             self.atom_render_pass =
-                BallAndStickPass::new(&self.device, &self.config, &self.camera_render, &molecule);
+                BallAndStickPass::new(&self.device, &self.config, &self.camera_resource, &molecule);
             self.gui.my_app.file_to_load = None;
 
             let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
@@ -168,7 +167,7 @@ impl State {
         self.camera_controller
             .update_camera(&mut self.camera, time_delta);
 
-        self.camera_render
+        self.camera_resource
             .update(&self.queue, &self.camera, &self.projection);
         self.update_molecule();
     }
@@ -214,7 +213,7 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                 #[cfg(target_arch = "wasm32")]
                 {
                     // Dynamically change the size of the canvas in the browser window
-                    match web_utils::update_canvas_size(&window) {
+                    match wasm::update_canvas_size(&window) {
                         None => {}
                         Some(new_size) => state.resize(new_size),
                     }
@@ -240,7 +239,7 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     &view,
                     &depth_view,
                     &mut encoder,
-                    &state.camera_render,
+                    &state.camera_resource,
                 );
 
                 // Copy data from the probe compute pass to cpu
@@ -251,16 +250,16 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                         &view,
                         &depth_view,
                         &mut encoder,
-                        &state.camera_render,
+                        &state.camera_resource,
                     );
                 }
 
-                // state.ses_render_pass.render(
-                //     &view,
-                //     &depth_view,
-                //     &mut encoder,
-                //     &state.camera_render,
-                // );
+                state.ses_render_pass.render(
+                    &view,
+                    &depth_view,
+                    &mut encoder,
+                    &state.camera_resource,
+                );
 
                 // Render GUI
                 state.gui.render(
@@ -303,7 +302,7 @@ fn main() {
     }
     #[cfg(target_arch = "wasm32")]
     {
-        web_utils::init_browser_window(&window);
+        wasm::init_browser_window(&window);
         wasm_bindgen_futures::spawn_local(run_loop(event_loop, window));
     }
 }

@@ -34,14 +34,14 @@ impl CameraUniform {
     }
 }
 
-pub struct CameraRender {
+pub struct CameraResource {
     camera_buffer: wgpu::Buffer,
     camera_uniform: CameraUniform,
     camera_bind_group_layout: wgpu::BindGroupLayout,
     camera_bind_group: wgpu::BindGroup,
 }
 
-impl CameraRender {
+impl CameraResource {
     pub fn new(device: &wgpu::Device) -> Self {
         let camera_uniform = CameraUniform::default();
 

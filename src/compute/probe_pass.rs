@@ -1,11 +1,11 @@
 use super::grid::{NeighborAtomGrid, SESGrid};
-use crate::parser::Molecule;
-use crate::renderer::camera::CameraRender;
+use crate::render::resources::camera::CameraResource;
+use crate::utils::molecule::Molecule;
 
 use super::bind_group::{ProbePassBindGroup, ProbePassBindGroupLayout};
-use super::buffer::ProbeComputePassBuffers;
+use super::buffer::ProbePassBuffers;
 
-pub struct ProbeComputePass {
+pub struct ProbePass {
     ses_grid: SESGrid,
     bind_group: wgpu::BindGroup,
 
@@ -16,17 +16,17 @@ pub struct ProbeComputePass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-impl ProbeComputePass {
+impl ProbePass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        camera_render: &CameraRender,
+        camera_resource: &CameraResource,
         molecule: &Molecule,
     ) -> Self {
         let ses_grid = SESGrid::from_molecule(&molecule);
         let neighbor_atom_grid = NeighborAtomGrid::from_molecule(&molecule);
 
-        let buffers = ProbeComputePassBuffers::new(device, &ses_grid, &neighbor_atom_grid);
+        let buffers = ProbePassBuffers::new(device, &ses_grid, &neighbor_atom_grid);
         let bind_group_layout = ProbePassBindGroupLayout::new(device);
         let bind_group = ProbePassBindGroup::new(device, &bind_group_layout, &buffers);
 
@@ -74,13 +74,13 @@ impl ProbeComputePass {
         });
 
         let render_shader =
-            device.create_shader_module(&wgpu::include_wgsl!("../renderer/shaders/atom.wgsl"));
+            device.create_shader_module(&wgpu::include_wgsl!("../render/shaders/atom.wgsl"));
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
-                    camera_render.get_bind_group_layout(),
+                    camera_resource.get_bind_group_layout(),
                     &grid_points_bind_group_layout,
                 ],
                 push_constant_ranges: &[],
@@ -152,7 +152,7 @@ impl ProbeComputePass {
         view: &wgpu::TextureView,
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        camera_render: &CameraRender,
+        camera_resource: &CameraResource,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
@@ -175,7 +175,7 @@ impl ProbeComputePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, camera_render.get_bind_group(), &[]);
+        render_pass.set_bind_group(0, camera_resource.get_bind_group(), &[]);
         render_pass.set_bind_group(1, &self.grid_points_bind_group, &[]);
         render_pass.draw(0..self.ses_grid.get_num_grid_points() * 6, 0..1);
     }

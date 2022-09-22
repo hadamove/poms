@@ -1,9 +1,9 @@
 use wgpu::util::DeviceExt;
 
 use super::grid::{NeighborAtomGrid, SESGrid};
-use crate::parser::Atom;
+use crate::utils::molecule::Atom;
 
-pub struct ProbeComputePassBuffers {
+pub struct ProbePassBuffers {
     pub ses_grid_buffer: wgpu::Buffer,
     pub neighbor_atom_grid_buffer: wgpu::Buffer,
 
@@ -13,7 +13,7 @@ pub struct ProbeComputePassBuffers {
     pub grid_cell_size_buffer: wgpu::Buffer,
 }
 
-impl ProbeComputePassBuffers {
+impl ProbePassBuffers {
     pub fn new(
         device: &wgpu::Device,
         ses_grid: &SESGrid,

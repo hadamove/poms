@@ -1,6 +1,6 @@
 use wgpu::{BindGroupLayout, Device};
 
-use super::buffer::ProbeComputePassBuffers;
+use super::buffer::ProbePassBuffers;
 
 pub struct ProbePassBindGroupLayout(wgpu::BindGroupLayout);
 
@@ -80,7 +80,7 @@ impl ProbePassBindGroup {
     pub fn new(
         device: &Device,
         layout: &BindGroupLayout,
-        buffers: &ProbeComputePassBuffers,
+        buffers: &ProbePassBuffers,
     ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: layout,
