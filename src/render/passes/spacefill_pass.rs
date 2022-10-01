@@ -2,13 +2,13 @@ use crate::render::resources::camera::CameraResource;
 use crate::utils::molecule::Molecule;
 use wgpu::util::DeviceExt;
 
-pub struct BallAndStickPass {
+pub struct SpacefillPass {
     pub render_pipeline: wgpu::RenderPipeline,
     pub atoms_bind_group: wgpu::BindGroup,
     pub vertex_count: u32,
 }
 
-impl BallAndStickPass {
+impl SpacefillPass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
