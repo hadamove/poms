@@ -1,5 +1,3 @@
-use crate::compute::passes::resources::bind_group::SharedBindGroupLayout;
-
 use super::resources::camera::CameraResource;
 
 pub struct RaymarchDistanceFieldPass {
@@ -12,32 +10,49 @@ impl RaymarchDistanceFieldPass {
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
         camera_resource: &CameraResource,
-        df_buffer: &wgpu::Buffer,
+        ses_buffer: &wgpu::Buffer,
+        distance_field_buffer: &wgpu::Buffer,
     ) -> Self {
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::all(),
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
                 },
-                count: None,
-            }],
-            label: None,
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+            ],
+            label: Some("Raymarch Distance Field Bind Group Layout"),
         });
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: df_buffer.as_entire_binding(),
-            }],
-            label: None,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: ses_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: distance_field_buffer.as_entire_binding(),
+                },
+            ],
+            label: Some("Raymarch Distance Field Bind Group"),
         });
-
-        let shared_bind_group_layout = SharedBindGroupLayout::init(device);
 
         let render_shader =
             device.create_shader_module(&wgpu::include_wgsl!("../../render/shaders/raymarch.wgsl"));
@@ -45,16 +60,12 @@ impl RaymarchDistanceFieldPass {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[
-                    camera_resource.get_bind_group_layout(),
-                    &bind_group_layout,
-                    &shared_bind_group_layout,
-                ],
+                bind_group_layouts: &[camera_resource.get_bind_group_layout(), &bind_group_layout],
                 push_constant_ranges: &[],
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("DRF Render Pipeline"),
+            label: Some("Raymarch Distance Field Render Pipeline"),
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &render_shader,
@@ -94,10 +105,9 @@ impl RaymarchDistanceFieldPass {
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         camera_resource: &CameraResource,
-        shared_bind_group: &wgpu::BindGroup,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("DFR Render Pass"),
+            label: Some("Raymarch Distance Field Render Pass"),
             color_attachments: &[wgpu::RenderPassColorAttachment {
                 view,
                 resolve_target: None,
@@ -119,7 +129,6 @@ impl RaymarchDistanceFieldPass {
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_bind_group(0, camera_resource.get_bind_group(), &[]);
         render_pass.set_bind_group(1, &self.bind_group, &[]);
-        render_pass.set_bind_group(2, shared_bind_group, &[]);
 
         render_pass.draw(0..6, 0..1);
     }

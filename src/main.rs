@@ -61,16 +61,8 @@ impl State {
             .await
             .unwrap();
 
-        // TODO: remove feature requirement
         let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: None,
-                    features: wgpu::Features::VERTEX_WRITABLE_STORAGE,
-                    limits: adapter.limits(),
-                },
-                None,
-            )
+            .request_device(&wgpu::DeviceDescriptor::default(), None)
             .await
             .unwrap();
 
@@ -103,14 +95,17 @@ impl State {
         let ses_grid = SESGrid::from_molecule(&molecule, gui.my_app.ses_resolution);
 
         let probe_compute_pass = ProbePass::new(&device, &molecule, &ses_grid);
-        let drf_compute_pass = DistanceFieldRefinementPass::new(&device, &ses_grid);
+        let shared_buffers = probe_compute_pass.get_shared_buffers();
+
+        let drf_compute_pass = DistanceFieldRefinementPass::new(&device, &ses_grid, shared_buffers);
 
         let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecule);
         let raymarch_pass = RaymarchDistanceFieldPass::new(
             &device,
             &config,
             &camera_resource,
-            &drf_compute_pass.df_buffer,
+            &shared_buffers.ses_grid_buffer,
+            drf_compute_pass.get_distance_field_buffer(),
         );
 
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
@@ -148,7 +143,10 @@ impl State {
             self.spacefill_pass =
                 SpacefillPass::new(&self.device, &self.config, &self.camera_resource, &molecule);
             self.probe_compute_pass = ProbePass::new(&self.device, &molecule, &self.ses_grid);
-            self.drf_compute_pass = DistanceFieldRefinementPass::new(&self.device, &self.ses_grid);
+            let shared_buffers = self.probe_compute_pass.get_shared_buffers();
+
+            self.drf_compute_pass =
+                DistanceFieldRefinementPass::new(&self.device, &self.ses_grid, shared_buffers);
 
             self.gui.my_app.file_to_load = None;
 
@@ -190,7 +188,7 @@ impl State {
         self.probe_compute_pass
             .update_grid(&self.queue, &self.ses_grid);
 
-        self.drf_compute_pass.num_grid_points = self.ses_grid.get_num_grid_points();
+        self.drf_compute_pass.update_grid(&self.ses_grid);
     }
 }
 
@@ -258,7 +256,7 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                 if state.gui.my_app.render_spacefill {
                     state.spacefill_pass.render(
                         &view,
-                        &depth_view,
+                        depth_view,
                         &mut encoder,
                         &state.camera_resource,
                     );
@@ -266,8 +264,8 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
 
                 // Render SES surface
                 if state.gui.my_app.render_ses_surface {
-                    state.drf_compute_pass.execute(&mut encoder, &state.probe_compute_pass.shared_bind_group);
-                    state.raymarch_pass.render(&view, depth_view, &mut encoder, &state.camera_resource, &state.probe_compute_pass.shared_bind_group)
+                    state.drf_compute_pass.execute(&mut encoder);
+                    state.raymarch_pass.render(&view, depth_view, &mut encoder, &state.camera_resource)
                 }
 
 

@@ -1,12 +1,12 @@
 use wgpu::{BindGroupLayout, Device};
 
-use super::buffer::ProbePassBuffers;
+use super::buffer::{ProbePassBuffers, SharedBuffers};
 
-pub struct ProbePassBindGroupLayout(wgpu::BindGroupLayout);
+pub struct ProbePassBindGroup;
 
-impl ProbePassBindGroupLayout {
-    pub fn init(device: &Device) -> BindGroupLayout {
-        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+impl ProbePassBindGroup {
+    pub const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'_> =
+        wgpu::BindGroupLayoutDescriptor {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
@@ -22,7 +22,7 @@ impl ProbePassBindGroupLayout {
                     binding: 1,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: false },
+                        ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -58,31 +58,9 @@ impl ProbePassBindGroupLayout {
                     },
                     count: None,
                 },
-            ],
-            label: None,
-        })
-    }
-}
-
-pub struct SharedBindGroupLayout(wgpu::BindGroupLayout);
-
-impl SharedBindGroupLayout {
-    pub fn init(device: &Device) -> BindGroupLayout {
-        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[
                 wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::FRAGMENT,
+                    binding: 5,
+                    visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { read_only: false },
                         has_dynamic_offset: false,
@@ -91,29 +69,25 @@ impl SharedBindGroupLayout {
                     count: None,
                 },
             ],
-            label: None,
-        })
-    }
-}
+            label: Some("Probe Pass Bind Group Layout"),
+        };
 
-pub struct ProbePassBindGroup(pub wgpu::BindGroup);
-
-impl ProbePassBindGroup {
     pub fn init(
         device: &Device,
         layout: &BindGroupLayout,
         buffers: &ProbePassBuffers,
+        shared_buffers: &SharedBuffers,
     ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: buffers.neighbor_atom_grid_buffer.as_entire_binding(),
+                    resource: shared_buffers.ses_grid_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: buffers.grid_points_buffer.as_entire_binding(),
+                    resource: buffers.neighbor_atom_grid_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
@@ -127,33 +101,14 @@ impl ProbePassBindGroup {
                     binding: 4,
                     resource: buffers.grid_cell_size_buffer.as_entire_binding(),
                 },
-            ],
-            label: None,
-        })
-    }
-}
-
-pub struct SharedBindGroup(pub wgpu::BindGroup);
-
-impl SharedBindGroup {
-    pub fn init(
-        device: &Device,
-        layout: &BindGroupLayout,
-        buffers: &ProbePassBuffers,
-    ) -> wgpu::BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout,
-            entries: &[
                 wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: buffers.ses_grid_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: buffers.grid_point_classification_buffer.as_entire_binding(),
+                    binding: 5,
+                    resource: shared_buffers
+                        .grid_point_classification_buffer
+                        .as_entire_binding(),
                 },
             ],
-            label: None,
+            label: Some("Probe Pass Bind Group"),
         })
     }
 }

@@ -14,18 +14,14 @@ struct Atom {
     color: vec4<f32>,
 };
 
-@group(0) @binding(0) var<uniform> neighbor_grid: GridUniform;
-
-// TODO: remove this stuff
-@group(0) @binding(1) var<storage, read_write> grid_points: array<Atom>;
+@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(0) @binding(1) var<uniform> neighbor_grid: GridUniform;
 
 @group(0) @binding(2) var<storage, read> sorted_atoms: array<Atom>;
 @group(0) @binding(3) var<storage, read> grid_cell_start: array<u32>;
 @group(0) @binding(4) var<storage, read> grid_cell_size: array<u32>;
 
-// Shared resources with Distance field refinement pass
-@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(1) @binding(1) var<storage, read_write> grid_point_class: array<u32>;
+@group(0) @binding(5) var<storage, read_write> grid_point_class: array<u32>;
 
 @stage(compute)
 @workgroup_size(64)
@@ -37,7 +33,7 @@ fn main(
     var GRID_POINT_CLASS_BOUNDARY: u32 = 2u;
 
     var grid_point_index: u32 = global_invocation_id.x;
-    var total = arrayLength(&grid_points);
+    var total = arrayLength(&grid_point_class);
     if (grid_point_index >= total) {
         return;
     }
@@ -50,10 +46,6 @@ fn main(
         f32((grid_point_index / ses_grid.resolution) % ses_grid.resolution),
         f32(grid_point_index / (ses_grid.resolution * ses_grid.resolution))
     ) * ses_grid.offset;
-
-    // Compute grid point's position, save it to a buffer
-    grid_points[grid_point_index].position = grid_point;
-    grid_points[grid_point_index].radius = 0.3;
 
     var offset_grid_point = grid_point - neighbor_grid.origin.xyz;
 
@@ -83,13 +75,11 @@ fn main(
 
                     if (distance < atom.radius - ses_grid.offset) {
                         grid_point_class[grid_point_index] = GRID_POINT_CLASS_INTERIOR;
-                        grid_points[grid_point_index].color = vec4<f32>(1.0);
                         return;
                     }
-                    // TODO refactor 1.2 constant into uniform (PROBE_RADIUS)
+                    // TODO: refactor 1.2 constant into uniform (PROBE_RADIUS)
                     if (distance < atom.radius + 1.2) {
                         grid_point_class[grid_point_index] = GRID_POINT_CLASS_BOUNDARY;
-                        grid_points[grid_point_index].color = grid_points[grid_point_index].color / 2.0 + atom.color / 2.0;
                     }
                 }
             }

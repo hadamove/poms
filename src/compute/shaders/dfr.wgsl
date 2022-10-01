@@ -1,4 +1,3 @@
-// FOR EACH BOUNDARY POINT, FIND THE NEAREST EXTERIOR POINT
 struct GridUniform {
     origin: vec4<f32>,
     resolution: u32,
@@ -9,11 +8,9 @@ struct GridUniform {
 };
 
 
-@group(0) @binding(0) var<storage, read_write> distance_field: array<f32>;
-
-// Shared resources
-@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(1) @binding(1) var<storage, read_write> grid_point_class: array<u32>;
+@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(0) @binding(1) var<storage, read> grid_point_class: array<u32>;
+@group(0) @binding(2) var<storage, read_write> distance_field: array<f32>;
 
 
 fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
@@ -62,7 +59,7 @@ fn compute_distance(grid_point_index: u32) -> f32 {
 fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {
-    // TODO replace everywhere with constants when updating syntax
+    // TODO: replace everywhere with constants when updating syntax
     var GRID_POINT_CLASS_EXTERIOR: u32 = 0u;
     var GRID_POINT_CLASS_INTERIOR: u32 = 1u;
     var GRID_POINT_CLASS_BOUNDARY: u32 = 2u;

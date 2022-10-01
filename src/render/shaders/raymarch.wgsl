@@ -17,9 +17,9 @@ struct GridUniform {
 };
 
 @group(0) @binding(0) var<uniform> camera: CameraUniform;
-@group(1) @binding(0) var<storage, read_write> distance_field: array<f32>;
-@group(2) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(2) @binding(1) var<storage, read_write> grid_point_class: array<u32>;
+
+@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(1) @binding(1) var<storage, read> distance_field: array<f32>;
 
 
 fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
