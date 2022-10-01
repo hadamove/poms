@@ -28,7 +28,7 @@ impl SpacefillPass {
                     binding: 1,
                     visibility: wgpu::ShaderStages::VERTEX,
                     ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: false },
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -55,7 +55,7 @@ impl SpacefillPass {
                 push_constant_ranges: &[],
             });
 
-        let shader = device.create_shader_module(&wgpu::include_wgsl!("../shaders/atom.wgsl"));
+        let shader = device.create_shader_module(&wgpu::include_wgsl!("../shaders/spacefill.wgsl"));
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Render Pipeline"),
