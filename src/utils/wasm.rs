@@ -46,6 +46,7 @@ pub fn update_canvas_size(window: &Window) -> Option<PhysicalSize<u32>> {
 
 #[cfg(target_arch = "wasm32")]
 pub async fn fetch_file(filename: String) -> String {
+    // TODO: get rid of this
     // Since it is more difficult to access the filesystem in the browser,
     // we will fetch the file from local storage using http protocol
     use wasm_bindgen::JsCast;

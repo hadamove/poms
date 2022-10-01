@@ -11,6 +11,8 @@ pub struct ProbePassBuffers {
     pub sorted_atoms_buffer: wgpu::Buffer,
     pub grid_cell_start_buffer: wgpu::Buffer,
     pub grid_cell_size_buffer: wgpu::Buffer,
+
+    pub grid_point_classification_buffer: wgpu::Buffer,
 }
 
 impl ProbePassBuffers {
@@ -21,14 +23,14 @@ impl ProbePassBuffers {
     ) -> Self {
         let ses_grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("SES Grid Uniform Buffer"),
-            contents: bytemuck::cast_slice(&[ses_grid.grid]),
-            usage: wgpu::BufferUsages::UNIFORM,
+            contents: bytemuck::cast_slice(&[ses_grid.uniform]),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let neighbor_atom_grid_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Neighbor Atoms Grid Uniform Buffer"),
-                contents: bytemuck::cast_slice(&[neighbor_atom_grid.grid]),
+                contents: bytemuck::cast_slice(&[neighbor_atom_grid.uniform]),
                 usage: wgpu::BufferUsages::UNIFORM,
             });
 
@@ -59,6 +61,13 @@ impl ProbePassBuffers {
             usage: wgpu::BufferUsages::STORAGE,
         });
 
+        let grid_point_classification_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Grid point classification buffer"),
+                contents: bytemuck::cast_slice(&vec![0u32; num_grid_points as usize]),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+
         Self {
             ses_grid_buffer,
             neighbor_atom_grid_buffer,
@@ -66,6 +75,7 @@ impl ProbePassBuffers {
             sorted_atoms_buffer,
             grid_cell_start_buffer,
             grid_cell_size_buffer,
+            grid_point_classification_buffer,
         }
     }
 }

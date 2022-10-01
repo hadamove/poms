@@ -6,10 +6,72 @@ struct CameraUniform {
     proj_inverse: mat4x4<f32>,
 };
 
-@group(0) @binding(0) var<uniform> camera: CameraUniform;
 
-fn distance_from_sphere(point: vec3<f32>, center: vec3<f32>, radius: f32) -> f32 {
-    return length(point  - center) - radius;
+struct GridUniform {
+    origin: vec4<f32>,
+    resolution: u32,
+    offset: f32,
+    size: f32,
+    // Add 8 bytes padding to avoid alignment issues.
+    _padding: f32,
+};
+
+@group(0) @binding(0) var<uniform> camera: CameraUniform;
+@group(1) @binding(0) var<storage, read_write> distance_field: array<f32>;
+@group(2) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(2) @binding(1) var<storage, read_write> grid_point_class: array<u32>;
+
+
+fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
+    return ses_grid.origin.xyz + vec3<f32>(
+        f32(grid_point_index % ses_grid.resolution),
+        f32((grid_point_index / ses_grid.resolution) % ses_grid.resolution),
+        f32(grid_point_index / (ses_grid.resolution * ses_grid.resolution))
+    ) * ses_grid.offset;
+}
+
+fn distance_from_df(point: vec3<f32>) -> f32 {
+    if (point.x < ses_grid.origin.x || point.y < ses_grid.origin.y || point.z < ses_grid.origin.z ||
+        point.x > ses_grid.origin.x + f32(ses_grid.resolution) * ses_grid.offset ||
+        point.y > ses_grid.origin.y + f32(ses_grid.resolution) * ses_grid.offset ||
+        point.z > ses_grid.origin.z + f32(ses_grid.resolution) * ses_grid.offset) {
+        // Point is outside the grid.
+        return 1.2;
+    }
+
+    var grid_space_point = point - ses_grid.origin.xyz;
+    var grid_space_coords = vec3<i32>(grid_space_point / ses_grid.offset);
+    
+    var res = i32(ses_grid.resolution);
+
+    var grid_point_index = grid_space_coords.x +
+        grid_space_coords.y * res +
+        grid_space_coords.z * res * res;
+    
+
+    var pos = grid_point_index_to_position(u32(grid_point_index));
+    var weight = (point - pos) / ses_grid.offset;
+
+    var d000 = distance_field[grid_point_index];
+    var d100 = distance_field[grid_point_index + 1];
+    var d010 = distance_field[grid_point_index + res];
+    var d001 = distance_field[grid_point_index + res * res];
+    var d110 = distance_field[grid_point_index + res + 1];
+    var d011 = distance_field[grid_point_index + res * res + res];
+    var d101 = distance_field[grid_point_index + res * res + 1];
+    var d111 = distance_field[grid_point_index + res * res + res + 1];
+
+    var d00 = mix(d000, d100, weight.x);
+    var d01 = mix(d001, d101, weight.x);
+    var d10 = mix(d010, d110, weight.x);
+    var d11 = mix(d011, d111, weight.x);
+
+    var d0 = mix(d00, d10, weight.y);
+    var d1 = mix(d01, d11, weight.y);
+
+    var d = mix(d0, d1, weight.z);
+
+    return d;
 }
 
 struct RayHit {
@@ -20,20 +82,29 @@ struct RayHit {
 
 fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
     var MAX_STEPS = 128u;
-    var MINIMUM_HIT_DISTANCE: f32 = 0.001;
-    var SPHERE_CENTER = vec3<f32>(79.17576, -51.610718, -5.8748875);
+    var MINIMUM_HIT_DISTANCE: f32 = 1.1;
 
     var rayhit: RayHit;
     var total_distance: f32 = 0.0;
 
     for (var i: u32 = 0u; i < MAX_STEPS; i += 1u) {
         var current_position: vec3<f32> = origin + total_distance * direction;
-        var distance = distance_from_sphere(current_position, SPHERE_CENTER, 10.0);
+        var distance = distance_from_df(current_position);
 
-        if (distance < MINIMUM_HIT_DISTANCE) {
+        if (distance < 0.5) {
+            // calculate normal 
+            var small_step = vec3<f32>(0.01, 0.0, 0.0);
+
+            var p = current_position + distance * direction;
+            var gradient_x = distance_from_df(p + small_step.xyy) - distance_from_df(p - small_step.xyy);
+            var gradient_y = distance_from_df(p + small_step.yxy) - distance_from_df(p - small_step.yxy);
+            var gradient_z = distance_from_df(p + small_step.yyx) - distance_from_df(p - small_step.yyx);
+
+            var normal = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
+
             rayhit.hit = true;
-            rayhit.point = current_position;
-            rayhit.color = vec3<f32>(1.0, 0.0, 1.0);
+            rayhit.point = current_position + distance * direction;
+            rayhit.color = normal * 0.5 + 0.5;
             return rayhit;
         }
         total_distance += distance;

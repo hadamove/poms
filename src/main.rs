@@ -1,7 +1,9 @@
 use cgmath::Vector3;
+use compute::dfr_pass::DistanceFieldRefinementPass;
+use compute::grid::{GridSpacing, SESGrid};
 use compute::probe_pass::ProbePass;
 use gui::egui;
-use render::passes::{ball_and_stick_pass::BallAndStickPass, ses_pass::SESRenderPass};
+use render::passes::spacefill_pass::SpacefillPass;
 use render::resources::camera::CameraResource;
 use render::resources::texture;
 use utils::camera::{self, Camera, CameraController, Projection};
@@ -28,12 +30,12 @@ struct State {
     camera_resource: CameraResource,
     camera_controller: CameraController,
 
-    atom_render_pass: BallAndStickPass,
-    ses_render_pass: SESRenderPass,
+    ses_grid: SESGrid,
+    spacefill_pass: SpacefillPass,
     probe_compute_pass: ProbePass,
+    drf_compute_pass: DistanceFieldRefinementPass,
 
     depth_texture: texture::Texture,
-    draw_atoms: bool,
 
     gui: egui::Gui,
 }
@@ -74,7 +76,9 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let molecule = parser::parse_pdb_file(&"./molecules/1aon.pdb".to_string());
+        let gui = egui::Gui::new(window, &device, &config, event_loop_proxy);
+
+        let molecule = parser::parse_pdb_file(&"./molecules/1cqw.pdb".to_string());
 
         let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
         let offset = Vector3::new(0.0, 0.0, 50.0);
@@ -87,13 +91,15 @@ impl State {
         let camera_controller = camera::CameraController::new(100.0, 0.3);
 
         let camera_resource = CameraResource::new(&device);
-        let atom_render_pass = BallAndStickPass::new(&device, &config, &camera_resource, &molecule);
-        let ses_render_pass = SESRenderPass::new(&device, &config, &camera_resource);
-        let probe_compute_pass = ProbePass::new(&device, &config, &camera_resource, &molecule);
+
+        let ses_grid = SESGrid::from_molecule(&molecule, gui.my_app.ses_resolution);
+        let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecule);
+        let probe_compute_pass =
+            ProbePass::new(&device, &config, &camera_resource, &molecule, &ses_grid);
+        let drf_compute_pass =
+            DistanceFieldRefinementPass::new(&device, &config, &camera_resource, &ses_grid);
 
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
-
-        let gui = egui::Gui::new(window, &device, &config, event_loop_proxy);
 
         Self {
             surface,
@@ -106,28 +112,45 @@ impl State {
             camera_resource,
             camera_controller,
 
-            atom_render_pass,
-            ses_render_pass,
+            ses_grid,
+            spacefill_pass,
             probe_compute_pass,
+            drf_compute_pass,
+
             depth_texture,
 
             gui,
-            draw_atoms: true,
         }
     }
 
     fn update_molecule(&mut self) {
         if let Some(path) = &self.gui.my_app.file_to_load {
             let molecule = parser::parse_pdb_file(path);
-            self.atom_render_pass =
-                BallAndStickPass::new(&self.device, &self.config, &self.camera_resource, &molecule);
+            self.ses_grid = SESGrid::from_molecule(&molecule, self.gui.my_app.ses_resolution);
+
+            self.spacefill_pass =
+                SpacefillPass::new(&self.device, &self.config, &self.camera_resource, &molecule);
+            self.probe_compute_pass = ProbePass::new(
+                &self.device,
+                &self.config,
+                &self.camera_resource,
+                &molecule,
+                &self.ses_grid,
+            );
+            self.drf_compute_pass = DistanceFieldRefinementPass::new(
+                &self.device,
+                &self.config,
+                &self.camera_resource,
+                &self.ses_grid,
+            );
+
             self.gui.my_app.file_to_load = None;
 
             let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
             let offset = Vector3::new(0.0, 0.0, 50.0);
 
             self.camera =
-                camera::Camera::new(camera_eye - offset, cgmath::Deg(-90.0), cgmath::Deg(-20.0));
+                camera::Camera::new(camera_eye + offset, cgmath::Deg(-90.0), cgmath::Deg(0.0));
         }
     }
 
@@ -143,21 +166,7 @@ impl State {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        self.camera_controller.process_events(event)
-            || self.gui.handle_events(event)
-            || match event {
-                WindowEvent::KeyboardInput { input, .. } => {
-                    if let Some(keycode) = input.virtual_keycode {
-                        if keycode == VirtualKeyCode::X {
-                            println!("X pressed");
-                            self.draw_atoms = !self.draw_atoms;
-                            return true;
-                        }
-                    }
-                    false
-                }
-                _ => false,
-            }
+        self.gui.handle_events(event) || self.camera_controller.process_events(event)
     }
 
     fn update(&mut self, time_delta: std::time::Duration) {
@@ -167,6 +176,15 @@ impl State {
         self.camera_resource
             .update(&self.queue, &self.camera, &self.projection);
         self.update_molecule();
+
+        self.ses_grid
+            .uniform
+            .update_spacing(GridSpacing::Resolution(self.gui.my_app.ses_resolution));
+
+        self.probe_compute_pass
+            .update_grid(&self.queue, &self.ses_grid);
+
+        self.drf_compute_pass.num_grid_points = self.ses_grid.get_num_grid_points();
     }
 }
 
@@ -239,24 +257,21 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     &state.camera_resource,
                 );
 
-                // Copy data from the probe compute pass to cpu
+                if state.gui.my_app.render_ses_surface {
+                    state.drf_compute_pass.execute(&mut encoder, &state.probe_compute_pass.shared_bind_group);
+                    // TODO: refactor. this line is awfully long
+                    state.drf_compute_pass.render_tmp(&view, &depth_view, &mut encoder, &state.camera_resource, &state.probe_compute_pass.shared_bind_group);
+                }
 
                 // Render atoms
-                if state.draw_atoms {
-                    state.atom_render_pass.render(
+                if state.gui.my_app.render_spacefill {
+                    state.spacefill_pass.render(
                         &view,
                         &depth_view,
                         &mut encoder,
                         &state.camera_resource,
                     );
                 }
-
-                state.ses_render_pass.render(
-                    &view,
-                    &depth_view,
-                    &mut encoder,
-                    &state.camera_resource,
-                );
 
                 // Render GUI
                 state.gui.render(

@@ -1,19 +1,11 @@
-struct GridPoint {
-    position: vec3<f32>,
-    radius: f32,
-    color: vec4<f32>,
-};
-
-struct GridPointsBuffer {
-    data: array<GridPoint>,
-};
 
 struct GridUniform {
     origin: vec4<f32>,
     resolution: u32,
     offset: f32,
+    size: f32,
     // Add 8 bytes padding to avoid alignment issues.
-    _padding: vec2<f32>,
+    _padding: f32,
 };
 
 struct Atom {
@@ -22,32 +14,35 @@ struct Atom {
     color: vec4<f32>,
 };
 
-struct SortedAtomBuffer {
-    atoms: array<Atom>,
-};
+@group(0) @binding(0) var<uniform> neighbor_grid: GridUniform;
 
-struct GridCellStartIndicesBuffer {
-    indices: array<u32>,
-};;
+// TODO: remove this stuff
+@group(0) @binding(1) var<storage, read_write> grid_points: array<Atom>;
 
-@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(0) @binding(1) var<uniform> neighbor_grid: GridUniform;
-@group(0) @binding(2) var<storage, read_write> grid_points: GridPointsBuffer;
+@group(0) @binding(2) var<storage, read> sorted_atoms: array<Atom>;
+@group(0) @binding(3) var<storage, read> grid_cell_start: array<u32>;
+@group(0) @binding(4) var<storage, read> grid_cell_size: array<u32>;
 
-@group(0) @binding(3) var<storage, read> sorted_atoms: SortedAtomBuffer;
-@group(0) @binding(4) var<storage, read> grid_cell_start: GridCellStartIndicesBuffer;
-@group(0) @binding(5) var<storage, read> grid_cell_size: GridCellStartIndicesBuffer;
+// Shared resources with Distance field refinement pass
+@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(1) @binding(1) var<storage, read_write> grid_point_class: array<u32>;
 
 @stage(compute)
 @workgroup_size(64)
 fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {
+    var GRID_POINT_CLASS_EXTERIOR: u32 = 0u;
+    var GRID_POINT_CLASS_INTERIOR: u32 = 1u;
+    var GRID_POINT_CLASS_BOUNDARY: u32 = 2u;
+
     var grid_point_index: u32 = global_invocation_id.x;
-    var total = arrayLength(&grid_points.data);
+    var total = arrayLength(&grid_points);
     if (grid_point_index >= total) {
         return;
     }
+
+    grid_point_class[grid_point_index] = GRID_POINT_CLASS_EXTERIOR;
 
     // Compute the grid position
     var grid_point: vec3<f32> = ses_grid.origin.xyz + vec3<f32>(
@@ -57,8 +52,8 @@ fn main(
     ) * ses_grid.offset;
 
     // Compute grid point's position, save it to a buffer
-    grid_points.data[grid_point_index].position = grid_point;
-    grid_points.data[grid_point_index].radius = 0.3;
+    grid_points[grid_point_index].position = grid_point;
+    grid_points[grid_point_index].radius = 0.3;
 
     var offset_grid_point = grid_point - neighbor_grid.origin.xyz;
 
@@ -77,16 +72,24 @@ fn main(
                 if (neighbor_cell_index >= res * res * res || neighbor_cell_index < 0) {
                     continue;
                 }
-                var start_index: u32 = grid_cell_start.indices[u32(neighbor_cell_index)];
-                var cell_size: u32 = grid_cell_size.indices[u32(neighbor_cell_index)];
+                var start_index: u32 = grid_cell_start[u32(neighbor_cell_index)];
+                var cell_size: u32 = grid_cell_size[u32(neighbor_cell_index)];
 
                 for (var i: i32 = 0; i < i32(cell_size); i = i + 1) {
                     var atom_index: u32 = start_index + u32(i);
 
-                    var atom: Atom = sorted_atoms.atoms[atom_index];
+                    var atom: Atom = sorted_atoms[atom_index];
                     var distance: f32 = length(grid_point - atom.position);
+
+                    if (distance < atom.radius - ses_grid.offset) {
+                        grid_point_class[grid_point_index] = GRID_POINT_CLASS_INTERIOR;
+                        grid_points[grid_point_index].color = vec4<f32>(1.0);
+                        return;
+                    }
+                    // TODO refactor 1.2 constant into uniform (PROBE_RADIUS)
                     if (distance < atom.radius + 1.2) {
-                        grid_points.data[grid_point_index].color = grid_points.data[grid_point_index].color / 2.0 + atom.color / 2.0;
+                        grid_point_class[grid_point_index] = GRID_POINT_CLASS_BOUNDARY;
+                        grid_points[grid_point_index].color = grid_points[grid_point_index].color / 2.0 + atom.color / 2.0;
                     }
                 }
             }
