@@ -1,6 +1,8 @@
 use cgmath::SquareMatrix;
 use wgpu::util::DeviceExt;
 
+use crate::utils::camera::{Camera, Projection};
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct CameraUniform {
@@ -22,7 +24,7 @@ impl CameraUniform {
         }
     }
 
-    fn update_uniform(&mut self, camera: &crate::Camera, projection: &crate::Projection) {
+    fn update_uniform(&mut self, camera: &Camera, projection: &Projection) {
         self.position = camera.position.to_homogeneous().into();
         let view_matrix = camera.calc_matrix();
         let proj_matrix = projection.calc_matrix();
@@ -91,12 +93,7 @@ impl CameraResource {
         &self.camera_bind_group_layout
     }
 
-    pub fn update(
-        &mut self,
-        queue: &wgpu::Queue,
-        camera: &crate::Camera,
-        projection: &crate::Projection,
-    ) {
+    pub fn update(&mut self, queue: &wgpu::Queue, camera: &Camera, projection: &Projection) {
         self.camera_uniform.update_uniform(camera, projection);
         queue.write_buffer(
             &self.camera_buffer,
