@@ -1,4 +1,4 @@
-use crate::render::resources::camera::CameraResource;
+use super::resources::camera::CameraResource;
 use crate::utils::molecule::Molecule;
 use wgpu::util::DeviceExt;
 

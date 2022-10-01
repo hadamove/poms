@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use super::grid::{NeighborAtomGrid, SESGrid};
+use crate::compute::grid::{NeighborAtomGrid, SESGrid};
 use crate::utils::molecule::Atom;
 
 pub struct ProbePassBuffers {

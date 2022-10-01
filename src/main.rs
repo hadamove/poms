@@ -1,11 +1,13 @@
 use cgmath::Vector3;
-use compute::dfr_pass::DistanceFieldRefinementPass;
 use compute::grid::{GridSpacing, SESGrid};
-use compute::probe_pass::ProbePass;
+use compute::passes::dfr_pass::DistanceFieldRefinementPass;
+use compute::passes::probe_pass::ProbePass;
 use gui::egui;
 use render::passes::spacefill_pass::SpacefillPass;
-use render::resources::camera::CameraResource;
-use render::resources::texture;
+
+use render::passes::resources::camera::CameraResource;
+use render::passes::resources::texture;
+
 use utils::camera::{self, Camera, CameraController, Projection};
 use utils::parser;
 use winit::{
@@ -237,10 +239,7 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     .device
                     .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
-                let depth_view = state
-                    .depth_texture
-                    .texture
-                    .create_view(&wgpu::TextureViewDescriptor::default());
+                let depth_view = &state.depth_texture.view;
 
                 state.probe_compute_pass.execute(&mut encoder);
 

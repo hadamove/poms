@@ -1,10 +1,10 @@
-use super::grid::{NeighborAtomGrid, SESGrid};
+use crate::compute::grid::{NeighborAtomGrid, SESGrid};
 use crate::utils::molecule::Molecule;
 
-use super::bind_group::{
+use super::resources::bind_group::{
     ProbePassBindGroup, ProbePassBindGroupLayout, SharedBindGroup, SharedBindGroupLayout,
 };
-use super::buffer::ProbePassBuffers;
+use super::resources::buffer::ProbePassBuffers;
 
 pub struct ProbePass {
     bind_group: wgpu::BindGroup,
@@ -35,7 +35,7 @@ impl ProbePass {
             });
 
         let compute_shader =
-            device.create_shader_module(&wgpu::include_wgsl!("shaders/probe.wgsl"));
+            device.create_shader_module(&wgpu::include_wgsl!("../shaders/probe.wgsl"));
 
         let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("Compute Pipeline"),

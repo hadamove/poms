@@ -1,9 +1,9 @@
 use wgpu::util::DeviceExt;
 
-use crate::render::resources::camera::CameraResource;
+use crate::render::passes::resources::camera::CameraResource;
 
-use super::bind_group::SharedBindGroupLayout;
-use super::grid::SESGrid;
+use super::resources::bind_group::SharedBindGroupLayout;
+use crate::compute::grid::SESGrid;
 
 pub struct DistanceFieldRefinementPass {
     compute_pipeline: wgpu::ComputePipeline,
@@ -59,7 +59,8 @@ impl DistanceFieldRefinementPass {
                 push_constant_ranges: &[],
             });
 
-        let compute_shader = device.create_shader_module(&wgpu::include_wgsl!("shaders/dfr.wgsl"));
+        let compute_shader =
+            device.create_shader_module(&wgpu::include_wgsl!("../shaders/dfr.wgsl"));
 
         let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("DFR Compute Pipeline"),
@@ -69,7 +70,7 @@ impl DistanceFieldRefinementPass {
         });
 
         let render_shader =
-            device.create_shader_module(&wgpu::include_wgsl!("../render/shaders/raymarch.wgsl"));
+            device.create_shader_module(&wgpu::include_wgsl!("../../render/shaders/raymarch.wgsl"));
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
