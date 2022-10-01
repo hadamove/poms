@@ -94,8 +94,7 @@ impl State {
 
         let ses_grid = SESGrid::from_molecule(&molecule, gui.my_app.ses_resolution);
         let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecule);
-        let probe_compute_pass =
-            ProbePass::new(&device, &config, &camera_resource, &molecule, &ses_grid);
+        let probe_compute_pass = ProbePass::new(&device, &molecule, &ses_grid);
         let drf_compute_pass =
             DistanceFieldRefinementPass::new(&device, &config, &camera_resource, &ses_grid);
 
@@ -130,13 +129,7 @@ impl State {
 
             self.spacefill_pass =
                 SpacefillPass::new(&self.device, &self.config, &self.camera_resource, &molecule);
-            self.probe_compute_pass = ProbePass::new(
-                &self.device,
-                &self.config,
-                &self.camera_resource,
-                &molecule,
-                &self.ses_grid,
-            );
+            self.probe_compute_pass = ProbePass::new(&self.device, &molecule, &self.ses_grid);
             self.drf_compute_pass = DistanceFieldRefinementPass::new(
                 &self.device,
                 &self.config,
@@ -250,18 +243,6 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     .create_view(&wgpu::TextureViewDescriptor::default());
 
                 state.probe_compute_pass.execute(&mut encoder);
-                state.probe_compute_pass.render(
-                    &view,
-                    &depth_view,
-                    &mut encoder,
-                    &state.camera_resource,
-                );
-
-                if state.gui.my_app.render_ses_surface {
-                    state.drf_compute_pass.execute(&mut encoder, &state.probe_compute_pass.shared_bind_group);
-                    // TODO: refactor. this line is awfully long
-                    state.drf_compute_pass.render_tmp(&view, &depth_view, &mut encoder, &state.camera_resource, &state.probe_compute_pass.shared_bind_group);
-                }
 
                 // Render atoms
                 if state.gui.my_app.render_spacefill {
@@ -271,6 +252,12 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                         &mut encoder,
                         &state.camera_resource,
                     );
+                }
+
+                if state.gui.my_app.render_ses_surface {
+                    state.drf_compute_pass.execute(&mut encoder, &state.probe_compute_pass.shared_bind_group);
+                    // TODO: refactor. this line is awfully long (move into render pass)
+                    state.drf_compute_pass.render_tmp(&view, &depth_view, &mut encoder, &state.camera_resource, &state.probe_compute_pass.shared_bind_group);
                 }
 
                 // Render GUI
