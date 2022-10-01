@@ -3,6 +3,7 @@ use compute::grid::{GridSpacing, SESGrid};
 use compute::passes::dfr_pass::DistanceFieldRefinementPass;
 use compute::passes::probe_pass::ProbePass;
 use gui::egui;
+use render::passes::raymarch_pass::RaymarchDistanceFieldPass;
 use render::passes::spacefill_pass::SpacefillPass;
 
 use render::passes::resources::camera::CameraResource;
@@ -33,9 +34,14 @@ struct State {
     camera_controller: CameraController,
 
     ses_grid: SESGrid,
-    spacefill_pass: SpacefillPass,
+
+    // Compute passes
     probe_compute_pass: ProbePass,
     drf_compute_pass: DistanceFieldRefinementPass,
+
+    // Render passes
+    spacefill_pass: SpacefillPass,
+    raymarch_pass: RaymarchDistanceFieldPass,
 
     depth_texture: texture::Texture,
 
@@ -95,10 +101,17 @@ impl State {
         let camera_resource = CameraResource::new(&device);
 
         let ses_grid = SESGrid::from_molecule(&molecule, gui.my_app.ses_resolution);
-        let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecule);
+
         let probe_compute_pass = ProbePass::new(&device, &molecule, &ses_grid);
-        let drf_compute_pass =
-            DistanceFieldRefinementPass::new(&device, &config, &camera_resource, &ses_grid);
+        let drf_compute_pass = DistanceFieldRefinementPass::new(&device, &ses_grid);
+
+        let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecule);
+        let raymarch_pass = RaymarchDistanceFieldPass::new(
+            &device,
+            &config,
+            &camera_resource,
+            &drf_compute_pass.df_buffer,
+        );
 
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
 
@@ -114,9 +127,12 @@ impl State {
             camera_controller,
 
             ses_grid,
-            spacefill_pass,
+
             probe_compute_pass,
             drf_compute_pass,
+
+            spacefill_pass,
+            raymarch_pass,
 
             depth_texture,
 
@@ -132,12 +148,7 @@ impl State {
             self.spacefill_pass =
                 SpacefillPass::new(&self.device, &self.config, &self.camera_resource, &molecule);
             self.probe_compute_pass = ProbePass::new(&self.device, &molecule, &self.ses_grid);
-            self.drf_compute_pass = DistanceFieldRefinementPass::new(
-                &self.device,
-                &self.config,
-                &self.camera_resource,
-                &self.ses_grid,
-            );
+            self.drf_compute_pass = DistanceFieldRefinementPass::new(&self.device, &self.ses_grid);
 
             self.gui.my_app.file_to_load = None;
 
@@ -253,11 +264,12 @@ async fn run_loop(event_loop: EventLoop<egui::Event>, window: Window) {
                     );
                 }
 
+                // Render SES surface
                 if state.gui.my_app.render_ses_surface {
                     state.drf_compute_pass.execute(&mut encoder, &state.probe_compute_pass.shared_bind_group);
-                    // TODO: refactor. this line is awfully long (move into render pass)
-                    state.drf_compute_pass.render_tmp(&view, &depth_view, &mut encoder, &state.camera_resource, &state.probe_compute_pass.shared_bind_group);
+                    state.raymarch_pass.render(&view, depth_view, &mut encoder, &state.camera_resource, &state.probe_compute_pass.shared_bind_group)
                 }
+
 
                 // Render GUI
                 state.gui.render(
