@@ -11,7 +11,7 @@ use crate::render::passes::resources::texture;
 
 use crate::utils::camera::{self, Camera, CameraController, Projection};
 use crate::utils::parser;
-use winit::{event::*, event_loop::EventLoopProxy, window::Window};
+use winit::{event::*, window::Window};
 
 pub struct State {
     pub surface: wgpu::Surface,
@@ -38,7 +38,7 @@ pub struct State {
 }
 
 impl State {
-    pub async fn new(window: &Window, event_loop_proxy: EventLoopProxy<egui::Event>) -> Self {
+    pub async fn new(window: &Window) -> Self {
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
@@ -56,16 +56,22 @@ impl State {
             .unwrap();
 
         let size = window.inner_size();
+        let supported_format = surface
+            .get_supported_formats(&adapter)
+            .get(0)
+            .expect("No format supported")
+            .to_owned();
+
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface.get_preferred_format(&adapter).unwrap(),
+            format: supported_format,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
         surface.configure(&device, &config);
 
-        let gui = egui::Gui::new(window, &device, &config, event_loop_proxy);
+        let gui = egui::Gui::new(window, &device, &config);
 
         let molecule = parser::parse_pdb_file(&"./molecules/1cqw.pdb".to_string());
 
@@ -159,7 +165,7 @@ impl State {
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
-        self.gui.handle_events(event) || self.camera_controller.process_events(event)
+        self.camera_controller.process_events(event)
     }
 
     pub fn render(&mut self, window: &Window) {
@@ -203,7 +209,7 @@ impl State {
         self.gui.render(
             &view,
             &mut encoder,
-            &window,
+            window,
             &self.device,
             &self.queue,
             &self.config,

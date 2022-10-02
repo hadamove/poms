@@ -32,7 +32,7 @@ impl ProbePass {
             });
 
         let compute_shader =
-            device.create_shader_module(&wgpu::include_wgsl!("../shaders/probe.wgsl"));
+            device.create_shader_module(wgpu::include_wgsl!("../shaders/probe.wgsl"));
 
         let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("Compute Pipeline"),
@@ -70,6 +70,6 @@ impl ProbePass {
         let num_work_groups = f32::ceil(self.num_grid_points as f32 / 64.0) as u32;
         println!("Executing Probe pass {} work groups", num_work_groups);
 
-        compute_pass.dispatch(num_work_groups, 1, 1);
+        compute_pass.dispatch_workgroups(num_work_groups, 1, 1);
     }
 }

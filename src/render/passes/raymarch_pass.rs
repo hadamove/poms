@@ -55,7 +55,7 @@ impl RaymarchDistanceFieldPass {
         });
 
         let render_shader =
-            device.create_shader_module(&wgpu::include_wgsl!("../../render/shaders/raymarch.wgsl"));
+            device.create_shader_module(wgpu::include_wgsl!("../shaders/raymarch.wgsl"));
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -75,11 +75,11 @@ impl RaymarchDistanceFieldPass {
             fragment: Some(wgpu::FragmentState {
                 module: &render_shader,
                 entry_point: "fs_main",
-                targets: &[wgpu::ColorTargetState {
+                targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
-                }],
+                })],
             }),
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: Some(wgpu::DepthStencilState {
@@ -108,14 +108,14 @@ impl RaymarchDistanceFieldPass {
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Raymarch Distance Field Render Pass"),
-            color_attachments: &[wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Load,
                     store: true,
                 },
-            }],
+            })],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                 view: depth_view,
                 depth_ops: Some(wgpu::Operations {

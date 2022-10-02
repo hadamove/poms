@@ -30,16 +30,16 @@ fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
     ) * ses_grid.offset;
 }
 
-fn distance_from_df(point: vec3<f32>) -> f32 {
-    if (point.x < ses_grid.origin.x || point.y < ses_grid.origin.y || point.z < ses_grid.origin.z ||
-        point.x > ses_grid.origin.x + f32(ses_grid.resolution) * ses_grid.offset ||
-        point.y > ses_grid.origin.y + f32(ses_grid.resolution) * ses_grid.offset ||
-        point.z > ses_grid.origin.z + f32(ses_grid.resolution) * ses_grid.offset) {
+fn distance_from_df(position: vec3<f32>) -> f32 {
+    if (position.x < ses_grid.origin.x || position.y < ses_grid.origin.y || position.z < ses_grid.origin.z ||
+        position.x > ses_grid.origin.x + f32(ses_grid.resolution) * ses_grid.offset ||
+        position.y > ses_grid.origin.y + f32(ses_grid.resolution) * ses_grid.offset ||
+        position.z > ses_grid.origin.z + f32(ses_grid.resolution) * ses_grid.offset) {
         // Point is outside the grid.
         return 1.2;
     }
 
-    var grid_space_point = point - ses_grid.origin.xyz;
+    var grid_space_point = position - ses_grid.origin.xyz;
     var grid_space_coords = vec3<i32>(grid_space_point / ses_grid.offset);
     
     var res = i32(ses_grid.resolution);
@@ -49,8 +49,8 @@ fn distance_from_df(point: vec3<f32>) -> f32 {
         grid_space_coords.z * res * res;
     
 
-    var pos = grid_point_index_to_position(u32(grid_point_index));
-    var weight = (point - pos) / ses_grid.offset;
+    var grid_position = grid_point_index_to_position(u32(grid_point_index));
+    var weight = (position - grid_position) / ses_grid.offset;
 
     var d000 = distance_field[grid_point_index];
     var d100 = distance_field[grid_point_index + 1];
@@ -76,7 +76,7 @@ fn distance_from_df(point: vec3<f32>) -> f32 {
 
 struct RayHit {
     hit: bool,
-    point: vec3<f32>,
+    position: vec3<f32>,
     color: vec3<f32>,
 };
 
@@ -103,7 +103,7 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
             var normal = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
 
             rayhit.hit = true;
-            rayhit.point = current_position + distance * direction;
+            rayhit.position = current_position + distance * direction;
             rayhit.color = normal * 0.5 + 0.5;
             return rayhit;
         }
@@ -118,7 +118,7 @@ struct VertexOutput {
     @location(0) uv: vec2<f32>,
 };
 
-@stage(vertex)
+@vertex
 fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
     var quad_vertices = array<vec2<f32>, 6>(
         vec2<f32>(-1.0,  1.0),
@@ -144,7 +144,7 @@ struct FragmentOutput {
     @location(0) color: vec4<f32>,
 };
 
-@stage(fragment)
+@fragment
 fn fs_main(in: VertexOutput) -> FragmentOutput {
     // Ray starts at the camera position.
     var ray_origin: vec3<f32> = camera.pos.xyz;
@@ -163,8 +163,8 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
         discard;
     }
 
-    // Calculate the distance from the camera to the hit point.
-    var rayhit_point_proj = camera.proj * camera.view * vec4<f32>(rayhit.point, 1.0);
+    // Calculate the distance from the camera to the hit position.
+    var rayhit_point_proj = camera.proj * camera.view * vec4<f32>(rayhit.position, 1.0);
     var rayhit_depth = rayhit_point_proj.z / rayhit_point_proj.w;
 
     var out: FragmentOutput;

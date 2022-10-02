@@ -54,8 +54,7 @@ fn compute_distance(grid_point_index: u32) -> f32 {
 }
 
 
-@stage(compute)
-@workgroup_size(64)
+@compute @workgroup_size(64)
 fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {

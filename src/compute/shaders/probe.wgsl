@@ -23,8 +23,7 @@ struct Atom {
 
 @group(0) @binding(5) var<storage, read_write> grid_point_class: array<u32>;
 
-@stage(compute)
-@workgroup_size(64)
+@compute @workgroup_size(64)
 fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {

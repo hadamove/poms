@@ -31,7 +31,7 @@ struct VertexOutput {
 
 // Renders atoms using sphere impostor technique on quad billboards
 // Atom data (position, color, radius) is fetched from a storage buffer
-@stage(vertex)
+@vertex
 fn vs_main(
     @builtin(vertex_index) vertex_index: u32,
 ) -> VertexOutput {
@@ -77,7 +77,7 @@ struct FragmentOutput {
     @location(0) color: vec4<f32>,
 };
 
-@stage(fragment)
+@fragment
 fn fs_main(in: VertexOutput) -> FragmentOutput {
 
     var dist_xy = dot(in.uv, in.uv);

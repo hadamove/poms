@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 pub struct MyApp {
     pub file_to_load: Option<String>,
 
@@ -19,12 +17,8 @@ impl Default for MyApp {
     }
 }
 
-impl epi::App for MyApp {
-    fn name(&self) -> &str {
-        "Molecular Surface Explorer"
-    }
-
-    fn update(&mut self, ctx: &epi::egui::Context, _frame: &epi::Frame) {
+impl MyApp {
+    pub fn ui(&mut self, ctx: &egui::Context) {
         egui::containers::Window::new("Settings").show(ctx, |ui| {
             ui.add(egui::Slider::new(&mut self.ses_resolution, 10..=160).text("SES resolution"));
             ui.add(egui::Checkbox::new(
