@@ -26,7 +26,7 @@ fn main() {
     }
     #[cfg(target_arch = "wasm32")]
     {
-        wasm::init_browser_window(&window);
+        crate::utils::wasm::init_browser_window(&window);
         wasm_bindgen_futures::spawn_local(run_loop(event_loop, window));
     }
 }
