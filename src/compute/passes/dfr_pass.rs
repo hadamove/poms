@@ -2,7 +2,7 @@ use wgpu::util::DeviceExt;
 
 use crate::compute::grid::SESGrid;
 
-use super::resources::buffer::SharedBuffers;
+use super::resources::buffer::{SharedBuffers, MAX_NUM_GRID_POINTS};
 
 pub struct DistanceFieldRefinementPass {
     bind_group: wgpu::BindGroup,
@@ -14,11 +14,9 @@ pub struct DistanceFieldRefinementPass {
 
 impl DistanceFieldRefinementPass {
     pub fn new(device: &wgpu::Device, ses_grid: &SESGrid, shared_buffers: &SharedBuffers) -> Self {
-        let num_grid_points = ses_grid.get_num_grid_points();
-
         let distance_field_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Distance field buffer"),
-            contents: bytemuck::cast_slice(&vec![0f32; num_grid_points as usize]),
+            contents: bytemuck::cast_slice(&vec![0f32; MAX_NUM_GRID_POINTS]),
             usage: wgpu::BufferUsages::STORAGE,
         });
 
@@ -100,7 +98,7 @@ impl DistanceFieldRefinementPass {
             bind_group,
             distance_field_buffer,
             compute_pipeline,
-            num_grid_points,
+            num_grid_points: ses_grid.get_num_grid_points(),
         }
     }
 

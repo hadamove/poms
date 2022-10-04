@@ -2,6 +2,8 @@ use wgpu::util::DeviceExt;
 
 use crate::compute::grid::{NeighborAtomGrid, SESGrid};
 
+pub const MAX_NUM_GRID_POINTS: usize = usize::pow(256, 3);
+
 pub struct ProbePassBuffers {
     pub neighbor_atom_grid_buffer: wgpu::Buffer,
     pub sorted_atoms_buffer: wgpu::Buffer,
@@ -59,11 +61,10 @@ impl SharedBuffers {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
-        let num_grid_points = ses_grid.get_num_grid_points();
         let grid_point_classification_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Grid point classification buffer"),
-                contents: bytemuck::cast_slice(&vec![0u32; num_grid_points as usize]),
+                contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
                 usage: wgpu::BufferUsages::STORAGE,
             });
 
