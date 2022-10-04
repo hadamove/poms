@@ -2,6 +2,7 @@ use crate::compute::grid::{GridSpacing, SESGrid};
 use crate::compute::passes::dfr_pass::DistanceFieldRefinementPass;
 use crate::compute::passes::probe_pass::ProbePass;
 use crate::gui::egui;
+use crate::render::passes::df_visualize_pass::{DistanceFieldVisualizePass, SettingsUniform};
 use crate::render::passes::raymarch_pass::RaymarchDistanceFieldPass;
 use crate::render::passes::spacefill_pass::SpacefillPass;
 use cgmath::Vector3;
@@ -31,6 +32,8 @@ pub struct State {
 
     pub spacefill_pass: SpacefillPass,
     pub raymarch_pass: RaymarchDistanceFieldPass,
+
+    pub df_visualize_pass: DistanceFieldVisualizePass,
 
     pub depth_texture: texture::Texture,
 
@@ -104,6 +107,13 @@ impl State {
             drf_compute_pass.get_distance_field_buffer(),
         );
 
+        let df_visualize_pass = DistanceFieldVisualizePass::new(
+            &device,
+            &config,
+            drf_compute_pass.get_distance_field_buffer(),
+            gui.my_app.ses_resolution,
+        );
+
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
 
         Self {
@@ -124,6 +134,8 @@ impl State {
 
             spacefill_pass,
             raymarch_pass,
+
+            df_visualize_pass,
 
             depth_texture,
 
@@ -191,19 +203,28 @@ impl State {
 
         let depth_view = &self.depth_texture.view;
 
-        self.probe_compute_pass.execute(&mut encoder);
-
         // Render atoms
         if self.gui.my_app.render_spacefill {
             self.spacefill_pass
                 .render(&view, depth_view, &mut encoder, &self.camera_resource);
         }
 
+        // Compute SES surface
+        if self.gui.my_app.compute_ses || self.gui.my_app.compute_ses_once {
+            self.probe_compute_pass.execute(&mut encoder);
+            self.drf_compute_pass.execute(&mut encoder);
+            self.gui.my_app.compute_ses_once = false;
+        }
+
         // Render SES surface
         if self.gui.my_app.render_ses_surface {
-            self.drf_compute_pass.execute(&mut encoder);
             self.raymarch_pass
-                .render(&view, depth_view, &mut encoder, &self.camera_resource)
+                .render(&view, depth_view, &mut encoder, &self.camera_resource);
+
+            if self.gui.my_app.show_distance_field {
+                self.df_visualize_pass
+                    .render(&view, depth_view, &mut encoder);
+            }
         }
 
         // Render GUI
@@ -231,13 +252,23 @@ impl State {
             .update(&self.queue, &self.camera, &self.projection);
         self.update_molecule();
 
-        self.ses_grid
-            .uniform
-            .update_spacing(GridSpacing::Resolution(self.gui.my_app.ses_resolution));
+        if self.ses_grid.get_resolution() != self.gui.my_app.ses_resolution {
+            self.ses_grid
+                .uniform
+                .update_spacing(GridSpacing::Resolution(self.gui.my_app.ses_resolution));
 
-        self.probe_compute_pass
-            .update_grid(&self.queue, &self.ses_grid);
+            self.probe_compute_pass
+                .update_grid(&self.queue, &self.ses_grid);
 
-        self.drf_compute_pass.update_grid(&self.ses_grid);
+            self.drf_compute_pass.update_grid(&self.ses_grid);
+        }
+
+        self.df_visualize_pass.update_settings(
+            &self.queue,
+            SettingsUniform {
+                df_size: self.gui.my_app.ses_resolution,
+                layer_offset: self.gui.my_app.df_visualize_layer,
+            },
+        );
     }
 }

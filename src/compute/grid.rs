@@ -67,6 +67,10 @@ impl SESGrid {
         }
     }
 
+    pub fn get_resolution(&self) -> u32 {
+        self.uniform.resolution
+    }
+
     pub fn get_num_grid_points(&self) -> u32 {
         u32::pow(self.uniform.resolution, 3)
     }

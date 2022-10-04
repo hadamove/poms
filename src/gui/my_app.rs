@@ -4,15 +4,26 @@ pub struct MyApp {
     pub ses_resolution: u32,
     pub render_spacefill: bool,
     pub render_ses_surface: bool,
+
+    pub show_distance_field: bool,
+    pub df_visualize_layer: u32,
+
+    pub compute_ses: bool,
+    pub compute_ses_once: bool,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
             file_to_load: None,
-            ses_resolution: 160,
+            ses_resolution: 32,
             render_spacefill: true,
-            render_ses_surface: false,
+            render_ses_surface: true,
+            show_distance_field: false,
+
+            df_visualize_layer: 0,
+            compute_ses: false,
+            compute_ses_once: true,
         }
     }
 }
@@ -20,7 +31,12 @@ impl Default for MyApp {
 impl MyApp {
     pub fn ui(&mut self, ctx: &egui::Context) {
         egui::containers::Window::new("Settings").show(ctx, |ui| {
-            ui.add(egui::Slider::new(&mut self.ses_resolution, 10..=160).text("SES resolution"));
+            if ui
+                .add(egui::Slider::new(&mut self.ses_resolution, 10..=160).text("SES resolution"))
+                .changed()
+            {
+                self.compute_ses_once = true;
+            };
             ui.add(egui::Checkbox::new(
                 &mut self.render_spacefill,
                 "Render Spacefill",
@@ -28,6 +44,20 @@ impl MyApp {
             ui.add(egui::Checkbox::new(
                 &mut self.render_ses_surface,
                 "Render SES surface",
+            ));
+            ui.separator();
+            ui.add(egui::Checkbox::new(
+                &mut self.show_distance_field,
+                "Show Distance Field",
+            ));
+            ui.add(
+                egui::Slider::new(&mut self.df_visualize_layer, 0..=self.ses_resolution - 1)
+                    .text("Distance Field Layer"),
+            );
+            ui.separator();
+            ui.add(egui::Checkbox::new(
+                &mut self.compute_ses,
+                "Compute SES continuously",
             ));
         });
 
