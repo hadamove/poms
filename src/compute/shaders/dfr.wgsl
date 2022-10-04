@@ -27,8 +27,8 @@ fn compute_distance(grid_point_index: u32) -> f32 {
     var res = i32(ses_grid.resolution);
 
     // We need to check points at maximum PROBE_RADIUS distance from the current point.
-    var search_range: i32 = i32(ceil(1.2 / ses_grid.offset));
-    var min_distance = 1.2;
+    var search_range: i32 = i32(ceil(1.2 / ses_grid.offset)) + 1;
+    var min_distance = 9999.;
 
     for (var x: i32 = -search_range; x <= search_range; x = x + 1) {
         for (var y: i32 = -search_range; y <= search_range; y = y + 1) {
@@ -50,7 +50,10 @@ fn compute_distance(grid_point_index: u32) -> f32 {
             }
         }
     }
-    return 1.2 - min_distance;
+    if min_distance < 10000. {
+        return 1.2 - min_distance;
+    }
+    return -ses_grid.offset;
 }
 
 
@@ -75,7 +78,7 @@ fn main(
             return;
         }
         case 1u: {
-            distance_field[grid_point_index] = -1.2;
+            distance_field[grid_point_index] = -ses_grid.offset;
             return;
         }
         // 2u
