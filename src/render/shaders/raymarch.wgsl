@@ -55,11 +55,6 @@ fn distance_from_df(position: vec3<f32>) -> f32 {
 
     var grid_position = grid_point_index_to_position(u32(grid_point_index));
     var weight = (position - grid_position) / ses_grid.offset;
-    var weight = vec3<f32>(
-        smoothstep(0.0, 1.0, weight.x),
-        smoothstep(0.0, 1.0, weight.y),
-        smoothstep(0.0, 1.0, weight.z),
-    );
 
     var d000 = distance_field[grid_point_index];
     var d100 = distance_field[grid_point_index + 1];
@@ -100,7 +95,7 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
         var current_position: vec3<f32> = origin + total_distance * direction;
         var distance = distance_from_df(current_position);
 
-        if (distance < 0.5) {
+        if (distance < 0.1) {
             // calculate normal 
             var small_step = vec3<f32>(0.001, 0.0, 0.0);
 
