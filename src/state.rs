@@ -218,8 +218,13 @@ impl State {
 
         // Render SES surface
         if self.gui.my_app.render_ses_surface {
-            self.raymarch_pass
-                .render(&view, depth_view, &mut encoder, &self.camera_resource);
+            self.raymarch_pass.render(
+                &view,
+                depth_view,
+                &mut encoder,
+                &self.camera_resource,
+                self.gui.my_app.render_ses_surface,
+            );
 
             if self.gui.my_app.show_distance_field {
                 self.df_visualize_pass

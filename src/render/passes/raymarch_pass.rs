@@ -105,6 +105,7 @@ impl RaymarchDistanceFieldPass {
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         camera_resource: &CameraResource,
+        clear: bool,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Raymarch Distance Field Render Pass"),
@@ -112,14 +113,22 @@ impl RaymarchDistanceFieldPass {
                 view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
+                    load: if clear {
+                        wgpu::LoadOp::Clear(wgpu::Color::BLACK)
+                    } else {
+                        wgpu::LoadOp::Load
+                    },
                     store: true,
                 },
             })],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                 view: depth_view,
                 depth_ops: Some(wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
+                    load: if clear {
+                        wgpu::LoadOp::Clear(1.0)
+                    } else {
+                        wgpu::LoadOp::Load
+                    },
                     store: true,
                 }),
                 stencil_ops: None,
