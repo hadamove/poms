@@ -52,7 +52,9 @@ pub struct State {
 
 impl State {
     pub async fn new(window: &Window) -> Self {
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let instance =
+            // TODO: Fix Vulkan
+            wgpu::Instance::new(wgpu::Backends::all().difference(wgpu::Backends::VULKAN));
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
