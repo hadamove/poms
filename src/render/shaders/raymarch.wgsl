@@ -48,7 +48,8 @@ fn distance_from_df(position: vec3<f32>) -> f32 {
         grid_space_coords.y * res +
         grid_space_coords.z * res * res;
 
-    if (grid_point_index < 0 || grid_point_index >= res * res * res) {
+    var total = res * res * res;
+    if (grid_point_index < 0 || grid_point_index >= total) {
         return 1.2;
     }
     
@@ -57,13 +58,13 @@ fn distance_from_df(position: vec3<f32>) -> f32 {
     var weight = (position - grid_position) / ses_grid.offset;
 
     var d000 = distance_field[grid_point_index];
-    var d100 = distance_field[grid_point_index + 1];
-    var d010 = distance_field[grid_point_index + res];
-    var d001 = distance_field[grid_point_index + res * res];
-    var d110 = distance_field[grid_point_index + res + 1];
-    var d011 = distance_field[grid_point_index + res * res + res];
-    var d101 = distance_field[grid_point_index + res * res + 1];
-    var d111 = distance_field[grid_point_index + res * res + res + 1];
+    var d100 = distance_field[min(grid_point_index + 1, total - 1)];
+    var d010 = distance_field[min(grid_point_index + res, total - 1)];
+    var d001 = distance_field[min(grid_point_index + res * res, total - 1)];
+    var d110 = distance_field[min(grid_point_index + res + 1, total - 1)];
+    var d011 = distance_field[min(grid_point_index + res * res + res, total - 1)];
+    var d101 = distance_field[min(grid_point_index + res * res + 1, total - 1)];
+    var d111 = distance_field[min(grid_point_index + res * res + res + 1, total - 1)];
 
     var d00 = mix(d000, d100, weight.x);
     var d01 = mix(d001, d101, weight.x);
