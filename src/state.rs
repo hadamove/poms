@@ -1,10 +1,15 @@
+use std::path::PathBuf;
+use std::vec;
+
 use crate::compute::grid::{GridSpacing, SESGrid};
 use crate::compute::passes::dfr_pass::DistanceFieldRefinementPass;
 use crate::compute::passes::probe_pass::ProbePass;
 use crate::gui::egui;
+use crate::gui::my_app::ResourcePath;
 use crate::render::passes::df_visualize_pass::{DistanceFieldVisualizePass, SettingsUniform};
 use crate::render::passes::raymarch_pass::RaymarchDistanceFieldPass;
 use crate::render::passes::spacefill_pass::SpacefillPass;
+use crate::utils::molecule::ComputedMolecule;
 use cgmath::Vector3;
 
 use crate::render::passes::resources::camera::CameraResource;
@@ -38,6 +43,11 @@ pub struct State {
     pub depth_texture: texture::Texture,
 
     pub gui: egui::Gui,
+
+    pub molecules: Vec<ComputedMolecule>,
+
+    pub frame_count: u64,
+    pub last_frame_time: f32,
 }
 
 impl State {
@@ -71,18 +81,17 @@ impl State {
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: wgpu::CompositeAlphaMode::Auto,
         };
         surface.configure(&device, &config);
 
         let gui = egui::Gui::new(window, &device, &config);
 
-        let molecule = parser::parse_pdb_file(&"./molecules/1cqw.pdb".to_string());
+        let molecule = parser::parse_pdb_file(&PathBuf::from("./molecules/md_long/model.12.pdb"));
 
         let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
-        let offset = Vector3::new(0.0, 0.0, 50.0);
+        let offset = Vector3::new(-55., 36., -117.);
 
-        let camera = camera::Camera::new(camera_eye + offset, cgmath::Deg(-90.0), cgmath::Deg(0.0));
+        let camera = camera::Camera::new(camera_eye + offset, cgmath::Deg(55.), cgmath::Deg(-11.0));
 
         let projection =
             camera::Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 1000.0);
@@ -140,25 +149,67 @@ impl State {
             depth_texture,
 
             gui,
+            molecules: vec![],
+            frame_count: 0,
+            last_frame_time: 0.0,
         }
     }
 
     fn update_molecule(&mut self) {
-        if let Some(path) = &self.gui.my_app.file_to_load {
-            let molecule = parser::parse_pdb_file(path);
-            self.ses_grid = SESGrid::from_molecule(&molecule, self.gui.my_app.ses_resolution);
+        let to_load = &self.gui.my_app.to_load;
+        match to_load {
+            Some(ResourcePath::DynamicMolecule(path)) => {
+                self.molecules = std::fs::read_dir(path)
+                    .unwrap()
+                    .filter_map(|d| d.ok())
+                    .map(|entry| parser::parse_pdb_file(&entry.path()))
+                    .map(|mol| ComputedMolecule::new(mol))
+                    .collect();
+                self.focus_camera();
+            }
+            Some(ResourcePath::SingleMolecule(path)) => {
+                self.molecules = vec![ComputedMolecule::new(parser::parse_pdb_file(&path))];
+                self.update_passes();
+                self.focus_camera();
+            }
+            None => {}
+        }
+        self.gui.my_app.to_load = None;
 
-            self.spacefill_pass =
-                SpacefillPass::new(&self.device, &self.config, &self.camera_resource, &molecule);
-            self.probe_compute_pass = ProbePass::new(&self.device, &molecule, &self.ses_grid);
-            let shared_buffers = self.probe_compute_pass.get_shared_buffers();
+        if self.molecules.len() > 1 {
+            // Dynamic molecule, multiple pdb files
+            self.update_passes();
+        }
+    }
 
-            self.drf_compute_pass =
-                DistanceFieldRefinementPass::new(&self.device, &self.ses_grid, shared_buffers);
+    fn update_passes(&mut self) {
+        if self.molecules.is_empty() {
+            return;
+        }
+        let molecule_index = (self.frame_count / 3) as usize % self.molecules.len();
+        let molecule = &self.molecules[molecule_index];
 
-            self.gui.my_app.file_to_load = None;
+        self.ses_grid = SESGrid::from_molecule(&molecule.mol, self.gui.my_app.ses_resolution);
 
-            let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
+        self.spacefill_pass = SpacefillPass::new(
+            &self.device,
+            &self.config,
+            &self.camera_resource,
+            &molecule.mol,
+        );
+
+        self.probe_compute_pass
+            .update_grid(&self.queue, &self.ses_grid);
+
+        self.probe_compute_pass
+            .update_buffers(&self.device, &molecule.neighbor_atom_grid);
+
+        self.drf_compute_pass.update_grid(&self.ses_grid);
+    }
+
+    fn focus_camera(&mut self) {
+        if let Some(molecule) = self.molecules.get(0) {
+            let camera_eye: cgmath::Point3<f32> = molecule.mol.calculate_centre().into();
             let offset = Vector3::new(0.0, 0.0, 50.0);
 
             self.camera =
@@ -250,6 +301,15 @@ impl State {
     }
 
     pub fn update(&mut self, time_delta: std::time::Duration) {
+        self.frame_count += 1;
+
+        if self.gui.my_app.frame_time == 0.0 {
+            self.gui.my_app.frame_time = time_delta.as_secs_f32();
+        } else {
+            self.gui.my_app.frame_time =
+                0.9 * self.gui.my_app.frame_time + 0.1 * time_delta.as_secs_f32();
+        }
+
         self.camera_controller
             .update_camera(&mut self.camera, time_delta);
 

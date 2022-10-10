@@ -1,6 +1,8 @@
+use std::path::PathBuf;
+
 use super::molecule::{Atom, Molecule};
 
-pub fn load_pdb_file(filename: &String) -> String {
+pub fn load_pdb_file(filename: &PathBuf) -> String {
     #[cfg(not(target_arch = "wasm32"))]
     return std::fs::read_to_string(filename).expect("file could not be read");
 
@@ -10,12 +12,12 @@ pub fn load_pdb_file(filename: &String) -> String {
     crate::wasm::fetch_file(filename).await
 }
 
-pub fn parse_pdb_file(filename: &String) -> Molecule {
+pub fn parse_pdb_file(filename: &PathBuf) -> Molecule {
     let mut atoms: Vec<Atom> = vec![];
     let content = load_pdb_file(filename);
 
     for line in content.split('\n') {
-        if line.len() < 80 {
+        if line.len() < 78 {
             continue;
         }
         if &line[0..4] == "ATOM" {

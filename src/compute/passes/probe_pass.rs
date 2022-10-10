@@ -6,6 +6,8 @@ use super::resources::buffer::{ProbePassBuffers, SharedBuffers};
 
 pub struct ProbePass {
     bind_group: wgpu::BindGroup,
+    bind_group_layout: wgpu::BindGroupLayout,
+    buffers: ProbePassBuffers,
     shared_buffers: SharedBuffers,
     compute_pipeline: wgpu::ComputePipeline,
 
@@ -43,10 +45,22 @@ impl ProbePass {
 
         Self {
             bind_group,
+            bind_group_layout,
+            buffers,
             shared_buffers,
             compute_pipeline,
             num_grid_points: ses_grid.get_num_grid_points(),
         }
+    }
+
+    pub fn update_buffers(&mut self, device: &wgpu::Device, neighbor_atoms: &NeighborAtomGrid) {
+        self.buffers = ProbePassBuffers::new(device, neighbor_atoms);
+        self.bind_group = ProbePassBindGroup::init(
+            device,
+            &self.bind_group_layout,
+            &self.buffers,
+            &self.shared_buffers,
+        );
     }
 
     pub fn update_grid(&mut self, queue: &wgpu::Queue, ses_grid: &SESGrid) {

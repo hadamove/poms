@@ -1,5 +1,7 @@
 use cgmath::Point3;
 
+use crate::compute::grid::NeighborAtomGrid;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Atom {
@@ -22,10 +24,17 @@ pub struct Molecule {
     pub atoms: Vec<Atom>,
 }
 
-impl Default for Molecule {
-    fn default() -> Self {
+pub struct ComputedMolecule {
+    pub mol: Molecule,
+    pub neighbor_atom_grid: NeighborAtomGrid,
+}
+
+impl ComputedMolecule {
+    pub fn new(mol: Molecule) -> Self {
+        let neighbor_atom_grid = NeighborAtomGrid::from_molecule(&mol);
         Self {
-            atoms: vec![Atom::default()],
+            mol,
+            neighbor_atom_grid,
         }
     }
 }
