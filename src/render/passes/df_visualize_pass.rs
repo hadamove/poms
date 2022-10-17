@@ -17,13 +17,24 @@ impl DistanceFieldVisualizePass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        distance_field_buffer: &wgpu::Buffer,
+        df_texture: &wgpu::Texture,
         df_size: u32,
     ) -> Self {
         let settings_uniform = SettingsUniform {
             df_size,
             layer_offset: 0,
         };
+
+        let texture_view = df_texture.create_view(&Default::default());
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            address_mode_w: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            // mipmap_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
+        });
 
         let settings_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Distance Field Visualize Settings Buffer"),
@@ -37,7 +48,7 @@ impl DistanceFieldVisualizePass {
                     binding: 0,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -46,11 +57,17 @@ impl DistanceFieldVisualizePass {
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D3,
+                        multisampled: false,
                     },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: None,
                 },
             ],
@@ -62,11 +79,15 @@ impl DistanceFieldVisualizePass {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: distance_field_buffer.as_entire_binding(),
+                    resource: settings_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: settings_buffer.as_entire_binding(),
+                    resource: wgpu::BindingResource::TextureView(&texture_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::Sampler(&sampler),
                 },
             ],
             label: None,

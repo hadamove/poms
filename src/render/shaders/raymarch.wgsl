@@ -19,78 +19,24 @@ struct GridUniform {
 @group(0) @binding(0) var<uniform> camera: CameraUniform;
 
 @group(1) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(1) @binding(1) var<storage, read> distance_field: array<f32>;
+@group(1) @binding(1) var df_sampler: sampler;
+
+@group(2) @binding(0) var df_texture: texture_3d<f32>;
 
 
-fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
-    return ses_grid.origin.xyz + vec3<f32>(
-        f32(grid_point_index % ses_grid.resolution),
-        f32((grid_point_index / ses_grid.resolution) % ses_grid.resolution),
-        f32(grid_point_index / (ses_grid.resolution * ses_grid.resolution))
-    ) * ses_grid.offset;
-}
-
-fn trilinear_interpolation(grid_point_index: u32, weight: vec3<f32>) -> f32 {
-    var res = ses_grid.resolution;
-    var total = res * res * res;
-
-    var d000 = distance_field[grid_point_index];
-    var d100 = distance_field[min(grid_point_index + 1u, total - 1u)];
-    var d010 = distance_field[min(grid_point_index + res, total - 1u)];
-    var d001 = distance_field[min(grid_point_index + res * res, total - 1u)];
-    var d110 = distance_field[min(grid_point_index + res + 1u, total - 1u)];
-    var d011 = distance_field[min(grid_point_index + res * res + res, total - 1u)];
-    var d101 = distance_field[min(grid_point_index + res * res + 1u, total - 1u)];
-    var d111 = distance_field[min(grid_point_index + res * res + res + 1u, total - 1u)];
-
-    var d00 = mix(d000, d100, weight.x);
-    var d01 = mix(d001, d101, weight.x);
-    var d10 = mix(d010, d110, weight.x);
-    var d11 = mix(d011, d111, weight.x);
-
-    var d0 = mix(d00, d10, weight.y);
-    var d1 = mix(d01, d11, weight.y);
-
-    var d = mix(d0, d1, weight.z);
-
-    return d;
-}
-
-fn linear_df_sample(coord: vec3<f32>) -> f32 {
-    var position = coord * (f32(ses_grid.resolution) * ses_grid.offset) + ses_grid.origin.xyz;
-
-    var grid_space_coords = vec3<i32>((position - ses_grid.origin.xyz) / ses_grid.offset);
-    
-    var res = i32(ses_grid.resolution);
-    var grid_point_index = u32(grid_space_coords.x +
-        grid_space_coords.y * res +
-        grid_space_coords.z * res * res);
-
-    let grid_point_position = grid_point_index_to_position(grid_point_index);
-
-    var weight = (position - grid_point_position) / ses_grid.offset;
-
-    return trilinear_interpolation(grid_point_index, weight);
-}
-
-fn distance_from_df(position: vec3<f32>) -> f32 {
-    if (position.x < ses_grid.origin.x || position.y < ses_grid.origin.y || position.z < ses_grid.origin.z ||
-        position.x > ses_grid.origin.x + f32(ses_grid.resolution) * ses_grid.offset ||
-        position.y > ses_grid.origin.y + f32(ses_grid.resolution) * ses_grid.offset ||
-        position.z > ses_grid.origin.z + f32(ses_grid.resolution) * ses_grid.offset) {
-        // Point is outside the grid.
-        // TODO: return distance to the closest grid point.
-        return 1.2;
-    }
-
-    // ses grid coordinate in range [0,1]
+fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {
     var coord = (position - ses_grid.origin.xyz) / (f32(ses_grid.resolution) * ses_grid.offset);
+    return textureSample(df_texture, df_sampler, coord).r;
+}
 
-    var nrOfVoxels = ses_grid.resolution;
-    var coord_grid = f32(nrOfVoxels) * coord - vec3<f32>(0.5);
+fn distance_from_df_tricubic(position: vec3<f32>) -> f32 {
+    var resolution = f32(ses_grid.resolution);
+
+    var coord = (position - ses_grid.origin.xyz) / (resolution * ses_grid.offset);
+    var coord_grid = resolution * coord - vec3<f32>(0.5);
     var index = floor(coord_grid);
 
-    var fraction = coord_grid - index; // fraction in [0, 1]
+    var fraction = coord_grid - index;
     var one_minus_fraction = vec3<f32>(1.0) - fraction;
 
     var w0 = 1.0/6.0 * one_minus_fraction * one_minus_fraction * one_minus_fraction;
@@ -101,35 +47,29 @@ fn distance_from_df(position: vec3<f32>) -> f32 {
     var g0 = w0 + w1;
     var g1 = w2 + w3;
 
-    var mult = 1.0 / f32(nrOfVoxels);
-    var h0 = mult * (w1 / g0 - 0.5 + index);
-    var h1 = mult * (w3 / g1 + 1.5 + index);
+    var h0 = (w1 / g0 - 0.5 + index) / resolution;
+    var h1 = (w3 / g1 + 1.5 + index) / resolution;
 
-	// fetch the eight linear interpolations
-	// weighting and fetching is interleaved for performance and stability reasons
-	var tex000 = linear_df_sample(h0);
-	var tex100 = linear_df_sample(vec3(h1.x, h0.y, h0.z));
-	tex000 = mix(tex100, tex000, g0.x);  //weigh along the x-direction\n"
+	// Fetch the eight linear interpolations.
+	var tex000 = textureSample(df_texture, df_sampler, h0).r;
+	var tex100 = textureSample(df_texture, df_sampler, vec3(h1.x, h0.y, h0.z)).r;
+	tex000 = mix(tex100, tex000, g0.x);
 
-	var tex010 = linear_df_sample(vec3(h0.x, h1.y, h0.z));
-	var tex110 = linear_df_sample(vec3(h1.x, h1.y, h0.z));
-	tex010 = mix(tex110, tex010, g0.x);  //weigh along the x-direction\n"
-	tex000 = mix(tex010, tex000, g0.y);  //weigh along the y-direction\n"
+	var tex010 = textureSample(df_texture, df_sampler, vec3(h0.x, h1.y, h0.z)).r;
+	var tex110 = textureSample(df_texture, df_sampler, vec3(h1.x, h1.y, h0.z)).r;
+	tex010 = mix(tex110, tex010, g0.x);
+	tex000 = mix(tex010, tex000, g0.y);
 
-	var tex001 = linear_df_sample(vec3(h0.x, h0.y, h1.z));
-	var tex101 = linear_df_sample(vec3(h1.x, h0.y, h1.z));
-	tex001 = mix(tex101, tex001, g0.x);  //weigh along the x-direction\n"
+	var tex001 = textureSample(df_texture, df_sampler, vec3(h0.x, h0.y, h1.z)).r;
+	var tex101 = textureSample(df_texture, df_sampler, vec3(h1.x, h0.y, h1.z)).r;
+	tex001 = mix(tex101, tex001, g0.x);
 
-	var tex011 = linear_df_sample(vec3(h0.x, h1.y, h1.z));
-	var tex111 = linear_df_sample(h1);
-	tex011 = mix(tex111, tex011, g0.x);  //weigh along the x-direction\n"
-	tex001 = mix(tex011, tex001, g0.y);  //weigh along the y-direction\n"
+	var tex011 = textureSample(df_texture, df_sampler, vec3(h0.x, h1.y, h1.z)).r;
+	var tex111 = textureSample(df_texture, df_sampler, h1).r;
+	tex011 = mix(tex111, tex011, g0.x);
+	tex001 = mix(tex011, tex001, g0.y);
 
-    var d = mix(tex001, tex000, g0.z);  //weigh along the z-direction\n"
-
-    return d;
-
-    // return linear_df_sample(position);
+    return mix(tex001, tex000, g0.z);
 }
 
 struct RayHit {
@@ -140,35 +80,65 @@ struct RayHit {
 
 fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
     var MAX_STEPS = 128u;
-    var MINIMUM_HIT_DISTANCE: f32 = 1.1;
+    var MINIMUM_HIT_DISTANCE: f32 = 0.05;
+    var TRICUBIC_THRESHOLD: f32 = 0.3;
 
     var rayhit: RayHit;
-    var total_distance: f32 = 0.0;
+    rayhit.hit = false;
+
+    // Find closest intersection with the bounding box grid.
+    var tmin = (ses_grid.origin.xyz - origin) / direction;
+    var tmax = (ses_grid.origin.xyz + vec3<f32>(f32(ses_grid.resolution) * ses_grid.offset) - origin) / direction;
+
+    var t0 = min(tmin, tmax);
+    var t1 = max(tmin, tmax);
+
+    var tnear = max(t0.x, max(t0.y, t0.z));
+    var tfar = min(t1.x, min(t1.y, t1.z));
+
+    if (tnear > tfar) {
+        return rayhit;
+    }
+
+    var total_distance: f32 = tnear;
 
     for (var i: u32 = 0u; i < MAX_STEPS; i += 1u) {
         var current_position: vec3<f32> = origin + total_distance * direction;
-        var distance = distance_from_df(current_position);
 
-        if (distance < 0.1) {
-            // calculate normal 
-            var small_step = vec3<f32>(0.001, 0.0, 0.0);
+        // First sample the distance field using trilinear interpolation.
+        var distance_trilinear = distance_from_df_trilinear(current_position);
+        if (distance_trilinear > TRICUBIC_THRESHOLD) {
+            total_distance += distance_trilinear;
+            continue;
+        }
+
+        // If the distance is too large, sample the using tricubic interpolation.
+        var distance = distance_from_df_tricubic(current_position);
+
+        if (distance < MINIMUM_HIT_DISTANCE) {
+            // Calculate normal.
+            var small_step = vec3<f32>(0.03, 0.0, 0.0) * ses_grid.offset;
 
             var p = current_position + distance * direction;
-            var gradient_x = distance_from_df(p + small_step.xyy) - distance_from_df(p - small_step.xyy);
-            var gradient_y = distance_from_df(p + small_step.yxy) - distance_from_df(p - small_step.yxy);
-            var gradient_z = distance_from_df(p + small_step.yyx) - distance_from_df(p - small_step.yyx);
+            var gradient_x = distance_from_df_tricubic(p + small_step.xyy) - distance_from_df_tricubic(p - small_step.xyy);
+            var gradient_y = distance_from_df_tricubic(p + small_step.yxy) - distance_from_df_tricubic(p - small_step.yxy);
+            var gradient_z = distance_from_df_tricubic(p + small_step.yyx) - distance_from_df_tricubic(p - small_step.yyx);
 
             var normal = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
+            // TODO: Add lighting model
             rayhit.color = normal * 0.5 + 0.5;
 
             rayhit.hit = true;
             rayhit.position = p;
-            // rayhit.color = distance.xyz;
             return rayhit;
         }
         total_distance += distance;
+
+        // Make sure we don't march too far.
+        if (total_distance > tfar) {
+            return rayhit;
+        }
     }
-    rayhit.hit = false;
     return rayhit;
 }
 

@@ -10,7 +10,8 @@ struct GridUniform {
 
 @group(0) @binding(0) var<uniform> ses_grid: GridUniform;
 @group(0) @binding(1) var<storage, read> grid_point_class: array<u32>;
-@group(0) @binding(2) var<storage, read_write> distance_field: array<f32>;
+
+@group(0) @binding(2) var distance_texture: texture_storage_3d<rgba16float, write>;
 
 
 fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
@@ -72,18 +73,25 @@ fn main(
         return;
     }
 
+    var texture_index = vec3<i32>(
+        i32(grid_point_index % ses_grid.resolution),
+        i32((grid_point_index / ses_grid.resolution) % ses_grid.resolution),
+        i32(grid_point_index / (ses_grid.resolution * ses_grid.resolution))
+    );
+
     switch (grid_point_class[grid_point_index]) {
         case 0u: {
-            distance_field[grid_point_index] = 1.2;
+            textureStore(distance_texture, texture_index, vec4<f32>(1.2));
             return;
         }
         case 1u: {
-            distance_field[grid_point_index] = -ses_grid.offset;
+            textureStore(distance_texture, texture_index, vec4<f32>(-ses_grid.offset));
             return;
         }
         // 2u
         default: {
-            distance_field[grid_point_index] = compute_distance(grid_point_index);
+            var dist = compute_distance(grid_point_index);
+            textureStore(distance_texture, texture_index, vec4<f32>(dist));
         }
     }
 }

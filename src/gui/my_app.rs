@@ -24,7 +24,7 @@ impl Default for MyApp {
     fn default() -> Self {
         Self {
             to_load: None,
-            ses_resolution: 32,
+            ses_resolution: 64,
             render_spacefill: true,
             render_ses_surface: true,
             show_distance_field: false,

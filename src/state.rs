@@ -115,13 +115,13 @@ impl State {
             &config,
             &camera_resource,
             &shared_buffers.ses_grid_buffer,
-            drf_compute_pass.get_distance_field_buffer(),
+            drf_compute_pass.get_df_texture(),
         );
 
         let df_visualize_pass = DistanceFieldVisualizePass::new(
             &device,
             &config,
-            drf_compute_pass.get_distance_field_buffer(),
+            drf_compute_pass.get_df_texture(),
             gui.my_app.ses_resolution,
         );
 
@@ -165,12 +165,12 @@ impl State {
                     .unwrap()
                     .filter_map(|d| d.ok())
                     .map(|entry| parser::parse_pdb_file(&entry.path()))
-                    .map(|mol| ComputedMolecule::new(mol))
+                    .map(ComputedMolecule::new)
                     .collect();
                 self.focus_camera();
             }
             Some(ResourcePath::SingleMolecule(path)) => {
-                self.molecules = vec![ComputedMolecule::new(parser::parse_pdb_file(&path))];
+                self.molecules = vec![ComputedMolecule::new(parser::parse_pdb_file(path))];
                 self.update_passes();
                 self.focus_camera();
             }
@@ -206,7 +206,15 @@ impl State {
         self.probe_compute_pass
             .update_buffers(&self.device, &molecule.neighbor_atom_grid);
 
-        self.drf_compute_pass.update_grid(&self.ses_grid);
+        let shared_buffers = self.probe_compute_pass.get_shared_buffers();
+
+        self.drf_compute_pass
+            .update_grid(&self.device, shared_buffers, &self.ses_grid);
+
+        self.raymarch_pass
+            .update_texture(&self.device, self.drf_compute_pass.get_df_texture());
+
+        self.gui.my_app.compute_ses_once = true;
     }
 
     fn focus_camera(&mut self) {
@@ -327,7 +335,14 @@ impl State {
             self.probe_compute_pass
                 .update_grid(&self.queue, &self.ses_grid);
 
-            self.drf_compute_pass.update_grid(&self.ses_grid);
+            self.drf_compute_pass.update_grid(
+                &self.device,
+                self.probe_compute_pass.get_shared_buffers(),
+                &self.ses_grid,
+            );
+
+            self.raymarch_pass
+                .update_texture(&self.device, self.drf_compute_pass.get_df_texture());
         }
 
         self.df_visualize_pass.update_settings(

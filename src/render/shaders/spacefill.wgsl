@@ -29,8 +29,8 @@ struct VertexOutput {
 };
 
 
-// Renders atoms using sphere impostor technique on quad billboards
-// Atom data (position, color, radius) is fetched from a storage buffer
+// Renders atoms using sphere impostor technique on quad billboards.
+// Atom data (position, color, radius) is fetched from a storage buffer.
 @vertex
 fn vs_main(
     @builtin(vertex_index) vertex_index: u32,
@@ -82,10 +82,12 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
 
     var dist_xy = dot(in.uv, in.uv);
 
+    // Discard fragments outside of the unit circle.
     if (dist_xy > 1.0) {
         discard;
     }
 
+    // Compute the distance to the sphere surface.
     var z = sqrt(1.0 - dist_xy);
     var offset_z = camera.proj * vec4<f32>(0.0, 0.0, z * in.atom_radius, 0.0);
     var proj_surface_position = in.proj_position + offset_z;
@@ -94,10 +96,6 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
 
     var out: FragmentOutput;
     out.color = in.color + shading;
-    if (in.color.x == 1.0 && in.color.y == 1.0) {
-        discard;
-    }
-
     out.depth = proj_surface_position.z / proj_surface_position.w;
 
     return out;

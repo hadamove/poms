@@ -3,9 +3,10 @@ struct SettingsUniform {
     layer_offset: u32,
 }
 
-@group(0) @binding(0) var<storage, read> distance_field: array<f32>;
-@group(0) @binding(1) var<uniform> settings: SettingsUniform;
+@group(0) @binding(0) var<uniform> settings: SettingsUniform;
 
+@group(0) @binding(1) var df_texture: texture_3d<f32>;
+@group(0) @binding(2) var df_sampler: sampler;
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
@@ -39,20 +40,11 @@ struct FragmentOutput {
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let x = (in.uv.x + 1.0) * 0.5 * f32(settings.df_size);
-    let y = (in.uv.y + 1.0) * 0.5 * f32(settings.df_size);
+    let x = (in.uv.x + 1.0) * 0.5;
+    let y = (in.uv.y + 1.0) * 0.5;
+    let z = f32(settings.layer_offset) / f32(settings.df_size);
 
-    let layer_offset = settings.layer_offset * settings.df_size * settings.df_size;
-    let offset = u32(x) + u32(y) * settings.df_size + layer_offset;
+    let value = textureSample(df_texture, df_sampler, vec3<f32>(x, y, z));
 
-
-    let value = (distance_field[offset] + 1.2) / 2.4;
-
-
-    return vec4<f32>(
-        value - 0.5,
-        value - 0.5,
-        value,
-        1.0,
-    );
+    return value;
 }
