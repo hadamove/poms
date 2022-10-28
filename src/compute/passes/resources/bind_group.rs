@@ -52,16 +52,6 @@ impl ProbePassBindGroup {
                     binding: 4,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 5,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { read_only: false },
                         has_dynamic_offset: false,
                         min_binding_size: None,
@@ -72,7 +62,7 @@ impl ProbePassBindGroup {
             label: Some("Probe Pass Bind Group Layout"),
         };
 
-    pub fn init(
+    pub fn create(
         device: &Device,
         layout: &BindGroupLayout,
         buffers: &ProbePassBuffers,
@@ -91,18 +81,16 @@ impl ProbePassBindGroup {
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: buffers.sorted_atoms_buffer.as_entire_binding(),
+                    resource: buffers
+                        .atoms_sorted_by_grid_cells_buffer
+                        .as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 3,
-                    resource: buffers.grid_cell_start_buffer.as_entire_binding(),
+                    resource: buffers.grid_cells_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 4,
-                    resource: buffers.grid_cell_size_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 5,
                     resource: shared_buffers
                         .grid_point_classification_buffer
                         .as_entire_binding(),

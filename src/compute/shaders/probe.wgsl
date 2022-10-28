@@ -4,7 +4,7 @@ struct GridUniform {
     resolution: u32,
     offset: f32,
     size: f32,
-    // Add 8 bytes padding to avoid alignment issues.
+    // Add 4 bytes padding to avoid alignment issues.
     _padding: f32,
 };
 
@@ -14,14 +14,19 @@ struct Atom {
     color: vec4<f32>,
 };
 
+struct GridCell {
+    first_atom_index: u32,
+    atoms_count: u32,
+}
+
 @group(0) @binding(0) var<uniform> ses_grid: GridUniform;
 @group(0) @binding(1) var<uniform> neighbor_grid: GridUniform;
 
-@group(0) @binding(2) var<storage, read> sorted_atoms: array<Atom>;
-@group(0) @binding(3) var<storage, read> grid_cell_start: array<u32>;
-@group(0) @binding(4) var<storage, read> grid_cell_size: array<u32>;
+@group(0) @binding(2) var<storage, read> atoms_sorted_by_grid_cells: array<Atom>;
+@group(0) @binding(3) var<storage, read> grid_cells: array<GridCell>;
 
-@group(0) @binding(5) var<storage, read_write> grid_point_class: array<u32>;
+@group(0) @binding(4) var<storage, read_write> grid_point_class: array<u32>;
+
 
 @compute @workgroup_size(64)
 fn main(
@@ -63,13 +68,12 @@ fn main(
                 if (neighbor_cell_index >= res * res * res || neighbor_cell_index < 0) {
                     continue;
                 }
-                var start_index: u32 = grid_cell_start[u32(neighbor_cell_index)];
-                var cell_size: u32 = grid_cell_size[u32(neighbor_cell_index)];
+                var grid_cell = grid_cells[neighbor_cell_index];
 
-                for (var i: i32 = 0; i < i32(cell_size); i = i + 1) {
-                    var atom_index: u32 = start_index + u32(i);
+                for (var i: i32 = 0; i < i32(grid_cell.atoms_count); i = i + 1) {
+                    var atom_index: u32 = grid_cell.first_atom_index + u32(i);
 
-                    var atom: Atom = sorted_atoms[atom_index];
+                    var atom: Atom = atoms_sorted_by_grid_cells[atom_index];
                     var distance: f32 = length(grid_point - atom.position);
 
                     if (distance < atom.radius - ses_grid.offset) {

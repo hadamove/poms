@@ -12,7 +12,7 @@ struct GridUniform {
     resolution: u32,
     offset: f32,
     size: f32,
-    // Add 8 bytes padding to avoid alignment issues.
+    // Add 4 bytes padding to avoid alignment issues.
     _padding: f32,
 };
 

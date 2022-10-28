@@ -6,10 +6,8 @@ pub const MAX_NUM_GRID_POINTS: usize = usize::pow(256, 3);
 
 pub struct ProbePassBuffers {
     pub neighbor_atom_grid_buffer: wgpu::Buffer,
-    pub sorted_atoms_buffer: wgpu::Buffer,
-    // TODO: refactor these buffers
-    pub grid_cell_start_buffer: wgpu::Buffer,
-    pub grid_cell_size_buffer: wgpu::Buffer,
+    pub atoms_sorted_by_grid_cells_buffer: wgpu::Buffer,
+    pub grid_cells_buffer: wgpu::Buffer,
 }
 
 impl ProbePassBuffers {
@@ -21,29 +19,23 @@ impl ProbePassBuffers {
                 usage: wgpu::BufferUsages::UNIFORM,
             });
 
-        let sorted_atoms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Sorted Atoms Buffer"),
-            contents: bytemuck::cast_slice(&neighbor_atom_grid.sorted_atoms),
-            usage: wgpu::BufferUsages::STORAGE,
-        });
+        let atoms_sorted_by_grid_cells_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Sorted Atoms Buffer"),
+                contents: bytemuck::cast_slice(&neighbor_atom_grid.atoms_sorted_by_grid_cells),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
 
-        let grid_cell_start_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Grid cell start buffer"),
-            contents: bytemuck::cast_slice(&neighbor_atom_grid.grid_cell_start),
-            usage: wgpu::BufferUsages::STORAGE,
-        });
-
-        let grid_cell_size_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Grid cell size buffer"),
-            contents: bytemuck::cast_slice(&neighbor_atom_grid.grid_cell_size),
+        let grid_cells_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Grid cells buffer"),
+            contents: bytemuck::cast_slice(&neighbor_atom_grid.grid_cells),
             usage: wgpu::BufferUsages::STORAGE,
         });
 
         Self {
             neighbor_atom_grid_buffer,
-            sorted_atoms_buffer,
-            grid_cell_start_buffer,
-            grid_cell_size_buffer,
+            atoms_sorted_by_grid_cells_buffer,
+            grid_cells_buffer,
         }
     }
 }

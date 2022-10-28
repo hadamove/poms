@@ -29,7 +29,6 @@ impl DistanceFieldRefinementPass {
             dimension: wgpu::TextureDimension::D3,
             format: wgpu::TextureFormat::Rgba16Float,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
-            // | wgpu::TextureUsages::COPY_DST,
         });
 
         let df_texture_view = df_texture.create_view(&Default::default());

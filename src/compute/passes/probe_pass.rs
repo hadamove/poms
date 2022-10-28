@@ -24,11 +24,11 @@ impl ProbePass {
         let bind_group_layout =
             device.create_bind_group_layout(&ProbePassBindGroup::LAYOUT_DESCRIPTOR);
         let bind_group =
-            ProbePassBindGroup::init(device, &bind_group_layout, &buffers, &shared_buffers);
+            ProbePassBindGroup::create(device, &bind_group_layout, &buffers, &shared_buffers);
 
         let compute_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Compute Pipeline Layout"),
+                label: Some("Probe Pass Compute Pipeline Layout"),
                 bind_group_layouts: &[&bind_group_layout],
                 push_constant_ranges: &[],
             });
@@ -37,7 +37,7 @@ impl ProbePass {
             device.create_shader_module(wgpu::include_wgsl!("../shaders/probe.wgsl"));
 
         let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-            label: Some("Compute Pipeline"),
+            label: Some("Probe Pass Compute Pipeline"),
             layout: Some(&compute_pipeline_layout),
             module: &compute_shader,
             entry_point: "main",
@@ -55,7 +55,7 @@ impl ProbePass {
 
     pub fn update_buffers(&mut self, device: &wgpu::Device, neighbor_atoms: &NeighborAtomGrid) {
         self.buffers = ProbePassBuffers::new(device, neighbor_atoms);
-        self.bind_group = ProbePassBindGroup::init(
+        self.bind_group = ProbePassBindGroup::create(
             device,
             &self.bind_group_layout,
             &self.buffers,
