@@ -1,0 +1,27 @@
+# Contents
+
+- Introduction
+- Background
+  - Biological background
+  - Definition of SAS, SES
+- Related works
+  - History of molecular surface visualisation
+    - Classification of models
+      - Analytical
+      - Numerical
+  - State of the art
+  - Limitations of current solutions
+- Technique overview
+- Implementation
+  - Technologies
+    - Webgpu
+    - Rust, Webassembly
+    - Multi-target compilation
+  - Project setup
+  - Compate shaders / passes
+  - Raymarching, interpolation
+  - Optimization
+  - User interface
+- Results
+- Limitations and future work
+- Conclusion
