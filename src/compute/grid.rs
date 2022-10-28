@@ -75,14 +75,6 @@ impl SESGrid {
     }
 }
 
-fn compute_grid_cell_index(position: [f32; 3], grid: &GridUniform) -> usize {
-    let res = grid.resolution as usize;
-    let x = ((position[0] - grid.origin[0]) / grid.offset).floor() as usize;
-    let y = ((position[1] - grid.origin[1]) / grid.offset).floor() as usize;
-    let z = ((position[2] - grid.origin[2]) / grid.offset).floor() as usize;
-    x + y * res + z * res * res
-}
-
 #[repr(C)]
 #[derive(Default, Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct GridCell {
@@ -101,6 +93,14 @@ pub struct NeighborAtomGrid {
 }
 
 impl NeighborAtomGrid {
+    fn compute_grid_cell_index(position: [f32; 3], grid: &GridUniform) -> usize {
+        let res = grid.resolution as usize;
+        let x = ((position[0] - grid.origin[0]) / grid.offset).floor() as usize;
+        let y = ((position[1] - grid.origin[1]) / grid.offset).floor() as usize;
+        let z = ((position[2] - grid.origin[2]) / grid.offset).floor() as usize;
+        x + y * res + z * res * res
+    }
+
     pub fn from_molecule(molecule: &Molecule) -> Self {
         const NEIGHBOR_ATOM_GRID_OFFSET: f32 = PROBE_RADIUS + MAX_ATOM_RADIUS;
 
@@ -108,35 +108,27 @@ impl NeighborAtomGrid {
             GridUniform::from_molecule(molecule, GridSpacing::Offset(NEIGHBOR_ATOM_GRID_OFFSET));
 
         // Divide atoms into grid cells for constant look up.
-        let mut atoms_with_cell_indices = molecule
+        let grid_cell_indices = molecule
             .atoms
-            .clone()
-            .into_iter()
-            .map(|atom| {
-                let cell_index = compute_grid_cell_index(atom.position, &uniform);
-                (atom, cell_index)
-            })
+            .iter()
+            .map(|atom| Self::compute_grid_cell_index(atom.position, &uniform))
             .collect::<Vec<_>>();
 
         // Sort the atoms by cell index.
-        atoms_with_cell_indices.sort_by_key(|(_, cell_index)| *cell_index);
+        let permutation = permutation::sort(&grid_cell_indices);
+        let atoms_sorted_by_grid_cells = permutation.apply_slice(&molecule.atoms);
+        let grid_cell_indices = permutation.apply_slice(&grid_cell_indices);
 
-        // Compute grid cell start indices in the atoms vector
         let grid_cell_count = u32::pow(uniform.resolution, 3) as usize;
         let mut grid_cells = vec![GridCell::default(); grid_cell_count];
 
-        for (atom_index, &(_, cell_index)) in atoms_with_cell_indices.iter().enumerate() {
-            if grid_cells[cell_index].first_atom_index == 0 {
+        // Compute grid cell start indices and size in the atoms vector
+        for (atom_index, &cell_index) in grid_cell_indices.iter().enumerate() {
+            if grid_cells[cell_index].atoms_count == 0 {
                 grid_cells[cell_index].first_atom_index = atom_index as u32;
             }
             grid_cells[cell_index].atoms_count += 1;
         }
-
-        // Remove the cell index from the atoms.
-        let atoms_sorted_by_grid_cells = atoms_with_cell_indices
-            .into_iter()
-            .map(|(atom, _)| atom)
-            .collect::<Vec<Atom>>();
 
         Self {
             uniform,
