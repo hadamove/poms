@@ -7,9 +7,6 @@ pub struct MyApp {
     pub render_spacefill: bool,
     pub render_ses_surface: bool,
 
-    pub show_distance_field: bool,
-    pub df_visualize_layer: u32,
-
     pub compute_ses: bool,
     pub compute_ses_once: bool,
     pub frame_time: f32,
@@ -27,9 +24,7 @@ impl Default for MyApp {
             ses_resolution: 64,
             render_spacefill: true,
             render_ses_surface: true,
-            show_distance_field: false,
 
-            df_visualize_layer: 0,
             frame_time: 0.0,
             compute_ses: false,
             compute_ses_once: true,
@@ -59,15 +54,6 @@ impl MyApp {
                     &mut self.render_ses_surface,
                     "Render SES surface",
                 ));
-                ui.separator();
-                ui.add(egui::Checkbox::new(
-                    &mut self.show_distance_field,
-                    "Show Distance Field",
-                ));
-                ui.add(
-                    egui::Slider::new(&mut self.df_visualize_layer, 0..=self.ses_resolution - 1)
-                        .text("Distance Field Layer"),
-                );
                 ui.separator();
                 ui.add(egui::Checkbox::new(
                     &mut self.compute_ses,

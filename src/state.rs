@@ -6,7 +6,6 @@ use crate::compute::passes::dfr_pass::DistanceFieldRefinementPass;
 use crate::compute::passes::probe_pass::ProbePass;
 use crate::gui::egui;
 use crate::gui::my_app::ResourcePath;
-use crate::render::passes::df_visualize_pass::{DistanceFieldVisualizePass, SettingsUniform};
 use crate::render::passes::raymarch_pass::RaymarchDistanceFieldPass;
 use crate::render::passes::spacefill_pass::SpacefillPass;
 use crate::utils::molecule::ComputedMolecule;
@@ -37,8 +36,6 @@ pub struct State {
 
     pub spacefill_pass: SpacefillPass,
     pub raymarch_pass: RaymarchDistanceFieldPass,
-
-    pub df_visualize_pass: DistanceFieldVisualizePass,
 
     pub depth_texture: texture::Texture,
 
@@ -118,13 +115,6 @@ impl State {
             drf_compute_pass.get_df_texture(),
         );
 
-        let df_visualize_pass = DistanceFieldVisualizePass::new(
-            &device,
-            &config,
-            drf_compute_pass.get_df_texture(),
-            gui.my_app.ses_resolution,
-        );
-
         let depth_texture = texture::Texture::create_depth_texture(&device, &config);
 
         Self {
@@ -145,8 +135,6 @@ impl State {
 
             spacefill_pass,
             raymarch_pass,
-
-            df_visualize_pass,
 
             depth_texture,
 
@@ -286,11 +274,6 @@ impl State {
                 &self.camera_resource,
                 self.gui.my_app.render_ses_surface,
             );
-
-            if self.gui.my_app.show_distance_field {
-                self.df_visualize_pass
-                    .render(&view, depth_view, &mut encoder);
-            }
         }
 
         // Render GUI
@@ -344,13 +327,5 @@ impl State {
             self.raymarch_pass
                 .update_texture(&self.device, self.drf_compute_pass.get_df_texture());
         }
-
-        self.df_visualize_pass.update_settings(
-            &self.queue,
-            SettingsUniform {
-                df_size: self.gui.my_app.ses_resolution,
-                layer_offset: self.gui.my_app.df_visualize_layer,
-            },
-        );
     }
 }
