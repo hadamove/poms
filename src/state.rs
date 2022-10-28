@@ -4,8 +4,8 @@ use std::vec;
 use crate::compute::grid::{GridSpacing, SESGrid};
 use crate::compute::passes::dfr_pass::DistanceFieldRefinementPass;
 use crate::compute::passes::probe_pass::ProbePass;
-use crate::gui::egui;
-use crate::gui::my_app::ResourcePath;
+use crate::gui::{Gui, ResourcePath};
+use crate::render::passes::gui_pass::GuiRenderPass;
 use crate::render::passes::raymarch_pass::RaymarchDistanceFieldPass;
 use crate::render::passes::spacefill_pass::SpacefillPass;
 use crate::utils::molecule::ComputedMolecule;
@@ -36,10 +36,11 @@ pub struct State {
 
     pub spacefill_pass: SpacefillPass,
     pub raymarch_pass: RaymarchDistanceFieldPass,
+    pub gui_pass: GuiRenderPass,
 
     pub depth_texture: texture::Texture,
 
-    pub gui: egui::Gui,
+    pub gui: Gui,
 
     pub molecules: Vec<ComputedMolecule>,
 
@@ -83,7 +84,8 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let gui = egui::Gui::new(window, &device, &config);
+        let gui_pass = GuiRenderPass::new(window, &device, &config);
+        let gui = Gui::default();
 
         let molecule = parser::parse_pdb_file(&PathBuf::from("./molecules/md_long/model.12.pdb"));
 
@@ -99,7 +101,7 @@ impl State {
 
         let camera_resource = CameraResource::new(&device);
 
-        let ses_grid = SESGrid::from_molecule(&molecule, gui.my_app.ses_resolution);
+        let ses_grid = SESGrid::from_molecule(&molecule, gui.ses_resolution);
 
         let probe_compute_pass = ProbePass::new(&device, &molecule, &ses_grid);
         let shared_buffers = probe_compute_pass.get_shared_buffers();
@@ -135,6 +137,7 @@ impl State {
 
             spacefill_pass,
             raymarch_pass,
+            gui_pass,
 
             depth_texture,
 
@@ -146,7 +149,7 @@ impl State {
     }
 
     fn update_molecule(&mut self) {
-        let to_load = &self.gui.my_app.to_load;
+        let to_load = &self.gui.to_load;
         match to_load {
             Some(ResourcePath::DynamicMolecule(path)) => {
                 self.molecules = std::fs::read_dir(path)
@@ -164,7 +167,7 @@ impl State {
             }
             None => {}
         }
-        self.gui.my_app.to_load = None;
+        self.gui.to_load = None;
 
         if self.molecules.len() > 1 {
             // Dynamic molecule, multiple pdb files
@@ -179,7 +182,7 @@ impl State {
         let molecule_index = (self.frame_count / 3) as usize % self.molecules.len();
         let molecule = &self.molecules[molecule_index];
 
-        self.ses_grid = SESGrid::from_molecule(&molecule.mol, self.gui.my_app.ses_resolution);
+        self.ses_grid = SESGrid::from_molecule(&molecule.mol, self.gui.ses_resolution);
 
         self.spacefill_pass = SpacefillPass::new(
             &self.device,
@@ -202,7 +205,7 @@ impl State {
         self.raymarch_pass
             .update_texture(&self.device, self.drf_compute_pass.get_df_texture());
 
-        self.gui.my_app.compute_ses_once = true;
+        self.gui.compute_ses_once = true;
     }
 
     fn focus_camera(&mut self) {
@@ -253,37 +256,38 @@ impl State {
         let depth_view = &self.depth_texture.view;
 
         // Render atoms
-        if self.gui.my_app.render_spacefill {
+        if self.gui.render_spacefill {
             self.spacefill_pass
                 .render(&view, depth_view, &mut encoder, &self.camera_resource);
         }
 
         // Compute SES surface
-        if self.gui.my_app.compute_ses || self.gui.my_app.compute_ses_once {
+        if self.gui.compute_ses || self.gui.compute_ses_once {
             self.probe_compute_pass.execute(&mut encoder);
             self.drf_compute_pass.execute(&mut encoder);
-            self.gui.my_app.compute_ses_once = false;
+            self.gui.compute_ses_once = false;
         }
 
         // Render SES surface
-        if self.gui.my_app.render_ses_surface {
+        if self.gui.render_ses_surface {
             self.raymarch_pass.render(
                 &view,
                 depth_view,
                 &mut encoder,
                 &self.camera_resource,
-                self.gui.my_app.render_ses_surface,
+                self.gui.render_ses_surface,
             );
         }
 
         // Render GUI
-        self.gui.render(
+        self.gui_pass.render(
             &view,
             &mut encoder,
             window,
             &self.device,
             &self.queue,
             &self.config,
+            &mut self.gui,
         );
 
         // Submit commands to the GPU
@@ -296,11 +300,10 @@ impl State {
     pub fn update(&mut self, time_delta: std::time::Duration) {
         self.frame_count += 1;
 
-        if self.gui.my_app.frame_time == 0.0 {
-            self.gui.my_app.frame_time = time_delta.as_secs_f32();
+        if self.gui.frame_time == 0.0 {
+            self.gui.frame_time = time_delta.as_secs_f32();
         } else {
-            self.gui.my_app.frame_time =
-                0.9 * self.gui.my_app.frame_time + 0.1 * time_delta.as_secs_f32();
+            self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
         }
 
         self.camera_controller
@@ -310,10 +313,10 @@ impl State {
             .update(&self.queue, &self.camera, &self.projection);
         self.update_molecule();
 
-        if self.ses_grid.get_resolution() != self.gui.my_app.ses_resolution {
+        if self.ses_grid.get_resolution() != self.gui.ses_resolution {
             self.ses_grid
                 .uniform
-                .update_spacing(GridSpacing::Resolution(self.gui.my_app.ses_resolution));
+                .update_spacing(GridSpacing::Resolution(self.gui.ses_resolution));
 
             self.probe_compute_pass
                 .update_grid_buffer(&self.queue, &self.ses_grid);

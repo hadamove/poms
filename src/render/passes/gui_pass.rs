@@ -3,24 +3,20 @@ use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
 use egui_winit_platform::{Platform, PlatformDescriptor};
 use winit::window::Window;
 
-use super::my_app::MyApp;
+use crate::gui::Gui;
 
-pub struct Gui {
+pub struct GuiRenderPass {
     render_pass: egui_wgpu_backend::RenderPass,
     platform: Platform,
-
-    pub my_app: MyApp,
 }
 
-impl Gui {
+impl GuiRenderPass {
     pub fn new(
         window: &Window,
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
     ) -> Self {
         let render_pass = RenderPass::new(device, config.format, 1);
-
-        let my_app = MyApp::default();
 
         let platform = Platform::new(PlatformDescriptor {
             physical_width: config.width,
@@ -33,7 +29,6 @@ impl Gui {
         Self {
             render_pass,
             platform,
-            my_app,
         }
     }
 
@@ -50,23 +45,21 @@ impl Gui {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         config: &wgpu::SurfaceConfiguration,
+        gui: &mut Gui,
     ) {
         self.platform.begin_frame();
 
-        // Draw the demo application.
-        self.my_app.ui(&self.platform.context());
+        gui.ui(&self.platform.context());
 
-        // End the UI frame. We could now handle the output and draw the UI with the backend.
         let output = self.platform.end_frame(Some(window));
-
         let paint_jobs = self.platform.context().tessellate(output.shapes);
 
-        // Upload all resources for the GPU.
         let screen_descriptor = ScreenDescriptor {
             physical_width: config.width,
             physical_height: config.height,
             scale_factor: window.scale_factor() as f32,
         };
+
         self.render_pass
             .add_textures(device, queue, &output.textures_delta)
             .unwrap();

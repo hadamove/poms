@@ -1,6 +1,11 @@
 use std::path::PathBuf;
 
-pub struct MyApp {
+pub enum ResourcePath {
+    SingleMolecule(PathBuf),
+    DynamicMolecule(PathBuf),
+}
+
+pub struct Gui {
     pub to_load: Option<ResourcePath>,
 
     pub ses_resolution: u32,
@@ -12,12 +17,7 @@ pub struct MyApp {
     pub frame_time: f32,
 }
 
-pub enum ResourcePath {
-    SingleMolecule(PathBuf),
-    DynamicMolecule(PathBuf),
-}
-
-impl Default for MyApp {
+impl Default for Gui {
     fn default() -> Self {
         Self {
             to_load: None,
@@ -32,7 +32,7 @@ impl Default for MyApp {
     }
 }
 
-impl MyApp {
+impl Gui {
     pub fn ui(&mut self, ctx: &egui::Context) {
         egui::containers::Window::new("Settings")
             .default_pos(egui::Pos2::new(100.0, 100.0))

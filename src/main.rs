@@ -37,7 +37,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
     let mut last_render_time = instant::Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
-        if state.gui.handle_events(&event) {
+        if state.gui_pass.handle_events(&event) {
             return;
         }
         match event {
