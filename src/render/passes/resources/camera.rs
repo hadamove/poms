@@ -31,6 +31,8 @@ impl CameraUniform {
 
         self.view_matrix = view_matrix.into();
         self.proj_matrix = proj_matrix.into();
+
+        // We can unwrap here because the matrices are invertible.
         self.view_inverse_matrix = view_matrix.invert().unwrap().into();
         self.proj_inverse_matrix = proj_matrix.invert().unwrap().into();
     }

@@ -2,17 +2,18 @@ use std::path::PathBuf;
 use std::vec;
 
 use crate::compute::grid::{GridSpacing, SESGrid};
-use crate::compute::passes::dfr_pass::DistanceFieldRefinementPass;
-use crate::compute::passes::probe_pass::ProbePass;
-use crate::gui::{Gui, ResourcePath};
-use crate::render::passes::gui_pass::GuiRenderPass;
-use crate::render::passes::raymarch_pass::RaymarchDistanceFieldPass;
-use crate::render::passes::spacefill_pass::SpacefillPass;
+use crate::compute::passes::{dfr_pass::DistanceFieldRefinementPass, probe_pass::ProbePass};
+use crate::gui::Gui;
+use crate::render::passes::{
+    gui_pass::GuiRenderPass, raymarch_pass::RaymarchDistanceFieldPass,
+    spacefill_pass::SpacefillPass,
+};
 use crate::utils::molecule::ComputedMolecule;
+
+use anyhow::Result;
 use cgmath::Vector3;
 
-use crate::render::passes::resources::camera::CameraResource;
-use crate::render::passes::resources::texture;
+use crate::render::passes::resources::{camera::CameraResource, texture};
 
 use crate::utils::camera::{self, Camera, CameraController, Projection};
 use crate::utils::parser;
@@ -61,12 +62,12 @@ impl State {
                 force_fallback_adapter: false,
             })
             .await
-            .unwrap();
+            .expect("Could not find a suitable adapter");
 
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor::default(), None)
             .await
-            .unwrap();
+            .expect("Could not create device");
 
         let size = window.inner_size();
         let supported_format = surface
@@ -87,7 +88,8 @@ impl State {
         let gui_pass = GuiRenderPass::new(window, &device, &config);
         let gui = Gui::default();
 
-        let molecule = parser::parse_pdb_file(&PathBuf::from("./molecules/md_long/model.12.pdb"));
+        let molecule =
+            parser::parse_pdb_file(&PathBuf::from("./molecules/md_long/model.12.pdb")).unwrap();
 
         let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
         let offset = Vector3::new(-55., 36., -117.);
@@ -148,31 +150,35 @@ impl State {
         }
     }
 
-    fn update_molecule(&mut self) {
-        let to_load = &self.gui.to_load;
-        match to_load {
-            Some(ResourcePath::DynamicMolecule(path)) => {
-                self.molecules = std::fs::read_dir(path)
-                    .unwrap()
-                    .filter_map(|d| d.ok())
-                    .map(|entry| parser::parse_pdb_file(&entry.path()))
+    fn update_molecules(&mut self) {
+        let files = &self.gui.files_to_load;
+        if files.is_empty() {
+            return;
+        }
+
+        let parsed_molecules_result = files
+            .iter()
+            .map(|path| parser::parse_pdb_file(path))
+            .collect::<Result<Vec<_>>>();
+
+        match parsed_molecules_result {
+            Ok(parsed_molecules) => {
+                self.molecules = parsed_molecules
+                    .into_iter()
                     .map(ComputedMolecule::new)
                     .collect();
-                self.focus_camera();
-            }
-            Some(ResourcePath::SingleMolecule(path)) => {
-                self.molecules = vec![ComputedMolecule::new(parser::parse_pdb_file(path))];
+
                 self.update_passes();
                 self.focus_camera();
-            }
-            None => {}
-        }
-        self.gui.to_load = None;
 
-        if self.molecules.len() > 1 {
-            // Dynamic molecule, multiple pdb files
-            self.update_passes();
+                println!("Loaded {} files.", self.molecules.len());
+                self.gui.error = None;
+            }
+            Err(e) => {
+                self.gui.error = Some(format!("Could not load file:\n{}", e));
+            }
         }
+        self.gui.files_to_load = Vec::new();
     }
 
     fn update_passes(&mut self) {
@@ -243,7 +249,10 @@ impl State {
             }
         }
 
-        let surface_texture = self.surface.get_current_texture().unwrap();
+        let surface_texture = self
+            .surface
+            .get_current_texture()
+            .expect("Could not get surface texture");
 
         let view = surface_texture
             .texture
@@ -280,15 +289,17 @@ impl State {
         }
 
         // Render GUI
-        self.gui_pass.render(
-            &view,
-            &mut encoder,
-            window,
-            &self.device,
-            &self.queue,
-            &self.config,
-            &mut self.gui,
-        );
+        self.gui_pass
+            .render(
+                &view,
+                &mut encoder,
+                window,
+                &self.device,
+                &self.queue,
+                &self.config,
+                &mut self.gui,
+            )
+            .expect("Could not render GUI");
 
         // Submit commands to the GPU
         self.queue.submit(Some(encoder.finish()));
@@ -311,7 +322,7 @@ impl State {
 
         self.camera_resource
             .update(&self.queue, &self.camera, &self.projection);
-        self.update_molecule();
+        self.update_molecules();
 
         if self.ses_grid.get_resolution() != self.gui.ses_resolution {
             self.ses_grid

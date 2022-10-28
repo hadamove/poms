@@ -1,12 +1,9 @@
 use std::path::PathBuf;
 
-pub enum ResourcePath {
-    SingleMolecule(PathBuf),
-    DynamicMolecule(PathBuf),
-}
+use egui::{Align, Layout};
 
 pub struct Gui {
-    pub to_load: Option<ResourcePath>,
+    pub files_to_load: Vec<PathBuf>,
 
     pub ses_resolution: u32,
     pub render_spacefill: bool,
@@ -15,12 +12,14 @@ pub struct Gui {
     pub compute_ses: bool,
     pub compute_ses_once: bool,
     pub frame_time: f32,
+
+    pub error: Option<String>,
 }
 
 impl Default for Gui {
     fn default() -> Self {
         Self {
-            to_load: None,
+            files_to_load: Vec::new(),
             ses_resolution: 64,
             render_spacefill: true,
             render_ses_surface: true,
@@ -28,6 +27,7 @@ impl Default for Gui {
             frame_time: 0.0,
             compute_ses: false,
             compute_ses_once: true,
+            error: None,
         }
     }
 }
@@ -74,16 +74,47 @@ impl Gui {
                     }
                     if ui.button("Load file").clicked() {
                         if let Some(path) = rfd::FileDialog::new().pick_file() {
-                            self.to_load = Some(ResourcePath::SingleMolecule(path))
+                            self.files_to_load = vec![path]
                         }
                     }
                     if ui.button("Load folder (multiple)").clicked() {
                         if let Some(path) = rfd::FileDialog::new().pick_folder() {
-                            self.to_load = Some(ResourcePath::DynamicMolecule(path))
+                            let directory = std::fs::read_dir(path);
+                            match directory {
+                                Ok(dir) => {
+                                    self.files_to_load = dir
+                                        .filter_map(|d| d.ok())
+                                        .map(|entry| entry.path())
+                                        .collect::<Vec<_>>();
+                                }
+                                Err(e) => {
+                                    self.error = Some(format!("Could not open directory: {}", e));
+                                }
+                            }
                         }
                     }
                 });
             });
         });
+
+        // Cannot borrow twice as mutable.
+        let mut close_error = false;
+
+        if let Some(error_message) = &self.error {
+            egui::containers::Window::new("Error")
+                .collapsible(false)
+                .default_pos((256.0, 256.0))
+                .show(ctx, |ui| {
+                    ui.with_layout(Layout::top_down(Align::Center), |ui| {
+                        ui.label(error_message);
+                        if ui.button("Close").clicked() {
+                            close_error = true;
+                        }
+                    });
+                });
+        }
+        if close_error {
+            self.error = None;
+        }
     }
 }

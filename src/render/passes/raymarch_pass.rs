@@ -15,7 +15,6 @@ impl RaymarchDistanceFieldPass {
         ses_buffer: &wgpu::Buffer,
         df_texture: &wgpu::Texture,
     ) -> Self {
-        // new!
         let texture_view = df_texture.create_view(&Default::default());
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::ClampToEdge,
@@ -23,7 +22,6 @@ impl RaymarchDistanceFieldPass {
             address_mode_w: wgpu::AddressMode::ClampToEdge,
             mag_filter: wgpu::FilterMode::Linear,
             min_filter: wgpu::FilterMode::Linear,
-            // mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
 

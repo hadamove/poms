@@ -1,5 +1,5 @@
 use egui::FontDefinitions;
-use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
+use egui_wgpu_backend::{BackendError, RenderPass, ScreenDescriptor};
 use egui_winit_platform::{Platform, PlatformDescriptor};
 use winit::window::Window;
 
@@ -46,7 +46,7 @@ impl GuiRenderPass {
         queue: &wgpu::Queue,
         config: &wgpu::SurfaceConfiguration,
         gui: &mut Gui,
-    ) {
+    ) -> Result<(), BackendError> {
         self.platform.begin_frame();
 
         gui.ui(&self.platform.context());
@@ -61,18 +61,16 @@ impl GuiRenderPass {
         };
 
         self.render_pass
-            .add_textures(device, queue, &output.textures_delta)
-            .unwrap();
+            .add_textures(device, queue, &output.textures_delta)?;
 
-        self.render_pass
-            .remove_textures(output.textures_delta)
-            .unwrap();
+        self.render_pass.remove_textures(output.textures_delta)?;
 
         self.render_pass
             .update_buffers(device, queue, &paint_jobs, &screen_descriptor);
 
         self.render_pass
-            .execute(encoder, view, &paint_jobs, &screen_descriptor, None)
-            .unwrap();
+            .execute(encoder, view, &paint_jobs, &screen_descriptor, None)?;
+
+        Ok(())
     }
 }
