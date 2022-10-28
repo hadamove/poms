@@ -189,15 +189,15 @@ impl State {
         );
 
         self.probe_compute_pass
-            .update_grid(&self.queue, &self.ses_grid);
+            .update_grid_buffer(&self.queue, &self.ses_grid);
 
         self.probe_compute_pass
-            .update_buffers(&self.device, &molecule.neighbor_atom_grid);
+            .recreate_buffers(&self.device, &molecule.neighbor_atom_grid);
 
         let shared_buffers = self.probe_compute_pass.get_shared_buffers();
 
         self.drf_compute_pass
-            .update_grid(&self.device, shared_buffers, &self.ses_grid);
+            .update_grid_buffer(&self.device, shared_buffers, &self.ses_grid);
 
         self.raymarch_pass
             .update_texture(&self.device, self.drf_compute_pass.get_df_texture());
@@ -316,9 +316,9 @@ impl State {
                 .update_spacing(GridSpacing::Resolution(self.gui.my_app.ses_resolution));
 
             self.probe_compute_pass
-                .update_grid(&self.queue, &self.ses_grid);
+                .update_grid_buffer(&self.queue, &self.ses_grid);
 
-            self.drf_compute_pass.update_grid(
+            self.drf_compute_pass.update_grid_buffer(
                 &self.device,
                 self.probe_compute_pass.get_shared_buffers(),
                 &self.ses_grid,

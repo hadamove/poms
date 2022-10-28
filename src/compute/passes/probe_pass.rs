@@ -9,6 +9,7 @@ pub struct ProbePass {
     bind_group_layout: wgpu::BindGroupLayout,
     buffers: ProbePassBuffers,
     shared_buffers: SharedBuffers,
+
     compute_pipeline: wgpu::ComputePipeline,
 
     num_grid_points: u32,
@@ -53,7 +54,7 @@ impl ProbePass {
         }
     }
 
-    pub fn update_buffers(&mut self, device: &wgpu::Device, neighbor_atoms: &NeighborAtomGrid) {
+    pub fn recreate_buffers(&mut self, device: &wgpu::Device, neighbor_atoms: &NeighborAtomGrid) {
         self.buffers = ProbePassBuffers::new(device, neighbor_atoms);
         self.bind_group = ProbePassBindGroup::create(
             device,
@@ -63,7 +64,7 @@ impl ProbePass {
         );
     }
 
-    pub fn update_grid(&mut self, queue: &wgpu::Queue, ses_grid: &SESGrid) {
+    pub fn update_grid_buffer(&mut self, queue: &wgpu::Queue, ses_grid: &SESGrid) {
         queue.write_buffer(
             &self.shared_buffers.ses_grid_buffer,
             0,
@@ -82,8 +83,6 @@ impl ProbePass {
         compute_pass.set_bind_group(0, &self.bind_group, &[]);
 
         let num_work_groups = f32::ceil(self.num_grid_points as f32 / 64.0) as u32;
-        println!("Executing Probe pass {} work groups", num_work_groups);
-
         compute_pass.dispatch_workgroups(num_work_groups, 1, 1);
     }
 }
