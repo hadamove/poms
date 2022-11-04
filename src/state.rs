@@ -81,7 +81,7 @@ impl State {
             format: supported_format,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::Fifo,
+            present_mode: wgpu::PresentMode::AutoNoVsync,
         };
         surface.configure(&device, &config);
 
