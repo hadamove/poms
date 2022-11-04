@@ -61,6 +61,8 @@ impl Gui {
                 ));
                 // Add fps text
                 ui.label(format!("Frame time: {:.3} ms", self.frame_time));
+
+                ui.label(format!("FPS: {}", (1.0 / self.frame_time) as u32));
             });
 
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
