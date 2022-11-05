@@ -79,4 +79,8 @@ impl Molecule {
         let max = self.get_max_position();
         f32::max(max.x - min.x, f32::max(max.y - min.y, max.z - min.z))
     }
+
+    pub fn get_max_atom_radius(&self) -> f32 {
+        self.atoms.iter().map(|a| a.radius).fold(0.0, f32::max)
+    }
 }

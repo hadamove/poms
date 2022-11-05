@@ -2,8 +2,7 @@ use cgmath::Vector3;
 
 use crate::utils::molecule::{Atom, Molecule};
 
-const PROBE_RADIUS: f32 = 1.2;
-const MAX_ATOM_RADIUS: f32 = 1.5;
+const PROBE_RADIUS: f32 = 1.4;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -33,7 +32,9 @@ impl GridUniform {
     }
 
     fn from_molecule(molecule: &Molecule, spacing: GridSpacing) -> Self {
-        let margin = 2.0 * PROBE_RADIUS + MAX_ATOM_RADIUS;
+        let max_atom_radius = molecule.get_max_atom_radius();
+        let margin = 2.0 * PROBE_RADIUS + max_atom_radius;
+
         let origin = molecule.get_min_position() - margin * Vector3::from((1.0, 1.0, 1.0));
         let size = molecule.get_max_distance() + 2.0 * margin;
 
@@ -102,10 +103,11 @@ impl NeighborAtomGrid {
     }
 
     pub fn from_molecule(molecule: &Molecule) -> Self {
-        const NEIGHBOR_ATOM_GRID_OFFSET: f32 = PROBE_RADIUS + MAX_ATOM_RADIUS;
+        let max_atom_radius = molecule.get_max_atom_radius();
+        let grid_offset = PROBE_RADIUS + max_atom_radius;
 
         let uniform =
-            GridUniform::from_molecule(molecule, GridSpacing::Offset(NEIGHBOR_ATOM_GRID_OFFSET));
+            GridUniform::from_molecule(molecule, GridSpacing::Offset(grid_offset));
 
         // Divide atoms into grid cells for constant look up.
         let grid_cell_indices = molecule
