@@ -1,7 +1,10 @@
 use anyhow::{bail, Result};
 use std::path::PathBuf;
 
-use super::molecule::{Atom, Molecule};
+use super::{
+    elements,
+    molecule::{Atom, Molecule},
+};
 
 pub fn load_pdb_file(filename: &PathBuf) -> Result<String> {
     #[cfg(not(target_arch = "wasm32"))]
@@ -31,15 +34,17 @@ pub fn parse_pdb_file(filename: &PathBuf) -> Result<Molecule> {
             continue;
         }
         if &line[0..4] == "ATOM" {
-            let element = &line[77..78];
+            let symbol = &line[77..78];
+            let element_data = elements::get_element_data(symbol);
+
             atoms.push(Atom {
                 position: [
                     line[30..38].trim().parse::<f32>()?,
                     line[38..45].trim().parse::<f32>()?,
                     line[46..53].trim().parse::<f32>()?,
                 ],
-                radius: 2.0,
-                color: get_default_color(element),
+                radius: element_data.radius,
+                color: element_data.color,
             });
         }
     }
@@ -49,16 +54,4 @@ pub fn parse_pdb_file(filename: &PathBuf) -> Result<Molecule> {
     }
 
     Ok(Molecule { atoms })
-}
-
-fn get_default_color(atom_type: &str) -> [f32; 4] {
-    match atom_type {
-        "H" => [1.0, 1.0, 1.0, 1.0],
-        "C" => [0.2, 0.2, 0.2, 1.0],
-        "O" => [1.0, 0.0, 0.0, 1.0],
-        "N" => [0.0, 0.0, 1.0, 1.0],
-        "S" => [1.0, 1.0, 0.0, 1.0],
-        "P" => [1.0, 0.5, 0.0, 1.0],
-        _ => [0.0, 0.0, 0.0, 1.0],
-    }
 }

@@ -1,0 +1,929 @@
+[
+    {
+        "symbol": "H",
+        "vdw_radius": 1.1,
+        "jmol_color": [
+            1.0,
+            1.0,
+            1.0
+        ]
+    },
+    {
+        "symbol": "HE",
+        "vdw_radius": 1.4,
+        "jmol_color": [
+            0.85,
+            1.0,
+            1.0
+        ]
+    },
+    {
+        "symbol": "LI",
+        "vdw_radius": 1.82,
+        "jmol_color": [
+            0.8,
+            0.5,
+            1.0
+        ]
+    },
+    {
+        "symbol": "BE",
+        "vdw_radius": 1.53,
+        "jmol_color": [
+            0.76,
+            1.0,
+            0.0
+        ]
+    },
+    {
+        "symbol": "B",
+        "vdw_radius": 1.92,
+        "jmol_color": [
+            1.0,
+            0.71,
+            0.71
+        ]
+    },
+    {
+        "symbol": "C",
+        "vdw_radius": 1.7,
+        "jmol_color": [
+            0.56,
+            0.56,
+            0.56
+        ]
+    },
+    {
+        "symbol": "N",
+        "vdw_radius": 1.55,
+        "jmol_color": [
+            0.19,
+            0.31,
+            0.97
+        ]
+    },
+    {
+        "symbol": "O",
+        "vdw_radius": 1.52,
+        "jmol_color": [
+            1.0,
+            0.05,
+            0.05
+        ]
+    },
+    {
+        "symbol": "F",
+        "vdw_radius": 1.47,
+        "jmol_color": [
+            0.56,
+            0.88,
+            0.31
+        ]
+    },
+    {
+        "symbol": "NE",
+        "vdw_radius": 1.54,
+        "jmol_color": [
+            0.7,
+            0.89,
+            0.96
+        ]
+    },
+    {
+        "symbol": "NA",
+        "vdw_radius": 2.27,
+        "jmol_color": [
+            0.67,
+            0.36,
+            0.95
+        ]
+    },
+    {
+        "symbol": "MG",
+        "vdw_radius": 1.73,
+        "jmol_color": [
+            0.54,
+            1.0,
+            0.0
+        ]
+    },
+    {
+        "symbol": "AL",
+        "vdw_radius": 1.84,
+        "jmol_color": [
+            0.75,
+            0.65,
+            0.65
+        ]
+    },
+    {
+        "symbol": "SI",
+        "vdw_radius": 2.1,
+        "jmol_color": [
+            0.94,
+            0.78,
+            0.63
+        ]
+    },
+    {
+        "symbol": "P",
+        "vdw_radius": 1.8,
+        "jmol_color": [
+            1.0,
+            0.5,
+            0.0
+        ]
+    },
+    {
+        "symbol": "S",
+        "vdw_radius": 1.8,
+        "jmol_color": [
+            1.0,
+            1.0,
+            0.19
+        ]
+    },
+    {
+        "symbol": "CL",
+        "vdw_radius": 1.75,
+        "jmol_color": [
+            0.12,
+            0.94,
+            0.12
+        ]
+    },
+    {
+        "symbol": "AR",
+        "vdw_radius": 1.88,
+        "jmol_color": [
+            0.5,
+            0.82,
+            0.89
+        ]
+    },
+    {
+        "symbol": "K",
+        "vdw_radius": 2.75,
+        "jmol_color": [
+            0.56,
+            0.25,
+            0.83
+        ]
+    },
+    {
+        "symbol": "CA",
+        "vdw_radius": 2.31,
+        "jmol_color": [
+            0.24,
+            1.0,
+            0.0
+        ]
+    },
+    {
+        "symbol": "SC",
+        "vdw_radius": 2.15,
+        "jmol_color": [
+            0.9,
+            0.9,
+            0.9
+        ]
+    },
+    {
+        "symbol": "TI",
+        "vdw_radius": 2.11,
+        "jmol_color": [
+            0.75,
+            0.76,
+            0.78
+        ]
+    },
+    {
+        "symbol": "V",
+        "vdw_radius": 2.07,
+        "jmol_color": [
+            0.65,
+            0.65,
+            0.67
+        ]
+    },
+    {
+        "symbol": "CR",
+        "vdw_radius": 2.06,
+        "jmol_color": [
+            0.54,
+            0.6,
+            0.78
+        ]
+    },
+    {
+        "symbol": "MN",
+        "vdw_radius": 2.05,
+        "jmol_color": [
+            0.61,
+            0.48,
+            0.78
+        ]
+    },
+    {
+        "symbol": "FE",
+        "vdw_radius": 2.04,
+        "jmol_color": [
+            0.88,
+            0.4,
+            0.2
+        ]
+    },
+    {
+        "symbol": "CO",
+        "vdw_radius": 2.0,
+        "jmol_color": [
+            0.94,
+            0.56,
+            0.63
+        ]
+    },
+    {
+        "symbol": "NI",
+        "vdw_radius": 1.97,
+        "jmol_color": [
+            0.31,
+            0.82,
+            0.31
+        ]
+    },
+    {
+        "symbol": "CU",
+        "vdw_radius": 1.96,
+        "jmol_color": [
+            0.78,
+            0.5,
+            0.2
+        ]
+    },
+    {
+        "symbol": "ZN",
+        "vdw_radius": 2.01,
+        "jmol_color": [
+            0.49,
+            0.5,
+            0.69
+        ]
+    },
+    {
+        "symbol": "GA",
+        "vdw_radius": 1.87,
+        "jmol_color": [
+            0.76,
+            0.56,
+            0.56
+        ]
+    },
+    {
+        "symbol": "GE",
+        "vdw_radius": 2.11,
+        "jmol_color": [
+            0.4,
+            0.56,
+            0.56
+        ]
+    },
+    {
+        "symbol": "AS",
+        "vdw_radius": 1.85,
+        "jmol_color": [
+            0.74,
+            0.5,
+            0.89
+        ]
+    },
+    {
+        "symbol": "SE",
+        "vdw_radius": 1.9,
+        "jmol_color": [
+            1.0,
+            0.63,
+            0.0
+        ]
+    },
+    {
+        "symbol": "BR",
+        "vdw_radius": 1.85,
+        "jmol_color": [
+            0.65,
+            0.16,
+            0.16
+        ]
+    },
+    {
+        "symbol": "KR",
+        "vdw_radius": 2.02,
+        "jmol_color": [
+            0.36,
+            0.72,
+            0.82
+        ]
+    },
+    {
+        "symbol": "RB",
+        "vdw_radius": 3.03,
+        "jmol_color": [
+            0.44,
+            0.18,
+            0.69
+        ]
+    },
+    {
+        "symbol": "SR",
+        "vdw_radius": 2.49,
+        "jmol_color": [
+            0.0,
+            1.0,
+            0.0
+        ]
+    },
+    {
+        "symbol": "Y",
+        "vdw_radius": 2.32,
+        "jmol_color": [
+            0.58,
+            1.0,
+            1.0
+        ]
+    },
+    {
+        "symbol": "ZR",
+        "vdw_radius": 2.23,
+        "jmol_color": [
+            0.58,
+            0.88,
+            0.88
+        ]
+    },
+    {
+        "symbol": "NB",
+        "vdw_radius": 2.18,
+        "jmol_color": [
+            0.45,
+            0.76,
+            0.79
+        ]
+    },
+    {
+        "symbol": "MO",
+        "vdw_radius": 2.17,
+        "jmol_color": [
+            0.33,
+            0.71,
+            0.71
+        ]
+    },
+    {
+        "symbol": "TC",
+        "vdw_radius": 2.16,
+        "jmol_color": [
+            0.23,
+            0.62,
+            0.62
+        ]
+    },
+    {
+        "symbol": "RU",
+        "vdw_radius": 2.13,
+        "jmol_color": [
+            0.14,
+            0.56,
+            0.56
+        ]
+    },
+    {
+        "symbol": "RH",
+        "vdw_radius": 2.1,
+        "jmol_color": [
+            0.04,
+            0.49,
+            0.55
+        ]
+    },
+    {
+        "symbol": "PD",
+        "vdw_radius": 2.1,
+        "jmol_color": [
+            0.0,
+            0.41,
+            0.52
+        ]
+    },
+    {
+        "symbol": "AG",
+        "vdw_radius": 2.11,
+        "jmol_color": [
+            0.75,
+            0.75,
+            0.75
+        ]
+    },
+    {
+        "symbol": "CD",
+        "vdw_radius": 2.18,
+        "jmol_color": [
+            1.0,
+            0.85,
+            0.56
+        ]
+    },
+    {
+        "symbol": "IN",
+        "vdw_radius": 1.93,
+        "jmol_color": [
+            0.65,
+            0.46,
+            0.45
+        ]
+    },
+    {
+        "symbol": "SN",
+        "vdw_radius": 2.17,
+        "jmol_color": [
+            0.4,
+            0.5,
+            0.5
+        ]
+    },
+    {
+        "symbol": "SB",
+        "vdw_radius": 2.06,
+        "jmol_color": [
+            0.62,
+            0.39,
+            0.71
+        ]
+    },
+    {
+        "symbol": "TE",
+        "vdw_radius": 2.06,
+        "jmol_color": [
+            0.83,
+            0.48,
+            0.0
+        ]
+    },
+    {
+        "symbol": "I",
+        "vdw_radius": 1.98,
+        "jmol_color": [
+            0.58,
+            0.0,
+            0.58
+        ]
+    },
+    {
+        "symbol": "XE",
+        "vdw_radius": 2.16,
+        "jmol_color": [
+            0.26,
+            0.62,
+            0.69
+        ]
+    },
+    {
+        "symbol": "CS",
+        "vdw_radius": 3.43,
+        "jmol_color": [
+            0.34,
+            0.09,
+            0.56
+        ]
+    },
+    {
+        "symbol": "BA",
+        "vdw_radius": 2.68,
+        "jmol_color": [
+            0.0,
+            0.79,
+            0.0
+        ]
+    },
+    {
+        "symbol": "LA",
+        "vdw_radius": 2.43,
+        "jmol_color": [
+            0.44,
+            0.83,
+            1.0
+        ]
+    },
+    {
+        "symbol": "CE",
+        "vdw_radius": 2.42,
+        "jmol_color": [
+            1.0,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "PR",
+        "vdw_radius": 2.4,
+        "jmol_color": [
+            0.85,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "ND",
+        "vdw_radius": 2.39,
+        "jmol_color": [
+            0.78,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "PM",
+        "vdw_radius": 2.38,
+        "jmol_color": [
+            0.64,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "SM",
+        "vdw_radius": 2.36,
+        "jmol_color": [
+            0.56,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "EU",
+        "vdw_radius": 2.35,
+        "jmol_color": [
+            0.38,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "GD",
+        "vdw_radius": 2.34,
+        "jmol_color": [
+            0.27,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "TB",
+        "vdw_radius": 2.33,
+        "jmol_color": [
+            0.19,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "DY",
+        "vdw_radius": 2.31,
+        "jmol_color": [
+            0.12,
+            1.0,
+            0.78
+        ]
+    },
+    {
+        "symbol": "HO",
+        "vdw_radius": 2.3,
+        "jmol_color": [
+            0.0,
+            1.0,
+            0.61
+        ]
+    },
+    {
+        "symbol": "ER",
+        "vdw_radius": 2.29,
+        "jmol_color": [
+            0.0,
+            0.9,
+            0.46
+        ]
+    },
+    {
+        "symbol": "TM",
+        "vdw_radius": 2.27,
+        "jmol_color": [
+            0.0,
+            0.83,
+            0.32
+        ]
+    },
+    {
+        "symbol": "YB",
+        "vdw_radius": 2.26,
+        "jmol_color": [
+            0.0,
+            0.75,
+            0.22
+        ]
+    },
+    {
+        "symbol": "LU",
+        "vdw_radius": 2.24,
+        "jmol_color": [
+            0.0,
+            0.67,
+            0.14
+        ]
+    },
+    {
+        "symbol": "HF",
+        "vdw_radius": 2.23,
+        "jmol_color": [
+            0.3,
+            0.76,
+            1.0
+        ]
+    },
+    {
+        "symbol": "TA",
+        "vdw_radius": 2.22,
+        "jmol_color": [
+            0.3,
+            0.65,
+            1.0
+        ]
+    },
+    {
+        "symbol": "W",
+        "vdw_radius": 2.18,
+        "jmol_color": [
+            0.13,
+            0.58,
+            0.84
+        ]
+    },
+    {
+        "symbol": "RE",
+        "vdw_radius": 2.16,
+        "jmol_color": [
+            0.15,
+            0.49,
+            0.67
+        ]
+    },
+    {
+        "symbol": "OS",
+        "vdw_radius": 2.16,
+        "jmol_color": [
+            0.15,
+            0.4,
+            0.59
+        ]
+    },
+    {
+        "symbol": "IR",
+        "vdw_radius": 2.13,
+        "jmol_color": [
+            0.09,
+            0.33,
+            0.53
+        ]
+    },
+    {
+        "symbol": "PT",
+        "vdw_radius": 2.13,
+        "jmol_color": [
+            0.82,
+            0.82,
+            0.88
+        ]
+    },
+    {
+        "symbol": "AU",
+        "vdw_radius": 2.14,
+        "jmol_color": [
+            1.0,
+            0.82,
+            0.14
+        ]
+    },
+    {
+        "symbol": "HG",
+        "vdw_radius": 2.23,
+        "jmol_color": [
+            0.72,
+            0.72,
+            0.82
+        ]
+    },
+    {
+        "symbol": "TL",
+        "vdw_radius": 1.96,
+        "jmol_color": [
+            0.65,
+            0.33,
+            0.3
+        ]
+    },
+    {
+        "symbol": "PB",
+        "vdw_radius": 2.02,
+        "jmol_color": [
+            0.34,
+            0.35,
+            0.38
+        ]
+    },
+    {
+        "symbol": "BI",
+        "vdw_radius": 2.07,
+        "jmol_color": [
+            0.62,
+            0.31,
+            0.71
+        ]
+    },
+    {
+        "symbol": "PO",
+        "vdw_radius": 1.97,
+        "jmol_color": [
+            0.67,
+            0.36,
+            0.0
+        ]
+    },
+    {
+        "symbol": "AT",
+        "vdw_radius": 2.02,
+        "jmol_color": [
+            0.46,
+            0.31,
+            0.27
+        ]
+    },
+    {
+        "symbol": "RN",
+        "vdw_radius": 2.2,
+        "jmol_color": [
+            0.26,
+            0.51,
+            0.59
+        ]
+    },
+    {
+        "symbol": "FR",
+        "vdw_radius": 3.48,
+        "jmol_color": [
+            0.26,
+            0.0,
+            0.4
+        ]
+    },
+    {
+        "symbol": "RA",
+        "vdw_radius": 2.83,
+        "jmol_color": [
+            0.0,
+            0.49,
+            0.0
+        ]
+    },
+    {
+        "symbol": "AC",
+        "vdw_radius": 2.47,
+        "jmol_color": [
+            0.44,
+            0.67,
+            0.98
+        ]
+    },
+    {
+        "symbol": "TH",
+        "vdw_radius": 2.45,
+        "jmol_color": [
+            0.0,
+            0.73,
+            1.0
+        ]
+    },
+    {
+        "symbol": "PA",
+        "vdw_radius": 2.43,
+        "jmol_color": [
+            0.0,
+            0.63,
+            1.0
+        ]
+    },
+    {
+        "symbol": "U",
+        "vdw_radius": 2.41,
+        "jmol_color": [
+            0.0,
+            0.56,
+            1.0
+        ]
+    },
+    {
+        "symbol": "NP",
+        "vdw_radius": 2.39,
+        "jmol_color": [
+            0.0,
+            0.5,
+            1.0
+        ]
+    },
+    {
+        "symbol": "PU",
+        "vdw_radius": 2.43,
+        "jmol_color": [
+            0.0,
+            0.42,
+            1.0
+        ]
+    },
+    {
+        "symbol": "AM",
+        "vdw_radius": 2.44,
+        "jmol_color": [
+            0.33,
+            0.36,
+            0.95
+        ]
+    },
+    {
+        "symbol": "CM",
+        "vdw_radius": 2.45,
+        "jmol_color": [
+            0.47,
+            0.36,
+            0.89
+        ]
+    },
+    {
+        "symbol": "BK",
+        "vdw_radius": 2.44,
+        "jmol_color": [
+            0.54,
+            0.31,
+            0.89
+        ]
+    },
+    {
+        "symbol": "CF",
+        "vdw_radius": 2.45,
+        "jmol_color": [
+            0.63,
+            0.21,
+            0.83
+        ]
+    },
+    {
+        "symbol": "ES",
+        "vdw_radius": 2.45,
+        "jmol_color": [
+            0.7,
+            0.12,
+            0.83
+        ]
+    },
+    {
+        "symbol": "FM",
+        "vdw_radius": 2.45,
+        "jmol_color": [
+            0.7,
+            0.12,
+            0.73
+        ]
+    },
+    {
+        "symbol": "MD",
+        "vdw_radius": 2.46,
+        "jmol_color": [
+            0.7,
+            0.05,
+            0.65
+        ]
+    },
+    {
+        "symbol": "NO",
+        "vdw_radius": 2.46,
+        "jmol_color": [
+            0.74,
+            0.05,
+            0.53
+        ]
+    },
+    {
+        "symbol": "LR",
+        "vdw_radius": 2.46,
+        "jmol_color": [
+            0.78,
+            0.0,
+            0.4
+        ]
+    }
+]
