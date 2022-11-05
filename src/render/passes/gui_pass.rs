@@ -37,6 +37,7 @@ impl GuiRenderPass {
         self.platform.captures_event(event)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn render(
         &mut self,
         view: &wgpu::TextureView,

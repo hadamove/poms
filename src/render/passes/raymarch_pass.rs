@@ -1,3 +1,5 @@
+use crate::compute::passes::shared::SharedResources;
+
 use super::resources::camera::CameraResource;
 
 pub struct RaymarchDistanceFieldPass {
@@ -12,7 +14,7 @@ impl RaymarchDistanceFieldPass {
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
         camera_resource: &CameraResource,
-        ses_buffer: &wgpu::Buffer,
+        shared_resources: &SharedResources,
         df_texture: &wgpu::Texture,
     ) -> Self {
         let texture_view = df_texture.create_view(&Default::default());
@@ -52,7 +54,7 @@ impl RaymarchDistanceFieldPass {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: ses_buffer.as_entire_binding(),
+                    resource: shared_resources.buffers.ses_grid_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
@@ -138,7 +140,7 @@ impl RaymarchDistanceFieldPass {
         }
     }
 
-    pub fn update_texture(&mut self, device: &wgpu::Device, df_texture: &wgpu::Texture) {
+    pub fn update_df_texture(&mut self, device: &wgpu::Device, df_texture: &wgpu::Texture) {
         let texture_view = df_texture.create_view(&Default::default());
 
         self.texture_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {

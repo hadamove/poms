@@ -2,8 +2,6 @@ use cgmath::Vector3;
 
 use crate::utils::molecule::{Atom, Molecule};
 
-const PROBE_RADIUS: f32 = 1.4;
-
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct GridUniform {
@@ -31,9 +29,9 @@ impl GridUniform {
         }
     }
 
-    fn from_molecule(molecule: &Molecule, spacing: GridSpacing) -> Self {
+    pub fn from_molecule(molecule: &Molecule, spacing: GridSpacing, probe_radius: f32) -> Self {
         let max_atom_radius = molecule.get_max_atom_radius();
-        let margin = 2.0 * PROBE_RADIUS + max_atom_radius;
+        let margin = 2.0 * probe_radius + max_atom_radius;
 
         let origin = molecule.get_min_position() - margin * Vector3::from((1.0, 1.0, 1.0));
         let size = molecule.get_max_distance() + 2.0 * margin;
@@ -48,22 +46,18 @@ impl GridUniform {
             _padding: Default::default(),
         }
     }
-
-    pub fn update_spacing(&mut self, new_spacing: GridSpacing) {
-        let (resolution, offset) = Self::compute_resolution_and_offset(new_spacing, self.size);
-        self.resolution = resolution;
-        self.offset = offset;
-    }
 }
 
 pub struct SESGrid {
     pub uniform: GridUniform,
+    pub probe_radius: f32,
 }
 
 impl SESGrid {
-    pub fn from_molecule(molecule: &Molecule, resolution: u32) -> Self {
+    pub fn from_molecule(molecule: &Molecule, resolution: u32, probe_radius: f32) -> Self {
         Self {
-            uniform: GridUniform::from_molecule(molecule, GridSpacing::Resolution(resolution)),
+            uniform: GridUniform::from_molecule(molecule, GridSpacing::Resolution(resolution), probe_radius),
+            probe_radius
         }
     }
 
@@ -102,12 +96,12 @@ impl NeighborAtomGrid {
         x + y * res + z * res * res
     }
 
-    pub fn from_molecule(molecule: &Molecule) -> Self {
+    pub fn from_molecule(molecule: &Molecule, probe_radius: f32) -> Self {
         let max_atom_radius = molecule.get_max_atom_radius();
-        let grid_offset = PROBE_RADIUS + max_atom_radius;
+        let grid_offset = probe_radius + max_atom_radius;
 
         let uniform =
-            GridUniform::from_molecule(molecule, GridSpacing::Offset(grid_offset));
+            GridUniform::from_molecule(molecule, GridSpacing::Offset(grid_offset), probe_radius);
 
         // Divide atoms into grid cells for constant look up.
         let grid_cell_indices = molecule

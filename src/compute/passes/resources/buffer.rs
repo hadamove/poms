@@ -1,13 +1,17 @@
 use wgpu::util::DeviceExt;
 
-use crate::compute::grid::{NeighborAtomGrid, SESGrid};
+use crate::compute::grid::NeighborAtomGrid;
 
 pub const MAX_NUM_GRID_POINTS: usize = usize::pow(256, 3);
 
 pub struct ProbePassBuffers {
+    // Input buffers
     pub neighbor_atom_grid_buffer: wgpu::Buffer,
     pub atoms_sorted_by_grid_cells_buffer: wgpu::Buffer,
     pub grid_cells_buffer: wgpu::Buffer,
+
+    // Output buffer
+    pub grid_point_class_buffer: wgpu::Buffer,
 }
 
 impl ProbePassBuffers {
@@ -32,37 +36,18 @@ impl ProbePassBuffers {
             usage: wgpu::BufferUsages::STORAGE,
         });
 
+        let grid_point_class_buffer =
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Grid point classification buffer"),
+            contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+
         Self {
             neighbor_atom_grid_buffer,
             atoms_sorted_by_grid_cells_buffer,
             grid_cells_buffer,
-        }
-    }
-}
-
-pub struct SharedBuffers {
-    pub ses_grid_buffer: wgpu::Buffer,
-    pub grid_point_classification_buffer: wgpu::Buffer,
-}
-
-impl SharedBuffers {
-    pub fn new(device: &wgpu::Device, ses_grid: &SESGrid) -> Self {
-        let ses_grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("SES Grid Uniform Buffer"),
-            contents: bytemuck::cast_slice(&[ses_grid.uniform]),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-
-        let grid_point_classification_buffer =
-            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Grid point classification buffer"),
-                contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
-                usage: wgpu::BufferUsages::STORAGE,
-            });
-
-        Self {
-            ses_grid_buffer,
-            grid_point_classification_buffer,
+            grid_point_class_buffer,
         }
     }
 }

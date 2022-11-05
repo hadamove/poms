@@ -8,11 +8,11 @@ struct GridUniform {
 };
 
 
-@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(0) @binding(1) var<storage, read> grid_point_class: array<u32>;
+@group(0) @binding(0) var<storage, read> grid_point_class: array<u32>;
+@group(0) @binding(1) var distance_texture: texture_storage_3d<rgba16float, write>;
 
-@group(0) @binding(2) var distance_texture: texture_storage_3d<rgba16float, write>;
-
+@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(1) @binding(1) var<uniform> probe_radius: f32;
 
 fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
     return ses_grid.origin.xyz + vec3<f32>(
@@ -29,8 +29,8 @@ fn compute_distance(grid_point_index: u32) -> f32 {
     var grid_point: vec3<f32> = grid_point_index_to_position(grid_point_index);
     var res = i32(ses_grid.resolution);
 
-    // We need to check points at maximum PROBE_RADIUS distance from the current point.
-    var search_range: i32 = i32(ceil(1.2 / ses_grid.offset)) + 1;
+    // We need to check points at maximum probe_radius distance from the current point.
+    var search_range: i32 = i32(ceil(probe_radius / ses_grid.offset)) + 1;
     var min_distance = HUGE_DISTANCE;
 
     // Loop over all neighboring points in the search range, find the closest exterior point.
@@ -57,7 +57,7 @@ fn compute_distance(grid_point_index: u32) -> f32 {
         }
     }
     if min_distance < HUGE_DISTANCE + 1.0 {
-        return 1.2 - min_distance;
+        return probe_radius - min_distance;
     }
     return -ses_grid.offset;
 }
@@ -86,7 +86,7 @@ fn main(
 
     switch (grid_point_class[grid_point_index]) {
         case 0u: {
-            textureStore(distance_texture, texture_index, vec4<f32>(1.2));
+            textureStore(distance_texture, texture_index, vec4<f32>(probe_radius));
             return;
         }
         case 1u: {

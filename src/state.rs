@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 use std::vec;
 
-use crate::compute::grid::{GridSpacing, SESGrid};
+use crate::compute::grid::{SESGrid, NeighborAtomGrid};
+use crate::compute::passes::shared::SharedResources;
 use crate::compute::passes::{dfr_pass::DistanceFieldRefinementPass, probe_pass::ProbePass};
 use crate::gui::Gui;
 use crate::render::passes::{
@@ -30,8 +31,6 @@ pub struct State {
     pub camera_resource: CameraResource,
     pub camera_controller: CameraController,
 
-    pub ses_grid: SESGrid,
-
     pub probe_compute_pass: ProbePass,
     pub drf_compute_pass: DistanceFieldRefinementPass,
 
@@ -47,6 +46,8 @@ pub struct State {
 
     pub frame_count: u64,
     pub last_frame_time: f32,
+
+    pub shared_resources: SharedResources,
 }
 
 impl State {
@@ -102,19 +103,23 @@ impl State {
 
         let camera_resource = CameraResource::new(&device);
 
-        let ses_grid = SESGrid::from_molecule(&molecule, gui.ses_resolution);
+        let ses_grid = SESGrid::from_molecule(&molecule, gui.ses_resolution, gui.probe_radius);
+        let molecules = vec![ComputedMolecule::new(molecule, gui.probe_radius)];
 
-        let probe_compute_pass = ProbePass::new(&device, &molecule, &ses_grid);
-        let shared_buffers = probe_compute_pass.get_shared_buffers();
+        let shared_resources = SharedResources::new(&device, ses_grid);
 
-        let drf_compute_pass = DistanceFieldRefinementPass::new(&device, &ses_grid, shared_buffers);
+        let neighbor_atom_grid = &molecules[0].neighbor_atom_grid;
+        let probe_compute_pass = ProbePass::new(&device, neighbor_atom_grid, &shared_resources);
 
-        let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecule);
+        let grid_point_class_buffer = probe_compute_pass.get_grid_point_class_buffer();
+        let drf_compute_pass = DistanceFieldRefinementPass::new(&device, &shared_resources, grid_point_class_buffer);
+
+        let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecules[0].molecule);
         let raymarch_pass = RaymarchDistanceFieldPass::new(
             &device,
             &config,
             &camera_resource,
-            &shared_buffers.ses_grid_buffer,
+            &shared_resources,
             drf_compute_pass.get_df_texture(),
         );
 
@@ -131,8 +136,6 @@ impl State {
             camera_resource,
             camera_controller,
 
-            ses_grid,
-
             probe_compute_pass,
             drf_compute_pass,
 
@@ -143,9 +146,11 @@ impl State {
             depth_texture,
 
             gui,
-            molecules: vec![],
+            molecules,
             frame_count: 0,
             last_frame_time: 0.0,
+            
+            shared_resources
         }
     }
 
@@ -157,14 +162,14 @@ impl State {
 
         let parsed_molecules_result = files
             .iter()
-            .map(|path| parser::parse_pdb_file(path))
+            .map(parser::parse_pdb_file)
             .collect::<Result<Vec<_>>>();
 
         match parsed_molecules_result {
             Ok(parsed_molecules) => {
                 self.molecules = parsed_molecules
                     .into_iter()
-                    .map(ComputedMolecule::new)
+                    .map(|molecule| ComputedMolecule::new(molecule, self.gui.probe_radius))
                     .collect();
 
                 self.update_passes();
@@ -187,35 +192,31 @@ impl State {
         let molecule_index = (self.frame_count / 3) as usize % self.molecules.len();
         let molecule = &self.molecules[molecule_index];
 
-        self.ses_grid = SESGrid::from_molecule(&molecule.mol, self.gui.ses_resolution);
+        let ses_grid = SESGrid::from_molecule(&molecule.molecule, self.gui.ses_resolution, self.gui.probe_radius);
+        self.shared_resources.update_ses_grid(&self.queue, ses_grid);
+        self.shared_resources.update_probe_radius(&self.queue, self.gui.probe_radius);
 
         self.spacefill_pass = SpacefillPass::new(
             &self.device,
             &self.config,
             &self.camera_resource,
-            &molecule.mol,
+            &molecule.molecule,
         );
 
         self.probe_compute_pass
-            .update_grid_buffer(&self.queue, &self.ses_grid);
-
-        self.probe_compute_pass
-            .recreate_buffers(&self.device, &molecule.neighbor_atom_grid);
-
-        let shared_buffers = self.probe_compute_pass.get_shared_buffers();
-
-        self.drf_compute_pass
-            .update_grid_buffer(&self.device, shared_buffers, &self.ses_grid);
+            .recreate_buffers(&self.device, &molecule.neighbor_atom_grid, &self.shared_resources);
+        
+        self.drf_compute_pass.recreate_df_texture(&self.device, &self.shared_resources, self.probe_compute_pass.get_grid_point_class_buffer());
 
         self.raymarch_pass
-            .update_texture(&self.device, self.drf_compute_pass.get_df_texture());
+            .update_df_texture(&self.device, self.drf_compute_pass.get_df_texture());
 
         self.gui.compute_ses_once = true;
     }
 
     fn focus_camera(&mut self) {
         if let Some(molecule) = self.molecules.get(0) {
-            let camera_eye: cgmath::Point3<f32> = molecule.mol.calculate_centre().into();
+            let camera_eye: cgmath::Point3<f32> = molecule.molecule.calculate_centre().into();
             let offset = Vector3::new(0.0, 0.0, 50.0);
 
             self.camera =
@@ -271,8 +272,8 @@ impl State {
 
         // Compute SES surface
         if self.gui.compute_ses || self.gui.compute_ses_once {
-            self.probe_compute_pass.execute(&mut encoder);
-            self.drf_compute_pass.execute(&mut encoder);
+            self.probe_compute_pass.execute(&mut encoder, &self.shared_resources);
+            self.drf_compute_pass.execute(&mut encoder, &self.shared_resources);
             self.gui.compute_ses_once = false;
         }
 
@@ -309,36 +310,23 @@ impl State {
 
     pub fn update(&mut self, time_delta: std::time::Duration) {
         self.frame_count += 1;
-
-        if self.gui.frame_time == 0.0 {
-            self.gui.frame_time = time_delta.as_secs_f32();
-        } else {
-            self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
-        }
+        self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
 
         self.camera_controller
             .update_camera(&mut self.camera, time_delta);
 
         self.camera_resource
             .update(&self.queue, &self.camera, &self.projection);
+
         self.update_molecules();
 
-        if self.ses_grid.get_resolution() != self.gui.ses_resolution {
-            self.ses_grid
-                .uniform
-                .update_spacing(GridSpacing::Resolution(self.gui.ses_resolution));
-
-            self.probe_compute_pass
-                .update_grid_buffer(&self.queue, &self.ses_grid);
-
-            self.drf_compute_pass.update_grid_buffer(
-                &self.device,
-                self.probe_compute_pass.get_shared_buffers(),
-                &self.ses_grid,
-            );
-
-            self.raymarch_pass
-                .update_texture(&self.device, self.drf_compute_pass.get_df_texture());
+        if self.shared_resources.ses_grid.get_resolution() != self.gui.ses_resolution || self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius {
+            if self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius {
+                self.molecules.iter_mut().for_each(|molecule|
+                    molecule.neighbor_atom_grid = NeighborAtomGrid::from_molecule(&molecule.molecule, self.gui.probe_radius)
+                );
+            }
+            self.update_passes();
         }
     }
 }

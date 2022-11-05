@@ -19,13 +19,17 @@ struct GridCell {
     atoms_count: u32,
 }
 
-@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(0) @binding(1) var<uniform> neighbor_grid: GridUniform;
+// Input buffers
+@group(0) @binding(0) var<uniform> neighbor_grid: GridUniform;
+@group(0) @binding(1) var<storage, read> atoms_sorted_by_grid_cells: array<Atom>;
+@group(0) @binding(2) var<storage, read> grid_cells: array<GridCell>;
 
-@group(0) @binding(2) var<storage, read> atoms_sorted_by_grid_cells: array<Atom>;
-@group(0) @binding(3) var<storage, read> grid_cells: array<GridCell>;
+// Output buffer
+@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
 
-@group(0) @binding(4) var<storage, read_write> grid_point_class: array<u32>;
+// Shared resources
+@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(1) @binding(1) var<uniform> probe_radius: f32;
 
 
 @compute @workgroup_size(64)
@@ -80,8 +84,7 @@ fn main(
                         grid_point_class[grid_point_index] = GRID_POINT_CLASS_INTERIOR;
                         return;
                     }
-                    // TODO: refactor 1.2 constant into uniform (PROBE_RADIUS)
-                    if (distance < atom.radius + 1.2) {
+                    if (distance < atom.radius + probe_radius) {
                         grid_point_class[grid_point_index] = GRID_POINT_CLASS_BOUNDARY;
                     }
                 }
