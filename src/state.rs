@@ -88,8 +88,7 @@ impl State {
         let gui_pass = GuiRenderPass::new(window, &device, &config);
         let gui = Gui::default();
 
-        let molecule =
-            parser::parse_pdb_file(&PathBuf::from("./molecules/md_long/model.12.pdb")).unwrap();
+        let molecule = parser::parse_pdb_file(&PathBuf::from("./data/pdb/1cqw.pdb")).unwrap();
 
         let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
         let offset = Vector3::new(-55., 36., -117.);
