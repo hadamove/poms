@@ -6,6 +6,8 @@ pub struct Gui {
     pub files_to_load: Vec<PathBuf>,
 
     pub ses_resolution: u32,
+    pub probe_radius: f32,
+
     pub render_spacefill: bool,
     pub render_ses_surface: bool,
 
@@ -21,6 +23,7 @@ impl Default for Gui {
         Self {
             files_to_load: Vec::new(),
             ses_resolution: 64,
+            probe_radius: 1.4,
             render_spacefill: true,
             render_ses_surface: true,
 
@@ -46,6 +49,8 @@ impl Gui {
                 {
                     self.compute_ses_once = true;
                 };
+
+                ui.add(egui::Slider::new(&mut self.probe_radius, 1.0..=5.0).text("Probe radius"));
                 ui.add(egui::Checkbox::new(
                     &mut self.render_spacefill,
                     "Render Spacefill",
