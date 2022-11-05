@@ -25,15 +25,15 @@ pub struct Molecule {
 }
 
 pub struct ComputedMolecule {
-    pub mol: Molecule,
+    pub molecule: Molecule,
     pub neighbor_atom_grid: NeighborAtomGrid,
 }
 
 impl ComputedMolecule {
-    pub fn new(mol: Molecule) -> Self {
-        let neighbor_atom_grid = NeighborAtomGrid::from_molecule(&mol);
+    pub fn new(molecule: Molecule, probe_radius: f32) -> Self {
+        let neighbor_atom_grid = NeighborAtomGrid::from_molecule(&molecule, probe_radius);
         Self {
-            mol,
+            molecule,
             neighbor_atom_grid,
         }
     }

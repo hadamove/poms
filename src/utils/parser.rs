@@ -10,7 +10,7 @@ pub fn load_pdb_file(filename: &PathBuf) -> Result<String> {
     #[cfg(not(target_arch = "wasm32"))]
     {
         // Read the file using OS file system
-        return Ok(std::fs::read_to_string(filename)?);
+        Ok(std::fs::read_to_string(filename)?)
     }
 
     #[cfg(target_arch = "wasm32")]

@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs::File, io::BufReader};
 
 use lazy_static::lazy_static;
 
-const ELEMENT_DATA_PATH: &'static str = "./data/elements.json";
+const ELEMENT_DATA_PATH: &str = "./data/elements.json";
 
 #[derive(Debug, serde::Deserialize)]
 struct RawElementData {
