@@ -63,23 +63,3 @@ Building the Electron Application requires `Node.js`, which can be downloded fro
 1. Build and host the web application either manually as described amove in **Building for the web** section or using `scripts/build-web.sh` script.
 2. In a new terminal window navigate to `src/electron` and run `npm i` to install Electron dependencies.
 3. Run `npm start` to run the Electron application.
-
-## Checkpoints
-
-- [x] basic rendering pipeline setup
-- [x] parse molecule file into data for shader
-- [x] render atoms using `wgsl` sphere impostor quad shader
-- [x] compilation for web browsers
-- [x] fix depth buffer quad clipping
-- [x] fix window resizing in browser
-- [x] electron build
-- [x] add docs for electron build
-- [x] profile both native and web build
-- [x] implement simple GUI
-- [x] use depth buffer texture in the shader to visualize depth
-- [x] raytracing rendering
-- [ ] SES rendering with fixed resolution
-- [ ] SES rendering with iterative refinement
-- [ ] fix console warnings in browser
-- [ ] fix colors in web build
-- [ ] implement proper lighting in the shader
