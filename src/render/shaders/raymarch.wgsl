@@ -26,7 +26,7 @@ struct GridUniform {
 
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {
     var coord = (position - ses_grid.origin.xyz) / (f32(ses_grid.resolution) * ses_grid.offset);
-    return textureSample(df_texture, df_sampler, coord).r;
+    return textureSampleLevel(df_texture, df_sampler, coord, 0.).r;
 }
 
 fn distance_from_df_tricubic(position: vec3<f32>) -> f32 {
@@ -51,21 +51,21 @@ fn distance_from_df_tricubic(position: vec3<f32>) -> f32 {
     var h1 = (w3 / g1 + 1.5 + index) / resolution;
 
 	// Fetch the eight linear interpolations.
-	var tex000 = textureSample(df_texture, df_sampler, h0).r;
-	var tex100 = textureSample(df_texture, df_sampler, vec3(h1.x, h0.y, h0.z)).r;
+	var tex000 = textureSampleLevel(df_texture, df_sampler, h0, 0.).r;
+	var tex100 = textureSampleLevel(df_texture, df_sampler, vec3(h1.x, h0.y, h0.z), 0.).r;
 	tex000 = mix(tex100, tex000, g0.x);
 
-	var tex010 = textureSample(df_texture, df_sampler, vec3(h0.x, h1.y, h0.z)).r;
-	var tex110 = textureSample(df_texture, df_sampler, vec3(h1.x, h1.y, h0.z)).r;
+	var tex010 = textureSampleLevel(df_texture, df_sampler, vec3(h0.x, h1.y, h0.z), 0.).r;
+	var tex110 = textureSampleLevel(df_texture, df_sampler, vec3(h1.x, h1.y, h0.z), 0.).r;
 	tex010 = mix(tex110, tex010, g0.x);
 	tex000 = mix(tex010, tex000, g0.y);
 
-	var tex001 = textureSample(df_texture, df_sampler, vec3(h0.x, h0.y, h1.z)).r;
-	var tex101 = textureSample(df_texture, df_sampler, vec3(h1.x, h0.y, h1.z)).r;
+	var tex001 = textureSampleLevel(df_texture, df_sampler, vec3(h0.x, h0.y, h1.z), 0.).r;
+	var tex101 = textureSampleLevel(df_texture, df_sampler, vec3(h1.x, h0.y, h1.z), 0.).r;
 	tex001 = mix(tex101, tex001, g0.x);
 
-	var tex011 = textureSample(df_texture, df_sampler, vec3(h0.x, h1.y, h1.z)).r;
-	var tex111 = textureSample(df_texture, df_sampler, h1).r;
+	var tex011 = textureSampleLevel(df_texture, df_sampler, vec3(h0.x, h1.y, h1.z), 0.).r;
+	var tex111 = textureSampleLevel(df_texture, df_sampler, h1, 0.).r;
 	tex011 = mix(tex111, tex011, g0.x);
 	tex001 = mix(tex011, tex001, g0.y);
 
