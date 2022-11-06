@@ -50,7 +50,7 @@ impl GuiRenderPass {
     ) -> Result<(), BackendError> {
         self.platform.begin_frame();
 
-        gui.ui(&self.platform.context());
+        gui.ui(&self.platform.context(), config);
 
         let output = self.platform.end_frame(Some(window));
         let paint_jobs = self.platform.context().tessellate(output.shapes);

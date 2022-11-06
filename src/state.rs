@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::vec;
 
 use crate::compute::grid::{SESGrid, NeighborAtomGrid};
@@ -90,7 +89,10 @@ impl State {
         let gui_pass = GuiRenderPass::new(window, &device, &config);
         let gui = Gui::default();
 
-        let molecule = parser::parse_pdb_file(&PathBuf::from("./data/pdb/1cqw.pdb")).unwrap();
+        let file = rfd::AsyncFileDialog::new().pick_file().await.unwrap();
+        let content = file.read().await;
+
+        let molecule = parser::parse_pdb_file(&content).unwrap();
 
         let camera_eye: cgmath::Point3<f32> = molecule.calculate_centre().into();
         let offset = Vector3::new(-55., 36., -117.);
@@ -163,7 +165,7 @@ impl State {
 
         let parsed_molecules_result = files
             .iter()
-            .map(parser::parse_pdb_file)
+            .map(|file| parser::parse_pdb_file(file))
             .collect::<Result<Vec<_>>>();
 
         match parsed_molecules_result {
@@ -176,7 +178,6 @@ impl State {
                 self.update_passes();
                 self.focus_camera();
 
-                println!("Loaded {} files.", self.molecules.len());
                 self.gui.error = None;
             }
             Err(e) => {
@@ -244,9 +245,9 @@ impl State {
         #[cfg(target_arch = "wasm32")]
         {
             // Dynamically change the size of the canvas in the browser window
-            match wasm::update_canvas_size(&window) {
+            match crate::utils::wasm::update_canvas_size(&window) {
                 None => {}
-                Some(new_size) => state.resize(new_size),
+                Some(new_size) => self.resize(new_size),
             }
         }
 

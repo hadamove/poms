@@ -1,33 +1,14 @@
 use anyhow::{bail, Result};
-use std::path::PathBuf;
 
 use super::{
     elements,
     molecule::{Atom, Molecule},
 };
 
-pub fn load_pdb_file(filename: &PathBuf) -> Result<String> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        // Read the file using OS file system
-        Ok(std::fs::read_to_string(filename)?)
-    }
 
-    #[cfg(target_arch = "wasm32")]
-    {
-        // TODO: make this function async to work with wasm
-        // https://github.com/dabreegster/minimal_websys_winit_glow_demo
-        crate::wasm::fetch_file(filename).await
-    }
-}
-
-pub fn parse_pdb_file(filename: &PathBuf) -> Result<Molecule> {
-    if !filename.to_string_lossy().ends_with(".pdb") {
-        bail!("File does not end with .pdb");
-    }
-
+pub fn parse_pdb_file(content: &[u8]) -> Result<Molecule> {
     let mut atoms: Vec<Atom> = vec![];
-    let content = load_pdb_file(filename)?;
+    let content = std::str::from_utf8(content)?;
 
     for line in content.split('\n') {
         if line.len() < 78 {

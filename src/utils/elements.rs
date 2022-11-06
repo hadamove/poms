@@ -1,8 +1,6 @@
-use std::{collections::HashMap, fs::File, io::BufReader};
+use std::collections::HashMap;
 
 use lazy_static::lazy_static;
-
-const ELEMENT_DATA_PATH: &str = "./data/elements.json";
 
 #[derive(Debug, serde::Deserialize)]
 struct RawElementData {
@@ -13,9 +11,8 @@ struct RawElementData {
 
 lazy_static! {
     static ref ELEMENTS: HashMap<String, RawElementData> = {
-        let file = File::open(ELEMENT_DATA_PATH).unwrap();
-        let reader = BufReader::new(file);
-        let data: Vec<RawElementData> = serde_json::from_reader(reader).unwrap();
+        let data_json: &str = include_str!("../../data/elements.json");
+        let data: Vec<RawElementData> = serde_json::from_str(data_json).unwrap();
 
         let mut map = HashMap::new();
         for element in data {

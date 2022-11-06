@@ -43,22 +43,3 @@ pub fn update_canvas_size(window: &Window) -> Option<PhysicalSize<u32>> {
     }
     None
 }
-
-#[cfg(target_arch = "wasm32")]
-pub async fn fetch_file(filename: &String) -> String {
-    // TODO: get rid of this
-    // Since it is more difficult to access the filesystem in the browser,
-    // we will fetch the file from local storage using http protocol
-    use wasm_bindgen::JsCast;
-    use wasm_bindgen_futures::JsFuture;
-    use web_sys::Response;
-
-    let window = web_sys::window().expect("no global `window` exists");
-    let url = format!("http://localhost:8000/{}", filename);
-    let fetch = web_sys::Window::fetch_with_str(&window, &url);
-    let resp_val = JsFuture::from(fetch).await.unwrap();
-    let resp: Response = resp_val.dyn_into().unwrap();
-    let text = JsFuture::from(resp.text().unwrap()).await.unwrap();
-
-    text.as_string().unwrap()
-}

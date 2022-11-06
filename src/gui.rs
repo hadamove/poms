@@ -1,9 +1,12 @@
-use std::path::PathBuf;
-
 use egui::{Align, Layout};
 
+pub enum Message {
+    FileLoaded(Vec<u8>),
+    // Other messages
+}
+
 pub struct Gui {
-    pub files_to_load: Vec<PathBuf>,
+    pub files_to_load: Vec<Vec<u8>>,
 
     pub ses_resolution: u32,
     pub probe_radius: f32,
@@ -16,6 +19,11 @@ pub struct Gui {
     pub frame_time: f32,
 
     pub error: Option<String>,
+
+    message_channel: (
+        std::sync::mpsc::Sender<Message>,
+        std::sync::mpsc::Receiver<Message>,
+    )
 }
 
 impl Default for Gui {
@@ -31,12 +39,23 @@ impl Default for Gui {
             compute_ses: false,
             compute_ses_once: true,
             error: None,
+
+            message_channel: std::sync::mpsc::channel(),
         }
     }
 }
 
 impl Gui {
-    pub fn ui(&mut self, ctx: &egui::Context) {
+    pub fn ui(&mut self, ctx: &egui::Context, config: &wgpu::SurfaceConfiguration) {
+
+        while let Ok(message) = self.message_channel.1.try_recv() {
+            match message {
+                Message::FileLoaded(data) => {
+                    self.files_to_load.push(data);
+                }
+            }
+        }
+            
         egui::containers::Window::new("Settings")
             .default_pos(egui::Pos2::new(100.0, 100.0))
             .show(ctx, |ui| {
@@ -68,37 +87,33 @@ impl Gui {
                 ui.label(format!("Frame time: {:.3} ms", self.frame_time));
 
                 ui.label(format!("FPS: {}", (1.0 / self.frame_time) as u32));
+
+                ui.label(format!("config: {:?} {:?}", config.width, config.height));
             });
 
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                // TODO: make this async
-                // https://github.com/emilk/egui/issues/270#issuecomment-869069186
                 ui.menu_button("File", |ui| {
                     if ui.button("Organize windows").clicked() {
                         ui.ctx().memory().reset_areas();
                         ui.close_menu();
                     }
                     if ui.button("Load file").clicked() {
-                        if let Some(path) = rfd::FileDialog::new().pick_file() {
-                            self.files_to_load = vec![path]
-                        }
-                    }
-                    if ui.button("Load folder (multiple)").clicked() {
-                        if let Some(path) = rfd::FileDialog::new().pick_folder() {
-                            let directory = std::fs::read_dir(path);
-                            match directory {
-                                Ok(dir) => {
-                                    self.files_to_load = dir
-                                        .filter_map(|d| d.ok())
-                                        .map(|entry| entry.path())
-                                        .collect::<Vec<_>>();
-                                }
-                                Err(e) => {
-                                    self.error = Some(format!("Could not open directory: {}", e));
+                        let task = rfd::AsyncFileDialog::new().pick_file();
+
+                        let message_sender = self.message_channel.0.clone();
+
+                        execute(
+                            async move {
+                                let file = task.await;
+
+                                if let Some(file) = file {
+                                    // let file_path = std::path::PathBuf::from(file.path());
+                                    let content = file.read().await;
+                                    message_sender.send(Message::FileLoaded(content)).ok();
                                 }
                             }
-                        }
+                        )
                     }
                 });
             });
@@ -124,4 +139,16 @@ impl Gui {
             self.error = None;
         }
     }
+}
+
+use std::future::Future;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn execute<F: Future<Output = ()> + Send + 'static>(f: F) {
+    // this is stupid... use any executor of your choice instead
+    std::thread::spawn(move || futures::executor::block_on(f));
+}
+#[cfg(target_arch = "wasm32")]
+fn execute<F: Future<Output = ()> + 'static>(f: F) {
+    wasm_bindgen_futures::spawn_local(f);
 }
