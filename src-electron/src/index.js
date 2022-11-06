@@ -1,5 +1,5 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
+import { app, BrowserWindow } from 'electron';
+import { join } from 'path';
 
 
 app.commandLine.appendSwitch('enable-unsafe-webgpu')
@@ -10,7 +10,7 @@ const createWindow = () => {
         height: 600,
     });
 
-    mainWindow.loadFile(path.join(__dirname, '../../../index.html'));
+    mainWindow.loadFile(join(__dirname, '../../index.html'));
     mainWindow.webContents.openDevTools();
 };
 
