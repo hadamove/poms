@@ -83,6 +83,7 @@ impl State {
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::AutoNoVsync,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
         };
         surface.configure(&device, &config);
 
