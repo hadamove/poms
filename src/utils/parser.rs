@@ -5,7 +5,6 @@ use super::{
     molecule::{Atom, Molecule},
 };
 
-
 pub fn parse_pdb_file(content: &[u8]) -> Result<Molecule> {
     let mut atoms: Vec<Atom> = vec![];
     let content = std::str::from_utf8(content)?;

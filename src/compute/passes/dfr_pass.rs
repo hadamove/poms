@@ -59,7 +59,12 @@ impl DistanceFieldRefinementPass {
         }
     }
 
-    pub fn recreate_df_texture(&mut self, device: &wgpu::Device, shared_resources: &SharedResources, grid_point_class_buffer: &wgpu::Buffer) {
+    pub fn recreate_df_texture(
+        &mut self,
+        device: &wgpu::Device,
+        shared_resources: &SharedResources,
+        grid_point_class_buffer: &wgpu::Buffer,
+    ) {
         // In case the resolution has changed, we need to recreate the texture.
         let resolution = shared_resources.ses_grid.get_resolution();
 
@@ -78,7 +83,11 @@ impl DistanceFieldRefinementPass {
         &self.df_texture
     }
 
-    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder, shared_resources: &SharedResources) {
+    pub fn execute(
+        &mut self,
+        encoder: &mut wgpu::CommandEncoder,
+        shared_resources: &SharedResources,
+    ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
         compute_pass.set_bind_group(0, &self.bind_group, &[]);

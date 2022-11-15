@@ -56,8 +56,12 @@ pub struct SESGrid {
 impl SESGrid {
     pub fn from_molecule(molecule: &Molecule, resolution: u32, probe_radius: f32) -> Self {
         Self {
-            uniform: GridUniform::from_molecule(molecule, GridSpacing::Resolution(resolution), probe_radius),
-            probe_radius
+            uniform: GridUniform::from_molecule(
+                molecule,
+                GridSpacing::Resolution(resolution),
+                probe_radius,
+            ),
+            probe_radius,
         }
     }
 

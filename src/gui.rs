@@ -23,7 +23,7 @@ pub struct Gui {
     message_channel: (
         std::sync::mpsc::Sender<Message>,
         std::sync::mpsc::Receiver<Message>,
-    )
+    ),
 }
 
 impl Default for Gui {
@@ -47,7 +47,6 @@ impl Default for Gui {
 
 impl Gui {
     pub fn ui(&mut self, ctx: &egui::Context, config: &wgpu::SurfaceConfiguration) {
-
         while let Ok(message) = self.message_channel.1.try_recv() {
             match message {
                 Message::FilesLoaded(data) => {
@@ -55,7 +54,7 @@ impl Gui {
                 }
             }
         }
-            
+
         egui::containers::Window::new("Settings")
             .default_pos(egui::Pos2::new(100.0, 100.0))
             .show(ctx, |ui| {
@@ -103,17 +102,15 @@ impl Gui {
 
                         let message_sender = self.message_channel.0.clone();
 
-                        execute(
-                            async move {
-                                if let Some(files) = task.await {
-                                    let mut contents = Vec::new();
-                                    for file in files {
-                                        contents.push(file.read().await);
-                                    }
-                                    message_sender.send(Message::FilesLoaded(contents)).ok();
+                        execute(async move {
+                            if let Some(files) = task.await {
+                                let mut contents = Vec::new();
+                                for file in files {
+                                    contents.push(file.read().await);
                                 }
+                                message_sender.send(Message::FilesLoaded(contents)).ok();
                             }
-                        )
+                        })
                     }
                 });
             });

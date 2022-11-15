@@ -89,28 +89,29 @@ pub struct DistanceFieldRefinementPassBindGroup;
 impl DistanceFieldRefinementPassBindGroup {
     pub const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'_> =
         wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Storage { read_only: true },
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
                 },
-                count: None,
-            },
-            wgpu::BindGroupLayoutEntry {
-                binding: 1,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::StorageTexture {
-                    access: wgpu::StorageTextureAccess::WriteOnly,
-                    format: wgpu::TextureFormat::Rgba16Float,
-                    view_dimension: wgpu::TextureViewDimension::D3,
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::StorageTexture {
+                        access: wgpu::StorageTextureAccess::WriteOnly,
+                        format: wgpu::TextureFormat::Rgba16Float,
+                        view_dimension: wgpu::TextureViewDimension::D3,
+                    },
+                    count: None,
                 },
-                count: None,
-            }],
+            ],
             label: Some("Distance Field Refinement Bind Group Layout"),
-
         };
 
     pub fn create(
@@ -121,14 +122,15 @@ impl DistanceFieldRefinementPassBindGroup {
     ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: grid_point_class_buffer.as_entire_binding(),
-            },
-            wgpu::BindGroupEntry {
-                binding: 1,
-                resource: wgpu::BindingResource::TextureView(df_texture_view),
-            }
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: grid_point_class_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(df_texture_view),
+                },
             ],
             label: Some("Distance Field Refinement Bind Group"),
         })

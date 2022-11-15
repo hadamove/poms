@@ -13,8 +13,9 @@ pub struct SharedResources {
 impl SharedResources {
     pub fn new(device: &wgpu::Device, ses_grid: SESGrid) -> Self {
         let buffers = SharedBuffers::new(device, &ses_grid);
-        let bind_group_layout = device.create_bind_group_layout(&SharedBindGroup::LAYOUT_DESCRIPTOR);
-        let bind_group = SharedBindGroup::new(device,  &buffers, &bind_group_layout).0;
+        let bind_group_layout =
+            device.create_bind_group_layout(&SharedBindGroup::LAYOUT_DESCRIPTOR);
+        let bind_group = SharedBindGroup::new(device, &buffers, &bind_group_layout).0;
 
         Self {
             ses_grid,

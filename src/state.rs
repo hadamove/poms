@@ -1,6 +1,6 @@
 use std::vec;
 
-use crate::compute::grid::{SESGrid, NeighborAtomGrid};
+use crate::compute::grid::{NeighborAtomGrid, SESGrid};
 use crate::compute::passes::shared::SharedResources;
 use crate::compute::passes::{dfr_pass::DistanceFieldRefinementPass, probe_pass::ProbePass};
 use crate::gui::Gui;
@@ -115,9 +115,11 @@ impl State {
         let probe_compute_pass = ProbePass::new(&device, neighbor_atom_grid, &shared_resources);
 
         let grid_point_class_buffer = probe_compute_pass.get_grid_point_class_buffer();
-        let drf_compute_pass = DistanceFieldRefinementPass::new(&device, &shared_resources, grid_point_class_buffer);
+        let drf_compute_pass =
+            DistanceFieldRefinementPass::new(&device, &shared_resources, grid_point_class_buffer);
 
-        let spacefill_pass = SpacefillPass::new(&device, &config, &camera_resource, &molecules[0].molecule);
+        let spacefill_pass =
+            SpacefillPass::new(&device, &config, &camera_resource, &molecules[0].molecule);
         let raymarch_pass = RaymarchDistanceFieldPass::new(
             &device,
             &config,
@@ -152,8 +154,8 @@ impl State {
             molecules,
             frame_count: 0,
             last_frame_time: 0.0,
-            
-            shared_resources
+
+            shared_resources,
         }
     }
 
@@ -194,9 +196,14 @@ impl State {
         let molecule_index = (self.frame_count / 3) as usize % self.molecules.len();
         let molecule = &self.molecules[molecule_index];
 
-        let ses_grid = SESGrid::from_molecule(&molecule.molecule, self.gui.ses_resolution, self.gui.probe_radius);
+        let ses_grid = SESGrid::from_molecule(
+            &molecule.molecule,
+            self.gui.ses_resolution,
+            self.gui.probe_radius,
+        );
         self.shared_resources.update_ses_grid(&self.queue, ses_grid);
-        self.shared_resources.update_probe_radius(&self.queue, self.gui.probe_radius);
+        self.shared_resources
+            .update_probe_radius(&self.queue, self.gui.probe_radius);
 
         self.spacefill_pass = SpacefillPass::new(
             &self.device,
@@ -205,9 +212,14 @@ impl State {
             &molecule.molecule,
         );
 
-        self.probe_compute_pass.recreate_buffers(&self.device, &molecule.neighbor_atom_grid);
-        
-        self.drf_compute_pass.recreate_df_texture(&self.device, &self.shared_resources, self.probe_compute_pass.get_grid_point_class_buffer());
+        self.probe_compute_pass
+            .recreate_buffers(&self.device, &molecule.neighbor_atom_grid);
+
+        self.drf_compute_pass.recreate_df_texture(
+            &self.device,
+            &self.shared_resources,
+            self.probe_compute_pass.get_grid_point_class_buffer(),
+        );
 
         self.raymarch_pass
             .update_df_texture(&self.device, self.drf_compute_pass.get_df_texture());
@@ -273,8 +285,10 @@ impl State {
 
         // Compute SES surface
         if self.gui.compute_ses || self.gui.compute_ses_once {
-            self.probe_compute_pass.execute(&mut encoder, &self.shared_resources);
-            self.drf_compute_pass.execute(&mut encoder, &self.shared_resources);
+            self.probe_compute_pass
+                .execute(&mut encoder, &self.shared_resources);
+            self.drf_compute_pass
+                .execute(&mut encoder, &self.shared_resources);
             self.gui.compute_ses_once = false;
         }
 
@@ -322,11 +336,15 @@ impl State {
         self.update_molecules();
 
         // TODO: refactor this
-        if self.shared_resources.ses_grid.get_resolution() != self.gui.ses_resolution || self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius || self.molecules.len() > 1{
+        if self.shared_resources.ses_grid.get_resolution() != self.gui.ses_resolution
+            || self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius
+            || self.molecules.len() > 1
+        {
             if self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius {
-                self.molecules.iter_mut().for_each(|molecule|
-                    molecule.neighbor_atom_grid = NeighborAtomGrid::from_molecule(&molecule.molecule, self.gui.probe_radius)
-                );
+                self.molecules.iter_mut().for_each(|molecule| {
+                    molecule.neighbor_atom_grid =
+                        NeighborAtomGrid::from_molecule(&molecule.molecule, self.gui.probe_radius)
+                });
             }
             self.update_passes();
         }

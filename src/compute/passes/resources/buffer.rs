@@ -37,11 +37,11 @@ impl ProbePassBuffers {
         });
 
         let grid_point_class_buffer =
-        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Grid point classification buffer"),
-            contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
-            usage: wgpu::BufferUsages::STORAGE,
-        });
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Grid point classification buffer"),
+                contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
 
         Self {
             neighbor_atom_grid_buffer,
