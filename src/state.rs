@@ -3,6 +3,7 @@ use std::vec;
 use crate::compute::grid::{NeighborAtomGrid, SESGrid};
 use crate::compute::passes::shared::SharedResources;
 use crate::compute::passes::{dfr_pass::DistanceFieldRefinementPass, probe_pass::ProbePass};
+use crate::gpu::GpuState;
 use crate::gui::Gui;
 use crate::render::passes::{
     gui_pass::GuiRenderPass, raymarch_pass::RaymarchDistanceFieldPass,
@@ -20,10 +21,7 @@ use crate::utils::parser;
 use winit::{event::*, window::Window};
 
 pub struct State {
-    pub surface: wgpu::Surface,
-    pub device: wgpu::Device,
-    pub queue: wgpu::Queue,
-    pub config: wgpu::SurfaceConfiguration,
+    pub gpu: GpuState,
 
     pub camera: Camera,
     pub projection: Projection,
@@ -51,42 +49,9 @@ pub struct State {
 
 impl State {
     pub async fn new(window: &Window) -> Self {
-        let instance =
-            // TODO: Fix Vulkan
-            wgpu::Instance::new(wgpu::Backends::all().difference(wgpu::Backends::VULKAN));
-        let surface = unsafe { instance.create_surface(window) };
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::default(),
-                compatible_surface: Some(&surface),
-                force_fallback_adapter: false,
-            })
-            .await
-            .expect("Could not find a suitable adapter");
+        let gpu = GpuState::init(window).await;
 
-        let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
-            .await
-            .expect("Could not create device");
-
-        let size = window.inner_size();
-        let supported_format = surface
-            .get_supported_formats(&adapter)
-            .get(0)
-            .expect("No format supported")
-            .to_owned();
-
-        let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: supported_format,
-            width: size.width,
-            height: size.height,
-            present_mode: wgpu::PresentMode::AutoNoVsync,
-            alpha_mode: wgpu::CompositeAlphaMode::Auto,
-        };
-        surface.configure(&device, &config);
-
-        let gui_pass = GuiRenderPass::new(window, &device, &config);
+        let gui_pass = GuiRenderPass::new(window, &gpu.device, &gpu.config);
         let gui = Gui::default();
 
         let file = rfd::AsyncFileDialog::new().pick_file().await.unwrap();
@@ -99,42 +64,51 @@ impl State {
 
         let camera = camera::Camera::new(camera_eye + offset, cgmath::Deg(55.), cgmath::Deg(-11.0));
 
-        let projection =
-            camera::Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 1000.0);
+        let projection = camera::Projection::new(
+            gpu.config.width,
+            gpu.config.height,
+            cgmath::Deg(45.0),
+            0.1,
+            1000.0,
+        );
 
         let camera_controller = camera::CameraController::new(100.0, 0.3);
 
-        let camera_resource = CameraResource::new(&device);
+        let camera_resource = CameraResource::new(&gpu.device);
 
         let ses_grid = SESGrid::from_molecule(&molecule, gui.ses_resolution, gui.probe_radius);
         let molecules = vec![ComputedMolecule::new(molecule, gui.probe_radius)];
 
-        let shared_resources = SharedResources::new(&device, ses_grid);
+        let shared_resources = SharedResources::new(&gpu.device, ses_grid);
 
         let neighbor_atom_grid = &molecules[0].neighbor_atom_grid;
-        let probe_compute_pass = ProbePass::new(&device, neighbor_atom_grid, &shared_resources);
+        let probe_compute_pass = ProbePass::new(&gpu.device, neighbor_atom_grid, &shared_resources);
 
         let grid_point_class_buffer = probe_compute_pass.get_grid_point_class_buffer();
-        let drf_compute_pass =
-            DistanceFieldRefinementPass::new(&device, &shared_resources, grid_point_class_buffer);
+        let drf_compute_pass = DistanceFieldRefinementPass::new(
+            &gpu.device,
+            &shared_resources,
+            grid_point_class_buffer,
+        );
 
-        let spacefill_pass =
-            SpacefillPass::new(&device, &config, &camera_resource, &molecules[0].molecule);
+        let spacefill_pass = SpacefillPass::new(
+            &gpu.device,
+            &gpu.config,
+            &camera_resource,
+            &molecules[0].molecule,
+        );
         let raymarch_pass = RaymarchDistanceFieldPass::new(
-            &device,
-            &config,
+            &gpu.device,
+            &gpu.config,
             &camera_resource,
             &shared_resources,
             drf_compute_pass.get_df_texture(),
         );
 
-        let depth_texture = texture::Texture::create_depth_texture(&device, &config);
+        let depth_texture = texture::Texture::create_depth_texture(&gpu.device, &gpu.config);
 
         Self {
-            surface,
-            device,
-            queue,
-            config,
+            gpu,
 
             camera,
             projection,
@@ -201,28 +175,29 @@ impl State {
             self.gui.ses_resolution,
             self.gui.probe_radius,
         );
-        self.shared_resources.update_ses_grid(&self.queue, ses_grid);
         self.shared_resources
-            .update_probe_radius(&self.queue, self.gui.probe_radius);
+            .update_ses_grid(&self.gpu.queue, ses_grid);
+        self.shared_resources
+            .update_probe_radius(&self.gpu.queue, self.gui.probe_radius);
 
         self.spacefill_pass = SpacefillPass::new(
-            &self.device,
-            &self.config,
+            &self.gpu.device,
+            &self.gpu.config,
             &self.camera_resource,
             &molecule.molecule,
         );
 
         self.probe_compute_pass
-            .recreate_buffers(&self.device, &molecule.neighbor_atom_grid);
+            .recreate_buffers(&self.gpu.device, &molecule.neighbor_atom_grid);
 
         self.drf_compute_pass.recreate_df_texture(
-            &self.device,
+            &self.gpu.device,
             &self.shared_resources,
             self.probe_compute_pass.get_grid_point_class_buffer(),
         );
 
         self.raymarch_pass
-            .update_df_texture(&self.device, self.drf_compute_pass.get_df_texture());
+            .update_df_texture(&self.gpu.device, self.drf_compute_pass.get_df_texture());
 
         self.gui.compute_ses_once = true;
     }
@@ -239,13 +214,12 @@ impl State {
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
-            self.surface.configure(&self.device, &self.config);
-        }
+            self.gpu.resize(new_size);
 
-        self.projection.resize(new_size.width, new_size.height);
-        self.depth_texture = texture::Texture::create_depth_texture(&self.device, &self.config)
+            self.projection.resize(new_size.width, new_size.height);
+            self.depth_texture =
+                texture::Texture::create_depth_texture(&self.gpu.device, &self.gpu.config)
+        }
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
@@ -263,6 +237,7 @@ impl State {
         }
 
         let surface_texture = self
+            .gpu
             .surface
             .get_current_texture()
             .expect("Could not get surface texture");
@@ -272,6 +247,7 @@ impl State {
             .create_view(&wgpu::TextureViewDescriptor::default());
 
         let mut encoder: wgpu::CommandEncoder = self
+            .gpu
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
@@ -309,15 +285,15 @@ impl State {
                 &view,
                 &mut encoder,
                 window,
-                &self.device,
-                &self.queue,
-                &self.config,
+                &self.gpu.device,
+                &self.gpu.queue,
+                &self.gpu.config,
                 &mut self.gui,
             )
             .expect("Could not render GUI");
 
         // Submit commands to the GPU
-        self.queue.submit(Some(encoder.finish()));
+        self.gpu.queue.submit(Some(encoder.finish()));
 
         // Draw a frame
         surface_texture.present();
@@ -331,7 +307,7 @@ impl State {
             .update_camera(&mut self.camera, time_delta);
 
         self.camera_resource
-            .update(&self.queue, &self.camera, &self.projection);
+            .update(&self.gpu.queue, &self.camera, &self.projection);
 
         self.update_molecules();
 

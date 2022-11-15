@@ -1,4 +1,5 @@
 mod compute;
+mod gpu;
 mod gui;
 mod render;
 mod state;
