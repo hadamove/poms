@@ -1,7 +1,7 @@
 use egui::{Align, Layout};
 
 pub enum Message {
-    FileLoaded(Vec<u8>),
+    FilesLoaded(Vec<Vec<u8>>),
     // Other messages
 }
 
@@ -50,8 +50,8 @@ impl Gui {
 
         while let Ok(message) = self.message_channel.1.try_recv() {
             match message {
-                Message::FileLoaded(data) => {
-                    self.files_to_load.push(data);
+                Message::FilesLoaded(data) => {
+                    self.files_to_load.extend(data);
                 }
             }
         }
@@ -99,18 +99,18 @@ impl Gui {
                         ui.close_menu();
                     }
                     if ui.button("Load file").clicked() {
-                        let task = rfd::AsyncFileDialog::new().pick_file();
+                        let task = rfd::AsyncFileDialog::new().pick_files();
 
                         let message_sender = self.message_channel.0.clone();
 
                         execute(
                             async move {
-                                let file = task.await;
-
-                                if let Some(file) = file {
-                                    // let file_path = std::path::PathBuf::from(file.path());
-                                    let content = file.read().await;
-                                    message_sender.send(Message::FileLoaded(content)).ok();
+                                if let Some(files) = task.await {
+                                    let mut contents = Vec::new();
+                                    for file in files {
+                                        contents.push(file.read().await);
+                                    }
+                                    message_sender.send(Message::FilesLoaded(contents)).ok();
                                 }
                             }
                         )

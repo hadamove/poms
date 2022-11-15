@@ -322,7 +322,8 @@ impl State {
 
         self.update_molecules();
 
-        if self.shared_resources.ses_grid.get_resolution() != self.gui.ses_resolution || self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius {
+        // TODO: refactor this
+        if self.shared_resources.ses_grid.get_resolution() != self.gui.ses_resolution || self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius || self.molecules.len() > 1{
             if self.shared_resources.ses_grid.probe_radius != self.gui.probe_radius {
                 self.molecules.iter_mut().for_each(|molecule|
                     molecule.neighbor_atom_grid = NeighborAtomGrid::from_molecule(&molecule.molecule, self.gui.probe_radius)
