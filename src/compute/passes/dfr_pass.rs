@@ -9,8 +9,6 @@ pub struct DistanceFieldRefinementPass {
 
     df_texture: wgpu::Texture,
     compute_pipeline: wgpu::ComputePipeline,
-
-    num_grid_points: u32,
 }
 
 impl DistanceFieldRefinementPass {
@@ -58,16 +56,13 @@ impl DistanceFieldRefinementPass {
             df_texture,
 
             compute_pipeline,
-            num_grid_points: u32::pow(resolution, 3),
         }
     }
 
     pub fn recreate_df_texture(&mut self, device: &wgpu::Device, shared_resources: &SharedResources, grid_point_class_buffer: &wgpu::Buffer) {
-        self.num_grid_points = shared_resources.ses_grid.get_num_grid_points();
-
+        // In case the resolution has changed, we need to recreate the texture.
         let resolution = shared_resources.ses_grid.get_resolution();
 
-        // In case the resolution has changed, we need to recreate the texture.
         self.df_texture = DistanceFieldTexture::create(device, resolution);
         let df_texture_view = self.df_texture.create_view(&Default::default());
 
@@ -89,7 +84,9 @@ impl DistanceFieldRefinementPass {
         compute_pass.set_bind_group(0, &self.bind_group, &[]);
         compute_pass.set_bind_group(1, &shared_resources.bind_group, &[]);
 
-        let num_work_groups = f32::ceil(self.num_grid_points as f32 / 64.0) as u32;
+        let num_grid_points = shared_resources.ses_grid.get_num_grid_points();
+        let num_work_groups = f32::ceil(num_grid_points as f32 / 64.0) as u32;
+
         compute_pass.dispatch_workgroups(num_work_groups, 1, 1);
     }
 }

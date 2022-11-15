@@ -205,8 +205,7 @@ impl State {
             &molecule.molecule,
         );
 
-        self.probe_compute_pass
-            .recreate_buffers(&self.device, &molecule.neighbor_atom_grid, &self.shared_resources);
+        self.probe_compute_pass.recreate_buffers(&self.device, &molecule.neighbor_atom_grid);
         
         self.drf_compute_pass.recreate_df_texture(&self.device, &self.shared_resources, self.probe_compute_pass.get_grid_point_class_buffer());
 

@@ -1,7 +1,7 @@
-use crate::compute::grid::NeighborAtomGrid;
 use super::resources::bind_group::ProbePassBindGroup;
 use super::resources::buffer::ProbePassBuffers;
 use super::shared::SharedResources;
+use crate::compute::grid::NeighborAtomGrid;
 
 pub struct ProbePass {
     bind_group: wgpu::BindGroup,
@@ -9,8 +9,6 @@ pub struct ProbePass {
     buffers: ProbePassBuffers,
 
     compute_pipeline: wgpu::ComputePipeline,
-
-    num_grid_points: u32,
 }
 
 impl ProbePass {
@@ -47,7 +45,6 @@ impl ProbePass {
             bind_group_layout,
             buffers,
             compute_pipeline,
-            num_grid_points: shared_resources.ses_grid.get_num_grid_points(),
         }
     }
 
@@ -59,24 +56,25 @@ impl ProbePass {
         &mut self,
         device: &wgpu::Device,
         neighbor_atom_grid: &NeighborAtomGrid,
-        shared_resources: &SharedResources,
     ) {
         self.buffers = ProbePassBuffers::new(device, neighbor_atom_grid);
-        self.bind_group = ProbePassBindGroup::create(
-            device,
-            &self.bind_group_layout,
-            &self.buffers,
-        );
-        self.num_grid_points = shared_resources.ses_grid.get_num_grid_points()
+        self.bind_group =
+            ProbePassBindGroup::create(device, &self.bind_group_layout, &self.buffers);
     }
 
-    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder, shared_resources: &SharedResources) {
+    pub fn execute(
+        &mut self,
+        encoder: &mut wgpu::CommandEncoder,
+        shared_resources: &SharedResources,
+    ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
         compute_pass.set_bind_group(0, &self.bind_group, &[]);
         compute_pass.set_bind_group(1, &shared_resources.bind_group, &[]);
 
-        let num_work_groups = f32::ceil(self.num_grid_points as f32 / 64.0) as u32;
+        let num_grid_points = shared_resources.ses_grid.get_num_grid_points();
+        let num_work_groups = f32::ceil(num_grid_points as f32 / 64.0) as u32;
+
         compute_pass.dispatch_workgroups(num_work_groups, 1, 1);
     }
 }
