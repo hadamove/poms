@@ -21,7 +21,7 @@ struct GridCell {
 
 // Input buffers
 @group(0) @binding(0) var<uniform> neighbor_grid: GridUniform;
-@group(0) @binding(1) var<storage, read> atoms_sorted_by_grid_cells: array<Atom>;
+@group(0) @binding(1) var<storage, read> atoms_sorted: array<Atom>;
 @group(0) @binding(2) var<storage, read> grid_cells: array<GridCell>;
 
 // Output buffer
@@ -77,7 +77,7 @@ fn main(
                 for (var i: i32 = 0; i < i32(grid_cell.atoms_count); i = i + 1) {
                     var atom_index: u32 = grid_cell.first_atom_index + u32(i);
 
-                    var atom: Atom = atoms_sorted_by_grid_cells[atom_index];
+                    var atom: Atom = atoms_sorted[atom_index];
                     var distance: f32 = length(grid_point - atom.position);
 
                     if (distance < atom.radius - ses_grid.offset) {

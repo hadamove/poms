@@ -25,6 +25,16 @@ pub struct Camera {
     pitch: Rad<f32>,
 }
 
+impl Default for Camera {
+    fn default() -> Self {
+        Self {
+            position: Point3::new(0.0, 0.0, 0.0),
+            yaw: Rad(0.0),
+            pitch: Rad(0.0),
+        }
+    }
+}
+
 impl Camera {
     pub fn new<V: Into<Point3<f32>>, Y: Into<Rad<f32>>, P: Into<Rad<f32>>>(
         position: V,
@@ -36,6 +46,11 @@ impl Camera {
             yaw: yaw.into(),
             pitch: pitch.into(),
         }
+    }
+
+    pub fn focus(&mut self, target: Point3<f32>) {
+        let offset = Vector3::new(0.0, 0.0, 100.0);
+        *self = Camera::new(target + offset, cgmath::Deg(-90.0), cgmath::Deg(0.0));
     }
 
     pub fn calc_matrix(&self) -> Matrix4<f32> {
@@ -62,6 +77,10 @@ impl Projection {
             znear,
             zfar,
         }
+    }
+
+    pub fn from_config(config: &wgpu::SurfaceConfiguration) -> Self {
+        Self::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 1000.0)
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {

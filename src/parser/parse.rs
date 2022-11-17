@@ -1,13 +1,11 @@
 use anyhow::{bail, Result};
 
-use super::{
-    elements,
-    molecule::{Atom, Molecule},
-};
+use super::elements;
+use crate::shared::molecule::Atom;
 
-pub fn parse_pdb_file(content: &[u8]) -> Result<Molecule> {
+pub fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<Vec<Atom>> {
     let mut atoms: Vec<Atom> = vec![];
-    let content = std::str::from_utf8(content)?;
+    let content = std::str::from_utf8(file)?;
 
     for line in content.split('\n') {
         if line.len() < 78 {
@@ -33,5 +31,5 @@ pub fn parse_pdb_file(content: &[u8]) -> Result<Molecule> {
         bail!("Invalid pdb file.")
     }
 
-    Ok(Molecule { atoms })
+    Ok(atoms)
 }

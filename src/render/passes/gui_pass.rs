@@ -1,9 +1,9 @@
 use egui::FontDefinitions;
 use egui_wgpu_backend::{BackendError, RenderPass, ScreenDescriptor};
 use egui_winit_platform::{Platform, PlatformDescriptor};
-use winit::window::Window;
+use winit::event::Event;
 
-use crate::gui::Gui;
+use crate::{gpu::GpuState, gui::Gui};
 
 pub struct GuiRenderPass {
     render_pass: egui_wgpu_backend::RenderPass,
@@ -11,17 +11,13 @@ pub struct GuiRenderPass {
 }
 
 impl GuiRenderPass {
-    pub fn new(
-        window: &Window,
-        device: &wgpu::Device,
-        config: &wgpu::SurfaceConfiguration,
-    ) -> Self {
-        let render_pass = RenderPass::new(device, config.format, 1);
+    pub fn new(gpu: &GpuState) -> Self {
+        let render_pass = RenderPass::new(&gpu.device, gpu.config.format, 1);
 
         let platform = Platform::new(PlatformDescriptor {
-            physical_width: config.width,
-            physical_height: config.height,
-            scale_factor: window.scale_factor(),
+            physical_width: gpu.config.width,
+            physical_height: gpu.config.height,
+            scale_factor: gpu.scale_factor,
             font_definitions: FontDefinitions::default(),
             style: Default::default(),
         });
@@ -32,9 +28,9 @@ impl GuiRenderPass {
         }
     }
 
-    pub fn handle_events<T>(&mut self, event: &winit::event::Event<T>) -> bool {
-        self.platform.handle_event(event);
-        self.platform.captures_event(event)
+    pub fn handle_events<T>(&mut self, winit_event: &Event<T>) -> bool {
+        self.platform.handle_event(winit_event);
+        self.platform.captures_event(winit_event)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -42,32 +38,29 @@ impl GuiRenderPass {
         &mut self,
         view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        window: &Window,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        config: &wgpu::SurfaceConfiguration,
+        gpu: &GpuState,
         gui: &mut Gui,
     ) -> Result<(), BackendError> {
         self.platform.begin_frame();
 
-        gui.ui(&self.platform.context(), config);
+        gui.ui(&self.platform.context());
 
-        let output = self.platform.end_frame(Some(window));
+        let output = self.platform.end_frame(None);
         let paint_jobs = self.platform.context().tessellate(output.shapes);
 
         let screen_descriptor = ScreenDescriptor {
-            physical_width: config.width,
-            physical_height: config.height,
-            scale_factor: window.scale_factor() as f32,
+            physical_width: gpu.config.width,
+            physical_height: gpu.config.height,
+            scale_factor: gpu.scale_factor as f32,
         };
 
         self.render_pass
-            .add_textures(device, queue, &output.textures_delta)?;
+            .add_textures(&gpu.device, &gpu.queue, &output.textures_delta)?;
 
         self.render_pass.remove_textures(output.textures_delta)?;
 
         self.render_pass
-            .update_buffers(device, queue, &paint_jobs, &screen_descriptor);
+            .update_buffers(&gpu.device, &gpu.queue, &paint_jobs, &screen_descriptor);
 
         self.render_pass
             .execute(encoder, view, &paint_jobs, &screen_descriptor, None)?;

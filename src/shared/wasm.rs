@@ -24,7 +24,7 @@ pub fn init_browser_window(window: &Window) {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn update_canvas_size(window: &Window) -> Option<PhysicalSize<u32>> {
+pub fn update_window_size_if_canvas_changed(window: &Window, app: &mut App) {
     use winit::platform::web::WindowExtWebSys;
 
     let size = window.inner_size();
@@ -39,7 +39,6 @@ pub fn update_canvas_size(window: &Window) -> Option<PhysicalSize<u32>> {
     if new_size != size {
         canvas.set_width(new_size.width);
         canvas.set_height(new_size.height);
-        return Some(new_size);
+        app.resize(new_size);
     }
-    None
 }

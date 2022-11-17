@@ -11,7 +11,8 @@ struct RawElementData {
 
 lazy_static! {
     static ref ELEMENTS: HashMap<String, RawElementData> = {
-        let data_json: &str = include_str!("../../data/elements.json");
+        // Load data from into program memory during compile time.
+        let data_json: &str = include_str!("./data/elements.json");
         let data: Vec<RawElementData> = serde_json::from_str(data_json).unwrap();
 
         let mut map = HashMap::new();

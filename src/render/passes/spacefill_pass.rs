@@ -1,42 +1,47 @@
-use super::resources::camera::CameraResource;
-use crate::utils::molecule::Molecule;
+use super::super::CameraResource;
+use crate::gpu::GpuState;
+use crate::shared::grid::MoleculeData;
 use wgpu::util::DeviceExt;
 
 pub struct SpacefillPass {
-    pub render_pipeline: wgpu::RenderPipeline,
+    pub atoms_buffer: wgpu::Buffer,
     pub atoms_bind_group: wgpu::BindGroup,
     pub vertex_count: u32,
+
+    pub render_pipeline: wgpu::RenderPipeline,
 }
 
 impl SpacefillPass {
-    pub fn new(
-        device: &wgpu::Device,
-        config: &wgpu::SurfaceConfiguration,
-        camera_resource: &CameraResource,
-        molecule: &Molecule,
-    ) -> Self {
-        let atoms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Atoms Buffer"),
-            contents: bytemuck::cast_slice(&molecule.atoms),
-            usage: wgpu::BufferUsages::STORAGE,
-        });
+    const VERTICES_PER_ATOM: u32 = 6;
+    // TODO: refactor into just one constatnt in constants.rs
+    const MAX_NUM_ATOMS: usize = 1_000_000;
 
-        let atoms_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("Atoms Bind Group Layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }],
+    pub fn new(gpu: &GpuState, camera_resource: &CameraResource) -> Self {
+        let atoms_buffer = gpu
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Atoms Buffer"),
+                contents: bytemuck::cast_slice(&[0u32; Self::MAX_NUM_ATOMS]),
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
 
-        let atoms_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        let atoms_bind_group_layout =
+            gpu.device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: Some("Atoms Bind Group Layout"),
+                    entries: &[wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::VERTEX,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Storage { read_only: true },
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    }],
+                });
+
+        let atoms_bind_group = gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Atoms Bind Group"),
             layout: &atoms_bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
@@ -46,65 +51,74 @@ impl SpacefillPass {
         });
 
         let render_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[
-                    camera_resource.get_bind_group_layout(),
-                    &atoms_bind_group_layout,
-                ],
-                push_constant_ranges: &[],
+            gpu.device
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: Some("Render Pipeline Layout"),
+                    bind_group_layouts: &[
+                        camera_resource.get_bind_group_layout(),
+                        &atoms_bind_group_layout,
+                    ],
+                    push_constant_ranges: &[],
+                });
+
+        let shader = gpu
+            .device
+            .create_shader_module(wgpu::include_wgsl!("../shaders/spacefill.wgsl"));
+
+        let render_pipeline = gpu
+            .device
+            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some("Render Pipeline"),
+                layout: Some(&render_pipeline_layout),
+                vertex: wgpu::VertexState {
+                    module: &shader,
+                    entry_point: "vs_main",
+                    buffers: &[],
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader,
+                    entry_point: "fs_main",
+                    targets: &[Some(wgpu::ColorTargetState {
+                        format: gpu.config.format,
+                        blend: Some(wgpu::BlendState::REPLACE),
+                        write_mask: wgpu::ColorWrites::ALL,
+                    })],
+                }),
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: Some(wgpu::Face::Back),
+                    polygon_mode: wgpu::PolygonMode::Fill,
+                    unclipped_depth: false,
+                    conservative: false,
+                },
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: wgpu::TextureFormat::Depth32Float,
+                    depth_write_enabled: true,
+                    depth_compare: wgpu::CompareFunction::Less,
+                    stencil: wgpu::StencilState::default(),
+                    bias: wgpu::DepthBiasState::default(),
+                }),
+                multisample: wgpu::MultisampleState::default(),
+                multiview: None,
             });
 
-        let shader = device.create_shader_module(wgpu::include_wgsl!("../shaders/spacefill.wgsl"));
-
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
-                buffers: &[],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-            },
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
-
-        let vertex_count = molecule.atoms.len() as u32 * 6;
-
         Self {
+            atoms_buffer,
             atoms_bind_group,
+            vertex_count: 0,
             render_pipeline,
-            vertex_count,
         }
+    }
+
+    pub fn on_molecule_changed(&mut self, queue: &wgpu::Queue, molecule: &MoleculeData) {
+        queue.write_buffer(
+            &self.atoms_buffer,
+            0,
+            bytemuck::cast_slice(&molecule.atoms_sorted),
+        );
+        self.vertex_count = molecule.atoms_sorted.len() as u32 * Self::VERTICES_PER_ATOM;
     }
 
     pub fn render(
