@@ -8,7 +8,6 @@ use crate::gui::Gui;
 use crate::parser::store::MoleculeStore;
 use crate::render::Renderer;
 use crate::shared::events::AppEvent;
-use crate::shared::molecule::Molecule;
 
 pub struct App {
     pub gpu: GpuState,
@@ -69,39 +68,30 @@ impl App {
         self.process_events();
         // self.frame_count += 1;
         // self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
-        self.renderer.update(&self.gpu, time_delta);
+        self.renderer.update(&mut self.gpu, time_delta);
     }
 
     fn process_events(&mut self) {
         while let Ok(event) = self.event_listener.try_recv() {
             match event {
                 AppEvent::MoleculeChanged(molecule) => {
-                    self.compute
-                        .probe_compute_pass
-                        .on_molecule_changed(&self.gpu.queue, &molecule);
-                    self.renderer
-                        .spacefill_pass
-                        .on_molecule_changed(&self.gpu.queue, &molecule);
-                    self.renderer
-                        .camera
-                        .focus(molecule.atoms_sorted.calculate_center());
                     self.gpu
-                        .shared_resources
-                        .update_ses(&self.gpu.queue, &molecule);
+                        .global_resources
+                        .update_molecule(&self.gpu.queue, molecule);
                 }
                 AppEvent::SesResolutionChanged(resolution) => {
-                    self.gpu.shared_resources.update_ses_resolution(
-                        &self.gpu.device,
+                    self.gpu.global_resources.update_resolution(
                         &self.gpu.queue,
+                        &self.gpu.device,
                         resolution,
                     );
                 }
                 AppEvent::ProbeRadiusChanged(probe_radius) => {
                     self.gpu
-                        .shared_resources
+                        .global_resources
                         .update_probe_radius(&self.gpu.queue, probe_radius);
 
-                    self.store.recompute_molecule_grids(probe_radius)
+                    self.store.recompute_molecule_grids(probe_radius);
                 }
                 AppEvent::RenderSesChanged(render_ses) => {
                     self.renderer.settings.render_ses = render_ses;
@@ -111,6 +101,9 @@ impl App {
                 }
                 AppEvent::OpenFileDialogRequested => self.store.load_pdb_files_from_user(),
                 AppEvent::FilesLoaded(files) => self.store.parse_molecules_and_grids(files, 1.4),
+                AppEvent::FocusCamera(position) => {
+                    self.renderer.camera.focus(position);
+                }
                 AppEvent::DisplayError(_) => self.gui.process_event(&event),
                 _ => {}
             }

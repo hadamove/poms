@@ -40,15 +40,6 @@ impl GridUniform {
         }
     }
 
-    pub fn update_resolution(&mut self, resolution: u32) {
-        self.resolution = resolution;
-        self.offset = self.size / resolution as f32;
-    }
-
-    pub fn get_num_grid_points(&self) -> u32 {
-        u32::pow(self.resolution, 3)
-    }
-
     fn compute_resolution_and_offset(spacing: GridSpacing, size: f32) -> (u32, f32) {
         match spacing {
             GridSpacing::Offset(offset) => ((size / offset).ceil() as u32, offset),
@@ -65,6 +56,7 @@ pub struct GridCell {
 }
 
 // Data structure for efficient lookup of neighboring atoms.
+#[derive(Debug, Default)]
 pub struct MoleculeData {
     pub atoms_sorted: Vec<Atom>,
     pub neighbor_grid: GridUniform,

@@ -16,8 +16,8 @@ struct AtomBuffer {
     atoms: array<Atom>,
 };
 
-@group(0) @binding(0) var<uniform> camera: CameraUniform;
-@group(1) @binding(1) var<storage, read> atoms: AtomBuffer;
+@group(0) @binding(0) var<storage, read> atoms: AtomBuffer;
+@group(1) @binding(0) var<uniform> camera: CameraUniform;
 
 
 struct VertexOutput {

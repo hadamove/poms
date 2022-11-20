@@ -1,82 +1,37 @@
-use super::super::CameraResource;
 use crate::gpu::GpuState;
-use crate::shared::grid::MoleculeData;
-use wgpu::util::DeviceExt;
+use crate::shared::resources::{GlobalResources, GroupIndex};
 
 pub struct SpacefillPass {
-    pub atoms_buffer: wgpu::Buffer,
-    pub atoms_bind_group: wgpu::BindGroup,
-    pub vertex_count: u32,
-
-    pub render_pipeline: wgpu::RenderPipeline,
+    render_pipeline: wgpu::RenderPipeline,
 }
 
 impl SpacefillPass {
     const VERTICES_PER_ATOM: u32 = 6;
-    // TODO: refactor into just one constatnt in constants.rs
-    const MAX_NUM_ATOMS: usize = 1_000_000;
 
-    pub fn new(gpu: &GpuState, camera_resource: &CameraResource) -> Self {
-        let atoms_buffer = gpu
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Atoms Buffer"),
-                contents: bytemuck::cast_slice(&[0u32; Self::MAX_NUM_ATOMS]),
-                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-            });
-
-        let atoms_bind_group_layout =
-            gpu.device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    label: Some("Atoms Bind Group Layout"),
-                    entries: &[wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::VERTEX,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Storage { read_only: true },
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
-                    }],
-                });
-
-        let atoms_bind_group = gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Atoms Bind Group"),
-            layout: &atoms_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 1,
-                resource: atoms_buffer.as_entire_binding(),
-            }],
-        });
-
+    pub fn new(gpu: &GpuState) -> Self {
         let render_pipeline_layout =
             gpu.device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[
-                        camera_resource.get_bind_group_layout(),
-                        &atoms_bind_group_layout,
-                    ],
-                    push_constant_ranges: &[],
+                    label: Some("Spacefill Render Pipeline Layout"),
+                    bind_group_layouts: &gpu.global_resources.spacefill_pass_bind_group_layouts(),
+                    ..Default::default()
                 });
 
-        let shader = gpu
-            .device
-            .create_shader_module(wgpu::include_wgsl!("../shaders/spacefill.wgsl"));
+        let shader = wgpu::include_wgsl!("../shaders/spacefill.wgsl");
+        let shader_module = gpu.device.create_shader_module(shader);
 
         let render_pipeline = gpu
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Render Pipeline"),
+                label: Some("Spacefill Render Pipeline"),
                 layout: Some(&render_pipeline_layout),
                 vertex: wgpu::VertexState {
-                    module: &shader,
+                    module: &shader_module,
                     entry_point: "vs_main",
                     buffers: &[],
                 },
                 fragment: Some(wgpu::FragmentState {
-                    module: &shader,
+                    module: &shader_module,
                     entry_point: "fs_main",
                     targets: &[Some(wgpu::ColorTargetState {
                         format: gpu.config.format,
@@ -84,6 +39,7 @@ impl SpacefillPass {
                         write_mask: wgpu::ColorWrites::ALL,
                     })],
                 }),
+                // TODO: try to replace with default
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu::PrimitiveTopology::TriangleList,
                     strip_index_format: None,
@@ -104,21 +60,7 @@ impl SpacefillPass {
                 multiview: None,
             });
 
-        Self {
-            atoms_buffer,
-            atoms_bind_group,
-            vertex_count: 0,
-            render_pipeline,
-        }
-    }
-
-    pub fn on_molecule_changed(&mut self, queue: &wgpu::Queue, molecule: &MoleculeData) {
-        queue.write_buffer(
-            &self.atoms_buffer,
-            0,
-            bytemuck::cast_slice(&molecule.atoms_sorted),
-        );
-        self.vertex_count = molecule.atoms_sorted.len() as u32 * Self::VERTICES_PER_ATOM;
+        Self { render_pipeline }
     }
 
     pub fn render(
@@ -126,7 +68,7 @@ impl SpacefillPass {
         view: &wgpu::TextureView,
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        camera_resource: &CameraResource,
+        global_resources: &GlobalResources,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
@@ -149,8 +91,13 @@ impl SpacefillPass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, camera_resource.get_bind_group(), &[]);
-        render_pass.set_bind_group(1, &self.atoms_bind_group, &[]);
-        render_pass.draw(0..self.vertex_count, 0..1);
+
+        let bind_groups = global_resources.spacefill_pass_bind_groups();
+        for (GroupIndex(index), bind_group) in bind_groups {
+            render_pass.set_bind_group(index, bind_group, &[]);
+        }
+
+        let vertex_count = global_resources.get_num_atoms() * Self::VERTICES_PER_ATOM;
+        render_pass.draw(0..vertex_count, 0..1);
     }
 }

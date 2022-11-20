@@ -5,13 +5,14 @@ use passes::raymarch_pass::RaymarchDistanceFieldPass;
 use passes::spacefill_pass::SpacefillPass;
 
 use shared::camera::{Camera, CameraController, Projection};
-use shared::resources::{camera::CameraResource, texture::Texture};
+
+use self::shared::texture::Texture;
 
 use super::gpu::GpuState;
 use super::gui::Gui;
 
 mod passes;
-mod shared;
+pub mod shared;
 
 pub struct RenderSettings {
     pub render_ses: bool,
@@ -21,7 +22,6 @@ pub struct RenderSettings {
 pub struct Renderer {
     pub camera: Camera,
     projection: Projection,
-    camera_resource: CameraResource,
     pub camera_controller: CameraController,
 
     depth_texture: Texture,
@@ -37,7 +37,6 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new(gpu: &GpuState) -> Renderer {
-        let camera_resource = CameraResource::new(&gpu.device);
         Self {
             camera: Camera::default(),
             projection: Projection::from_config(&gpu.config),
@@ -45,10 +44,8 @@ impl Renderer {
 
             depth_texture: Texture::create_depth_texture(&gpu.device, &gpu.config),
             gui_pass: GuiRenderPass::new(gpu),
-            spacefill_pass: SpacefillPass::new(gpu, &camera_resource),
-            raymarch_pass: RaymarchDistanceFieldPass::new(gpu, &camera_resource),
-
-            camera_resource,
+            spacefill_pass: SpacefillPass::new(gpu),
+            raymarch_pass: RaymarchDistanceFieldPass::new(gpu),
 
             settings: RenderSettings {
                 render_ses: true,
@@ -62,11 +59,12 @@ impl Renderer {
         self.depth_texture = Texture::create_depth_texture(&gpu.device, &gpu.config);
     }
 
-    pub fn update(&mut self, gpu: &GpuState, time_delta: instant::Duration) {
+    pub fn update(&mut self, gpu: &mut GpuState, time_delta: instant::Duration) {
         self.camera_controller
             .update_camera(&mut self.camera, time_delta);
 
-        self.camera_resource
+        gpu.global_resources
+            .camera_resource
             .update(&gpu.queue, &self.camera, &self.projection);
     }
 
@@ -85,18 +83,13 @@ impl Renderer {
         // Render spacefill representation.
         if self.settings.render_spacefill {
             self.spacefill_pass
-                .render(&view, depth_view, &mut encoder, &self.camera_resource);
+                .render(&view, depth_view, &mut encoder, &gpu.global_resources);
         }
 
         // Render Ses surface using raymarching.
         if self.settings.render_ses {
-            self.raymarch_pass.render(
-                &view,
-                depth_view,
-                &mut encoder,
-                &self.camera_resource,
-                &gpu.shared_resources,
-            );
+            self.raymarch_pass
+                .render(&view, depth_view, &mut encoder, &gpu.global_resources);
         }
         // Render GUI
         self.gui_pass.render(&view, &mut encoder, gpu, gui)?;

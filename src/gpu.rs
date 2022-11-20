@@ -1,6 +1,6 @@
 use winit::window::Window;
 
-use crate::shared::resources::SharedResources;
+use crate::shared::resources::GlobalResources;
 
 pub struct GpuState {
     pub surface: wgpu::Surface,
@@ -9,7 +9,7 @@ pub struct GpuState {
     pub config: wgpu::SurfaceConfiguration,
 
     pub scale_factor: f64,
-    pub shared_resources: SharedResources,
+    pub global_resources: GlobalResources,
 }
 
 impl GpuState {
@@ -51,7 +51,7 @@ impl GpuState {
         surface.configure(&device, &config);
 
         let scale_factor = window.scale_factor();
-        let shared_resources = SharedResources::new(&device);
+        let global_resources = GlobalResources::new(&device);
 
         Self {
             surface,
@@ -60,7 +60,7 @@ impl GpuState {
             config,
 
             scale_factor,
-            shared_resources,
+            global_resources,
         }
     }
 

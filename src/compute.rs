@@ -13,8 +13,7 @@ pub struct ComputeJobs {
 impl ComputeJobs {
     pub fn new(gpu: &GpuState) -> Self {
         let probe_compute_pass = ProbePass::new(gpu);
-        let drf_compute_pass =
-            DistanceFieldRefinementPass::new(gpu, probe_compute_pass.get_grid_point_class_buffer());
+        let drf_compute_pass = DistanceFieldRefinementPass::new(gpu);
         Self {
             probe_compute_pass,
             drf_compute_pass,
@@ -22,10 +21,9 @@ impl ComputeJobs {
     }
 
     pub fn execute_passes(&mut self, gpu: &GpuState, encoder: &mut wgpu::CommandEncoder) {
-        println!("Executing compute passes");
         self.probe_compute_pass
-            .execute(encoder, &gpu.shared_resources);
+            .execute(encoder, &gpu.global_resources);
         self.drf_compute_pass
-            .execute(encoder, &gpu.shared_resources);
+            .execute(encoder, &gpu.global_resources);
     }
 }

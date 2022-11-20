@@ -1,7 +1,7 @@
 use cgmath::SquareMatrix;
 use wgpu::util::DeviceExt;
 
-use super::super::camera::{Camera, Projection};
+use crate::render::shared::camera::{Camera, Projection};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -39,10 +39,10 @@ impl CameraUniform {
 }
 
 pub struct CameraResource {
-    camera_buffer: wgpu::Buffer,
-    camera_uniform: CameraUniform,
-    camera_bind_group_layout: wgpu::BindGroupLayout,
-    camera_bind_group: wgpu::BindGroup,
+    buffer: wgpu::Buffer,
+    uniform: CameraUniform,
+    bind_group_layout: wgpu::BindGroupLayout,
+    bind_group: wgpu::BindGroup,
 }
 
 impl CameraResource {
@@ -80,27 +80,23 @@ impl CameraResource {
         });
 
         Self {
-            camera_buffer,
-            camera_uniform,
-            camera_bind_group_layout,
-            camera_bind_group,
+            buffer: camera_buffer,
+            uniform: camera_uniform,
+            bind_group_layout: camera_bind_group_layout,
+            bind_group: camera_bind_group,
         }
     }
 
-    pub fn get_bind_group(&self) -> &wgpu::BindGroup {
-        &self.camera_bind_group
+    pub fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.bind_group_layout
     }
 
-    pub fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.camera_bind_group_layout
+    pub fn get_bind_group(&self) -> &wgpu::BindGroup {
+        &self.bind_group
     }
 
     pub fn update(&mut self, queue: &wgpu::Queue, camera: &Camera, projection: &Projection) {
-        self.camera_uniform.update_uniform(camera, projection);
-        queue.write_buffer(
-            &self.camera_buffer,
-            0,
-            bytemuck::cast_slice(&[self.camera_uniform]),
-        );
+        self.uniform.update_uniform(camera, projection);
+        queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
     }
 }

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::shared::events::{AppEvent, EventDispatch};
 use crate::shared::grid::MoleculeData;
+use crate::shared::molecule::Molecule;
 
 use super::parse::parse_atoms_from_pdb_file;
 
@@ -46,9 +47,11 @@ impl MoleculeStore {
                 ))
             })
             .collect();
+
+        self.dispatch_molecule_changed();
     }
 
-    fn change_current_molecule(&mut self) {
+    fn dispatch_molecule_changed(&mut self) {
         if let Some(molecule) = self.molecules.get(self.current_molecule_index) {
             self.dispatch
                 .send(AppEvent::MoleculeChanged(molecule.clone()))
@@ -69,8 +72,17 @@ impl MoleculeStore {
                     .map(|atoms| Arc::new(MoleculeData::from_atoms(atoms, probe_radius)))
                     .collect();
 
-                self.current_molecule_index = 0;
-                self.change_current_molecule()
+                if !self.molecules.is_empty() {
+                    self.current_molecule_index = 0;
+                    self.dispatch_molecule_changed();
+
+                    let molecule = self.molecules[self.current_molecule_index].clone();
+                    self.dispatch
+                        .send(AppEvent::FocusCamera(
+                            molecule.atoms_sorted.calculate_center(),
+                        ))
+                        .ok();
+                }
             }
             Err(e) => {
                 self.dispatch

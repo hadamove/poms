@@ -11,6 +11,7 @@ pub enum AppEvent {
     ComputeSesAlwaysChanged(bool),
     OpenFileDialogRequested,
     MoleculeChanged(Arc<MoleculeData>),
+    FocusCamera(cgmath::Point3<f32>),
 
     DisplayError(String),
     FilesLoaded(Vec<Vec<u8>>),

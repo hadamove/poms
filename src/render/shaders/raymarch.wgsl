@@ -16,12 +16,13 @@ struct GridUniform {
     _padding: f32,
 };
 
-@group(0) @binding(0) var<uniform> camera: CameraUniform;
 
-@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
+
+@group(1) @binding(0) var df_texture: texture_3d<f32>;
 @group(1) @binding(1) var df_sampler: sampler;
 
-@group(2) @binding(0) var df_texture: texture_3d<f32>;
+@group(2) @binding(0) var<uniform> camera: CameraUniform;
 
 
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {

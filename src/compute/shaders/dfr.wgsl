@@ -8,10 +8,10 @@ struct GridUniform {
 };
 
 
-@group(0) @binding(0) var<storage, read> grid_point_class: array<u32>;
+@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(0) @binding(1) var<uniform> probe_radius: f32;
 
-@group(1) @binding(0) var<uniform> ses_grid: GridUniform;
-@group(1) @binding(1) var<uniform> probe_radius: f32;
+@group(1) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
 
 @group(2) @binding(0) var distance_texture: texture_storage_3d<rgba16float, write>;
 
