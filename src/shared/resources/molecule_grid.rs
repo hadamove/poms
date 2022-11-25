@@ -2,6 +2,8 @@ use wgpu::util::DeviceExt;
 
 use crate::shared::grid::{GridUniform, MoleculeData};
 
+use super::Resource;
+
 pub struct MoleculeGridResource {
     buffers: MoleculeGridBuffers,
     bind_group_layout: wgpu::BindGroupLayout,
@@ -38,12 +40,14 @@ impl MoleculeGridResource {
             bytemuck::cast_slice(&molecule.grid_cells),
         );
     }
+}
 
-    pub fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+impl Resource for MoleculeGridResource {
+    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
         &self.bind_group_layout
     }
 
-    pub fn get_bind_group(&self) -> &wgpu::BindGroup {
+    fn get_bind_group(&self) -> &wgpu::BindGroup {
         &self.bind_group
     }
 }

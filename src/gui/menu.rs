@@ -7,7 +7,7 @@ use crate::shared::events::{AppEvent, EventDispatch};
 pub struct Menu;
 
 impl GuiComponent for Menu {
-    fn ui(&mut self, context: &egui::Context, dispatch: &EventDispatch) {
+    fn draw(&mut self, context: &egui::Context, dispatch: &EventDispatch) {
         TopBottomPanel::top("menu_bar").show(context, |ui| {
             menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {

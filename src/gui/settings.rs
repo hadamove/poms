@@ -29,7 +29,7 @@ impl Default for UserSettings {
 
 impl GuiComponent for UserSettings {
     #[rustfmt::skip]
-    fn ui(&mut self, context: &egui::Context, dispatch: &EventDispatch) {
+    fn draw(&mut self, context: &egui::Context, dispatch: &EventDispatch) {
         let window = Window::new("Settings").default_pos(Pos2::new(100.0, 100.0));
         window.show(context, |ui| {
             // Model parameters.

@@ -2,7 +2,7 @@ use wgpu::util::DeviceExt;
 
 use crate::shared::grid::{GridSpacing, GridUniform, MoleculeData};
 
-use super::SesSettings;
+use super::{Resource, SesSettings};
 
 pub struct SesGridResource {
     buffers: SesGridBuffers,
@@ -40,12 +40,14 @@ impl SesGridResource {
             bytemuck::cast_slice(&[ses_grid]),
         );
     }
+}
 
-    pub fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+impl Resource for SesGridResource {
+    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
         &self.bind_group_layout
     }
 
-    pub fn get_bind_group(&self) -> &wgpu::BindGroup {
+    fn get_bind_group(&self) -> &wgpu::BindGroup {
         &self.bind_group
     }
 }

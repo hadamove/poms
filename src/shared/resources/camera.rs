@@ -3,6 +3,8 @@ use wgpu::util::DeviceExt;
 
 use crate::render::shared::camera::{Camera, Projection};
 
+use super::Resource;
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct CameraUniform {
@@ -87,16 +89,18 @@ impl CameraResource {
         }
     }
 
-    pub fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
-
-    pub fn get_bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
-    }
-
     pub fn update(&mut self, queue: &wgpu::Queue, camera: &Camera, projection: &Projection) {
         self.uniform.update_uniform(camera, projection);
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
+    }
+}
+
+impl Resource for CameraResource {
+    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.bind_group_layout
+    }
+
+    fn get_bind_group(&self) -> &wgpu::BindGroup {
+        &self.bind_group
     }
 }

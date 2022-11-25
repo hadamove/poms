@@ -51,7 +51,7 @@ impl GpuState {
         surface.configure(&device, &config);
 
         let scale_factor = window.scale_factor();
-        let global_resources = GlobalResources::new(&device);
+        let global_resources = GlobalResources::new(&device, &config);
 
         Self {
             surface,
@@ -68,6 +68,7 @@ impl GpuState {
         self.config.width = size.width;
         self.config.height = size.height;
         self.surface.configure(&self.device, &self.config);
+        self.global_resources.resize(&self.device, &self.config);
     }
 
     pub fn get_command_encoder(&self) -> wgpu::CommandEncoder {

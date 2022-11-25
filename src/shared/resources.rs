@@ -1,17 +1,22 @@
 mod camera;
+mod depth_texture;
 mod distance_field;
 mod molecule_grid;
 mod ses_grid;
 
 use std::sync::Arc;
 
+use crate::compute::PassId;
+
 use self::camera::CameraResource;
+use self::depth_texture::DepthTexture;
 use self::distance_field::DistanceFieldResource;
 use self::molecule_grid::MoleculeGridResource;
 use self::ses_grid::SesGridResource;
 
 use super::grid::MoleculeData;
 
+// TODO: move this into separate file.
 pub struct SesSettings {
     probe_radius: f32,
     resolution: u32,
@@ -34,13 +39,22 @@ pub struct GlobalResources {
     ses_resource: SesGridResource,
     molecule_resource: MoleculeGridResource,
     distance_field_resource: DistanceFieldResource,
+    depth_texture: DepthTexture,
+
+    // TODO: make this private
     pub camera_resource: CameraResource,
 }
 
+pub trait Resource {
+    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout;
+    fn get_bind_group(&self) -> &wgpu::BindGroup;
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct GroupIndex(pub u32);
 
 impl GlobalResources {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self {
         let ses_settings = SesSettings::default();
 
         Self {
@@ -48,6 +62,7 @@ impl GlobalResources {
             ses_resource: SesGridResource::new(device),
             molecule_resource: MoleculeGridResource::new(device),
             distance_field_resource: DistanceFieldResource::new(device, ses_settings.resolution),
+            depth_texture: DepthTexture::new(device, config),
             camera_resource: CameraResource::new(device),
             ses_settings,
         }
@@ -66,6 +81,7 @@ impl GlobalResources {
             .update_grid(queue, &self.molecule, &self.ses_settings);
     }
 
+    // TODO: pass only GpuState here
     pub fn update_resolution(
         &mut self,
         queue: &wgpu::Queue,
@@ -75,10 +91,12 @@ impl GlobalResources {
         self.ses_settings.resolution = resolution;
         self.ses_resource
             .update_grid(queue, &self.molecule, &self.ses_settings);
-
-        // Recreate the distance field texture
         self.distance_field_resource =
             DistanceFieldResource::new(device, self.ses_settings.resolution);
+    }
+
+    pub fn resize(&mut self, device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
+        self.depth_texture = DepthTexture::new(device, &config);
     }
 
     pub fn get_num_grid_points(&self) -> u32 {
@@ -89,66 +107,49 @@ impl GlobalResources {
         self.molecule.atoms_sorted.len() as u32
     }
 
-    pub fn probe_pass_bind_group_layouts(&self) -> [&wgpu::BindGroupLayout; 2] {
-        [
-            self.ses_resource.get_bind_group_layout(),
-            self.molecule_resource.get_bind_group_layout(),
-        ]
+    pub fn get_depth_texture(&self) -> &DepthTexture {
+        &self.depth_texture
     }
 
     #[rustfmt::skip]
-    pub fn probe_pass_bind_groups(&self) -> [(GroupIndex, &wgpu::BindGroup); 2] {
-        [
-            (GroupIndex(0), self.ses_resource.get_bind_group()),
-            (GroupIndex(1), self.molecule_resource.get_bind_group()),
-        ]
+    pub fn get_resources(&self, pass_id: &PassId) -> ResourceGroup {
+        match pass_id {
+            PassId::ProbePass => ResourceGroup(vec![
+                (GroupIndex(0), &self.ses_resource as &dyn Resource),
+                (GroupIndex(1), &self.molecule_resource as &dyn Resource),
+            ]),
+            PassId::DFRefinementPass => ResourceGroup(vec![
+                (GroupIndex(0), &self.ses_resource as &dyn Resource),
+                (GroupIndex(1), &self.molecule_resource as &dyn Resource),
+                (GroupIndex(2), &self.distance_field_resource.compute as &dyn Resource),
+            ]),
+            PassId::SpacefillPass => ResourceGroup(vec![
+                (GroupIndex(0), &self.molecule_resource as &dyn Resource),
+                (GroupIndex(1), &self.camera_resource as &dyn Resource),
+            ]),
+            PassId::RaymarchPass => ResourceGroup(vec![
+                (GroupIndex(0), &self.ses_resource as &dyn Resource),
+                (GroupIndex(1), &self.distance_field_resource.render as &dyn Resource),
+                (GroupIndex(2), &self.camera_resource as &dyn Resource),
+            ]),
+        }
+    }
+}
+
+pub struct ResourceGroup<'a>(Vec<(GroupIndex, &'a dyn Resource)>);
+
+impl<'a> ResourceGroup<'a> {
+    pub fn get_bind_groups(&self) -> Vec<(GroupIndex, &wgpu::BindGroup)> {
+        self.0
+            .iter()
+            .map(|(index, resource)| (*index, resource.get_bind_group()))
+            .collect()
     }
 
-    pub fn dfr_pass_bind_group_layouts(&self) -> [&wgpu::BindGroupLayout; 3] {
-        [
-            self.ses_resource.get_bind_group_layout(),
-            self.molecule_resource.get_bind_group_layout(),
-            self.distance_field_resource.get_compute_bind_group_layout(),
-        ]
-    }
-
-    #[rustfmt::skip]
-    pub fn dfr_pass_bind_groups(&self) -> [(GroupIndex, &wgpu::BindGroup); 3] {
-        [
-            (GroupIndex(0), self.ses_resource.get_bind_group()),
-            (GroupIndex(1), self.molecule_resource.get_bind_group()),
-            (GroupIndex(2), self.distance_field_resource.get_compute_bind_group()),
-        ]
-    }
-
-    pub fn spacefill_pass_bind_group_layouts(&self) -> [&wgpu::BindGroupLayout; 2] {
-        [
-            self.molecule_resource.get_bind_group_layout(),
-            self.camera_resource.get_bind_group_layout(),
-        ]
-    }
-
-    pub fn spacefill_pass_bind_groups(&self) -> [(GroupIndex, &wgpu::BindGroup); 2] {
-        [
-            (GroupIndex(0), self.molecule_resource.get_bind_group()),
-            (GroupIndex(1), self.camera_resource.get_bind_group()),
-        ]
-    }
-
-    pub fn raymarch_pass_bind_group_layouts(&self) -> [&wgpu::BindGroupLayout; 3] {
-        [
-            self.ses_resource.get_bind_group_layout(),
-            self.distance_field_resource.get_render_bind_group_layout(),
-            self.camera_resource.get_bind_group_layout(),
-        ]
-    }
-
-    #[rustfmt::skip]
-    pub fn raymarch_pass_bind_groups(&self) -> [(GroupIndex, &wgpu::BindGroup); 3] {
-        [
-            (GroupIndex(0), self.ses_resource.get_bind_group()),
-            (GroupIndex(1), self.distance_field_resource.get_render_bind_group()),
-            (GroupIndex(2), self.camera_resource.get_bind_group()),
-        ]
+    pub fn get_bind_group_layouts(&self) -> Vec<&wgpu::BindGroupLayout> {
+        self.0
+            .iter()
+            .map(|(_, resource)| resource.get_bind_group_layout())
+            .collect()
     }
 }

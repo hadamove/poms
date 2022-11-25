@@ -1,13 +1,10 @@
-pub struct Texture {
+pub struct DepthTexture {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
 }
 
-impl Texture {
-    pub fn create_depth_texture(
-        device: &wgpu::Device,
-        config: &wgpu::SurfaceConfiguration,
-    ) -> Self {
+impl DepthTexture {
+    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self {
         let size = wgpu::Extent3d {
             width: config.width,
             height: config.height,

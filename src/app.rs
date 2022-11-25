@@ -2,7 +2,7 @@ use std::sync::mpsc::{channel, Receiver};
 
 use winit::{event::*, window::Window};
 
-use crate::compute::ComputeJobs;
+use crate::compute::{ComputeJobs, PassId};
 use crate::gpu::GpuState;
 use crate::gui::Gui;
 use crate::parser::store::MoleculeStore;
@@ -33,7 +33,7 @@ impl App {
             compute: ComputeJobs::new(&gpu),
             renderer: Renderer::new(&gpu),
 
-            gui: Gui::new(dispatch.clone()),
+            gui: Gui::new(&gpu, dispatch.clone()),
             store: MoleculeStore::new(dispatch),
 
             frame_count: 0,
@@ -47,31 +47,34 @@ impl App {
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.gpu.resize(new_size);
-            self.renderer.resize(&self.gpu, new_size);
+            self.renderer.resize(new_size);
         }
     }
 
-    pub fn input(&mut self, event: &WindowEvent) -> bool {
-        self.renderer.camera_controller.process_events(event)
+    pub fn input<T>(&mut self, event: &Event<T>) -> bool {
+        self.gui.handle_winit_event(event)
+            || self.renderer.camera_controller.process_winit_event(event)
     }
 
     pub fn render(&mut self, _window: &Window) -> anyhow::Result<()> {
+        let gui_output = self.gui.draw_frame();
+
         let mut encoder = self.gpu.get_command_encoder();
 
         self.compute.execute_passes(&self.gpu, &mut encoder);
-        self.renderer.render(&self.gpu, encoder, &mut self.gui)?;
+        self.renderer.render(&self.gpu, encoder, gui_output)?;
 
         Ok(())
     }
 
     pub fn update(&mut self, time_delta: std::time::Duration) {
-        self.process_events();
+        self.process_app_events();
         // self.frame_count += 1;
         // self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
         self.renderer.update(&mut self.gpu, time_delta);
     }
 
-    fn process_events(&mut self) {
+    fn process_app_events(&mut self) {
         while let Ok(event) = self.event_listener.try_recv() {
             match event {
                 AppEvent::MoleculeChanged(molecule) => {
@@ -93,18 +96,20 @@ impl App {
 
                     self.store.recompute_molecule_grids(probe_radius);
                 }
-                AppEvent::RenderSesChanged(render_ses) => {
-                    self.renderer.settings.render_ses = render_ses;
+                AppEvent::RenderSesChanged(enabled) => {
+                    self.renderer
+                        .toggle_render_pass(PassId::RaymarchPass, enabled);
                 }
-                AppEvent::RenderSpacefillChanged(render_spacefill) => {
-                    self.renderer.settings.render_spacefill = render_spacefill;
+                AppEvent::RenderSpacefillChanged(enabled) => {
+                    self.renderer
+                        .toggle_render_pass(PassId::SpacefillPass, enabled);
                 }
                 AppEvent::OpenFileDialogRequested => self.store.load_pdb_files_from_user(),
                 AppEvent::FilesLoaded(files) => self.store.parse_molecules_and_grids(files, 1.4),
                 AppEvent::FocusCamera(position) => {
                     self.renderer.camera.focus(position);
                 }
-                AppEvent::DisplayError(_) => self.gui.process_event(&event),
+                AppEvent::DisplayError(_) => self.gui.handle_app_event(&event),
                 _ => {}
             }
         }

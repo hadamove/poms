@@ -4,7 +4,8 @@ use cgmath::{InnerSpace, Matrix4, Point3, Rad, Vector3};
 use winit::{
     dpi::PhysicalPosition,
     event::{
-        ElementState, KeyboardInput, MouseButton, MouseScrollDelta, VirtualKeyCode, WindowEvent,
+        DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, MouseScrollDelta,
+        VirtualKeyCode, WindowEvent,
     },
 };
 
@@ -130,34 +131,42 @@ impl CameraController {
         self.mouse_pressed
     }
 
-    pub fn process_events(&mut self, event: &WindowEvent) -> bool {
+    pub fn process_winit_event<T>(&mut self, event: &Event<T>) -> bool {
         match event {
-            WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        virtual_keycode: Some(key),
-                        state,
-                        ..
-                    },
+            Event::DeviceEvent {
+                event: DeviceEvent::MouseMotion { delta },
                 ..
-            } => self.process_keyboard(*key, *state),
-            WindowEvent::MouseWheel { delta, .. } => {
-                self.process_scroll(delta);
-                true
-            }
-            WindowEvent::MouseInput {
-                button: MouseButton::Left,
-                state,
-                ..
-            } => {
-                self.mouse_pressed = *state == ElementState::Pressed;
-                true
-            }
+            } => self.process_mouse(delta.0, delta.1),
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(key),
+                            state,
+                            ..
+                        },
+                    ..
+                } => self.process_keyboard(*key, *state),
+                WindowEvent::MouseWheel { delta, .. } => {
+                    self.process_scroll(delta);
+                    true
+                }
+                WindowEvent::MouseInput {
+                    button: MouseButton::Left,
+                    state,
+                    ..
+                } => {
+                    self.mouse_pressed = *state == ElementState::Pressed;
+                    true
+                }
+                _ => false,
+            },
             _ => false,
         }
     }
 
     pub fn process_keyboard(&mut self, key: VirtualKeyCode, state: ElementState) -> bool {
+        println!("processing keyboard");
         let amount = if state == ElementState::Pressed {
             1.0
         } else {
@@ -192,9 +201,13 @@ impl CameraController {
         }
     }
 
-    pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) {
-        self.rotate_horizontal = mouse_dx as f32;
-        self.rotate_vertical = mouse_dy as f32;
+    pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) -> bool {
+        let pressed = self.is_mouse_pressed();
+        if pressed {
+            self.rotate_horizontal = mouse_dx as f32 * self.sensitivity;
+            self.rotate_vertical = mouse_dy as f32 * self.sensitivity;
+        }
+        pressed
     }
 
     pub fn process_scroll(&mut self, delta: &MouseScrollDelta) {

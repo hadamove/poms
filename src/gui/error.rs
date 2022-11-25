@@ -9,7 +9,7 @@ pub struct ErrorMessage {
 }
 
 impl GuiComponent for ErrorMessage {
-    fn ui(&mut self, context: &egui::Context, _dispatch: &EventDispatch) {
+    fn draw(&mut self, context: &egui::Context, _dispatch: &EventDispatch) {
         if let Some(message) = &self.message {
             // Clone so that we can mutate self.message.
             let message_clone = message.clone();
