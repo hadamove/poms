@@ -8,9 +8,11 @@ use crate::gui::Gui;
 use crate::parser::store::MoleculeStore;
 use crate::render::Renderer;
 use crate::shared::events::AppEvent;
+use crate::shared::resources::GlobalResources;
 
 pub struct App {
     pub gpu: GpuState,
+    pub global_resources: GlobalResources,
 
     pub compute: ComputeJobs,
     pub renderer: Renderer,
@@ -27,11 +29,13 @@ pub struct App {
 impl App {
     pub async fn new(window: &Window) -> Self {
         let gpu = GpuState::new(window).await;
+        let global_resources = GlobalResources::new(&gpu);
 
         let (dispatch, event_listener) = channel::<AppEvent>();
         App {
-            compute: ComputeJobs::new(&gpu),
-            renderer: Renderer::new(&gpu),
+            global_resources: GlobalResources::new(&gpu),
+            compute: ComputeJobs::new(&gpu, &global_resources),
+            renderer: Renderer::new(&gpu, &global_resources),
 
             gui: Gui::new(&gpu, dispatch.clone()),
             store: MoleculeStore::new(dispatch),
@@ -48,6 +52,7 @@ impl App {
         if new_size.width > 0 && new_size.height > 0 {
             self.gpu.resize(new_size);
             self.renderer.resize(new_size);
+            self.global_resources.resize(&self.gpu);
         }
     }
 
@@ -61,8 +66,10 @@ impl App {
 
         let mut encoder = self.gpu.get_command_encoder();
 
-        self.compute.execute_passes(&self.gpu, &mut encoder);
-        self.renderer.render(&self.gpu, encoder, gui_output)?;
+        self.compute
+            .execute_passes(&self.global_resources, &mut encoder);
+        self.renderer
+            .render(&self.gpu, &self.global_resources, encoder, gui_output)?;
 
         Ok(())
     }
@@ -71,38 +78,33 @@ impl App {
         self.process_app_events();
         // self.frame_count += 1;
         // self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
-        self.renderer.update(&mut self.gpu, time_delta);
+        self.renderer
+            .update(&mut self.gpu, &mut self.global_resources, time_delta);
     }
 
     fn process_app_events(&mut self) {
         while let Ok(event) = self.event_listener.try_recv() {
             match event {
                 AppEvent::MoleculeChanged(molecule) => {
-                    self.gpu
-                        .global_resources
+                    self.global_resources
                         .update_molecule(&self.gpu.queue, molecule);
                 }
                 AppEvent::SesResolutionChanged(resolution) => {
-                    self.gpu.global_resources.update_resolution(
-                        &self.gpu.queue,
-                        &self.gpu.device,
-                        resolution,
-                    );
+                    self.global_resources
+                        .update_resolution(&self.gpu, resolution);
                 }
                 AppEvent::ProbeRadiusChanged(probe_radius) => {
-                    self.gpu
-                        .global_resources
+                    self.global_resources
                         .update_probe_radius(&self.gpu.queue, probe_radius);
 
                     self.store.recompute_molecule_grids(probe_radius);
                 }
                 AppEvent::RenderSesChanged(enabled) => {
                     self.renderer
-                        .toggle_render_pass(PassId::RaymarchPass, enabled);
+                        .toggle_render_pass(PassId::SesRaymarching, enabled);
                 }
                 AppEvent::RenderSpacefillChanged(enabled) => {
-                    self.renderer
-                        .toggle_render_pass(PassId::SpacefillPass, enabled);
+                    self.renderer.toggle_render_pass(PassId::Spacefill, enabled);
                 }
                 AppEvent::OpenFileDialogRequested => self.store.load_pdb_files_from_user(),
                 AppEvent::FilesLoaded(files) => self.store.parse_molecules_and_grids(files, 1.4),

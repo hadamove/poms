@@ -1,7 +1,5 @@
 use winit::window::Window;
 
-use crate::shared::resources::GlobalResources;
-
 pub struct GpuState {
     pub surface: wgpu::Surface,
     pub device: wgpu::Device,
@@ -9,7 +7,6 @@ pub struct GpuState {
     pub config: wgpu::SurfaceConfiguration,
 
     pub scale_factor: f64,
-    pub global_resources: GlobalResources,
 }
 
 impl GpuState {
@@ -45,13 +42,13 @@ impl GpuState {
             format: supported_format,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::AutoNoVsync,
+            present_mode: wgpu::PresentMode::Fifo,
+            // present_mode: wgpu::PresentMode::AutoNoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
         };
         surface.configure(&device, &config);
 
         let scale_factor = window.scale_factor();
-        let global_resources = GlobalResources::new(&device, &config);
 
         Self {
             surface,
@@ -60,7 +57,6 @@ impl GpuState {
             config,
 
             scale_factor,
-            global_resources,
         }
     }
 
@@ -68,7 +64,6 @@ impl GpuState {
         self.config.width = size.width;
         self.config.height = size.height;
         self.surface.configure(&self.device, &self.config);
-        self.global_resources.resize(&self.device, &self.config);
     }
 
     pub fn get_command_encoder(&self) -> wgpu::CommandEncoder {

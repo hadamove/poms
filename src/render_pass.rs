@@ -1,5 +1,3 @@
-use wgpu::ShaderModuleDescriptor;
-
 use crate::compute::PassId;
 use crate::gpu::GpuState;
 use crate::shared::resources::{GlobalResources, GroupIndex};
@@ -13,10 +11,11 @@ pub struct RenderPass {
     enabled: bool,
 }
 
-impl<'a> RenderPass {
-    pub fn new(gpu: &GpuState, id: PassId, shader: ShaderModuleDescriptor<'a>) -> Self {
+impl RenderPass {
+    pub fn new(gpu: &GpuState, global_resources: &GlobalResources, id: PassId) -> Self {
+        let shader = GlobalResources::get_shader(&id);
         let shader_module = gpu.device.create_shader_module(shader);
-        let resources = gpu.global_resources.get_resources(&id);
+        let resources = global_resources.get_resources(&id);
 
         let render_pipeline_layout =
             gpu.device
@@ -117,8 +116,8 @@ impl<'a> RenderPass {
 
     fn get_num_vertices(&self, global_resources: &GlobalResources) -> u32 {
         match self.id {
-            PassId::RaymarchPass => FULLSCREEN_VERTICES,
-            PassId::SpacefillPass => global_resources.get_num_atoms() * VERTICES_PER_ATOM,
+            PassId::SesRaymarching => FULLSCREEN_VERTICES,
+            PassId::Spacefill => global_resources.get_num_atoms() * VERTICES_PER_ATOM,
             _ => unreachable!(),
         }
     }

@@ -1,15 +1,13 @@
-use wgpu::{include_wgsl, ShaderModuleDescriptor};
-
 use super::gpu::GpuState;
 use super::shared::resources::{GlobalResources, GroupIndex};
 
 // TODO: move this somewhere else.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum PassId {
-    ProbePass,
-    DFRefinementPass,
-    SpacefillPass,
-    RaymarchPass,
+    Probe,
+    DistanceFieldRefinement,
+    Spacefill,
+    SesRaymarching,
 }
 
 pub struct ComputeJobs {
@@ -17,20 +15,25 @@ pub struct ComputeJobs {
 }
 
 impl ComputeJobs {
-    pub fn new(gpu: &GpuState) -> Self {
+    pub fn new(gpu: &GpuState, global_resources: &GlobalResources) -> Self {
         use PassId::*;
+
         let passes = vec![
-            ComputePass::new(gpu, ProbePass, include_wgsl!("./shaders/probe.wgsl")),
-            ComputePass::new(gpu, DFRefinementPass, include_wgsl!("./shaders/dfr.wgsl")),
+            ComputePass::new(gpu, global_resources, Probe),
+            ComputePass::new(gpu, global_resources, DistanceFieldRefinement),
             // More passes can be added here.
         ];
 
         Self { passes }
     }
 
-    pub fn execute_passes(&mut self, gpu: &GpuState, encoder: &mut wgpu::CommandEncoder) {
+    pub fn execute_passes(
+        &mut self,
+        global_resources: &GlobalResources,
+        encoder: &mut wgpu::CommandEncoder,
+    ) {
         for pass in &mut self.passes {
-            pass.execute(encoder, &gpu.global_resources);
+            pass.execute(encoder, global_resources);
         }
     }
 }
@@ -40,9 +43,10 @@ pub struct ComputePass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
-impl<'a> ComputePass {
-    pub fn new(gpu: &GpuState, pass_id: PassId, shader: ShaderModuleDescriptor<'a>) -> Self {
-        let resources = gpu.global_resources.get_resources(&pass_id);
+impl ComputePass {
+    pub fn new(gpu: &GpuState, global_resources: &GlobalResources, pass_id: PassId) -> Self {
+        let resources = global_resources.get_resources(&pass_id);
+        let shader = GlobalResources::get_shader(&pass_id);
 
         let compute_pipeline_layout =
             gpu.device

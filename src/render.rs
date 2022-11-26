@@ -7,6 +7,7 @@ use shared::camera::{Camera, CameraController, Projection};
 use crate::compute::PassId;
 use crate::gui::GuiOutput;
 use crate::render_pass::RenderPass;
+use crate::shared::resources::GlobalResources;
 
 use super::gpu::GpuState;
 
@@ -24,7 +25,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(gpu: &GpuState) -> Renderer {
+    pub fn new(gpu: &GpuState, global_resources: &GlobalResources) -> Renderer {
         Self {
             camera: Camera::default(),
             projection: Projection::from_config(&gpu.config),
@@ -33,26 +34,23 @@ impl Renderer {
             gui_pass: GuiRenderPass::new(gpu),
 
             render_passes: vec![
-                RenderPass::new(
-                    gpu,
-                    PassId::SpacefillPass,
-                    wgpu::include_wgsl!("./shaders/spacefill.wgsl"),
-                ),
-                RenderPass::new(
-                    gpu,
-                    PassId::RaymarchPass,
-                    wgpu::include_wgsl!("./shaders/raymarch.wgsl"),
-                ),
+                RenderPass::new(gpu, global_resources, PassId::Spacefill),
+                RenderPass::new(gpu, global_resources, PassId::SesRaymarching),
             ],
         }
     }
 
     // TODO: move this somewhere else
-    pub fn update(&mut self, gpu: &mut GpuState, time_delta: instant::Duration) {
+    pub fn update(
+        &mut self,
+        gpu: &mut GpuState,
+        global_resources: &mut GlobalResources,
+        time_delta: instant::Duration,
+    ) {
         self.camera_controller
             .update_camera(&mut self.camera, time_delta);
 
-        gpu.global_resources
+        global_resources
             .camera_resource
             .update(&gpu.queue, &self.camera, &self.projection);
     }
@@ -72,6 +70,7 @@ impl Renderer {
     pub fn render(
         &mut self,
         gpu: &GpuState,
+        global_resources: &GlobalResources,
         mut encoder: wgpu::CommandEncoder,
         gui_output: GuiOutput,
     ) -> Result<()> {
@@ -79,11 +78,11 @@ impl Renderer {
         let output_texture = gpu.surface.get_current_texture()?;
 
         let view = output_texture.texture.create_view(&Default::default());
-        let depth_view = &gpu.global_resources.get_depth_texture().view;
+        let depth_view = &global_resources.get_depth_texture().view;
 
         // Render Spacefill and Ses.
         for render_pass in &mut self.render_passes {
-            render_pass.render(&view, depth_view, &mut encoder, &gpu.global_resources);
+            render_pass.render(&view, depth_view, &mut encoder, global_resources);
         }
 
         // Render GUI

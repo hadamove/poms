@@ -6,7 +6,10 @@ mod ses_grid;
 
 use std::sync::Arc;
 
+use wgpu::{include_wgsl, ShaderModuleDescriptor};
+
 use crate::compute::PassId;
+use crate::gpu::GpuState;
 
 use self::camera::CameraResource;
 use self::depth_texture::DepthTexture;
@@ -54,16 +57,19 @@ pub trait Resource {
 pub struct GroupIndex(pub u32);
 
 impl GlobalResources {
-    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self {
+    pub fn new(gpu: &GpuState) -> Self {
         let ses_settings = SesSettings::default();
 
         Self {
             molecule: Arc::default(),
-            ses_resource: SesGridResource::new(device),
-            molecule_resource: MoleculeGridResource::new(device),
-            distance_field_resource: DistanceFieldResource::new(device, ses_settings.resolution),
-            depth_texture: DepthTexture::new(device, config),
-            camera_resource: CameraResource::new(device),
+            ses_resource: SesGridResource::new(&gpu.device),
+            molecule_resource: MoleculeGridResource::new(&gpu.device),
+            distance_field_resource: DistanceFieldResource::new(
+                &gpu.device,
+                ses_settings.resolution,
+            ),
+            depth_texture: DepthTexture::new(&gpu.device, &gpu.config),
+            camera_resource: CameraResource::new(&gpu.device),
             ses_settings,
         }
     }
@@ -82,21 +88,16 @@ impl GlobalResources {
     }
 
     // TODO: pass only GpuState here
-    pub fn update_resolution(
-        &mut self,
-        queue: &wgpu::Queue,
-        device: &wgpu::Device,
-        resolution: u32,
-    ) {
+    pub fn update_resolution(&mut self, gpu: &GpuState, resolution: u32) {
         self.ses_settings.resolution = resolution;
         self.ses_resource
-            .update_grid(queue, &self.molecule, &self.ses_settings);
+            .update_grid(&gpu.queue, &self.molecule, &self.ses_settings);
         self.distance_field_resource =
-            DistanceFieldResource::new(device, self.ses_settings.resolution);
+            DistanceFieldResource::new(&gpu.device, self.ses_settings.resolution);
     }
 
-    pub fn resize(&mut self, device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
-        self.depth_texture = DepthTexture::new(device, &config);
+    pub fn resize(&mut self, gpu: &GpuState) {
+        self.depth_texture = DepthTexture::new(&gpu.device, &gpu.config);
     }
 
     pub fn get_num_grid_points(&self) -> u32 {
@@ -114,24 +115,33 @@ impl GlobalResources {
     #[rustfmt::skip]
     pub fn get_resources(&self, pass_id: &PassId) -> ResourceGroup {
         match pass_id {
-            PassId::ProbePass => ResourceGroup(vec![
+            PassId::Probe => ResourceGroup(vec![
                 (GroupIndex(0), &self.ses_resource as &dyn Resource),
                 (GroupIndex(1), &self.molecule_resource as &dyn Resource),
             ]),
-            PassId::DFRefinementPass => ResourceGroup(vec![
+            PassId::DistanceFieldRefinement => ResourceGroup(vec![
                 (GroupIndex(0), &self.ses_resource as &dyn Resource),
                 (GroupIndex(1), &self.molecule_resource as &dyn Resource),
                 (GroupIndex(2), &self.distance_field_resource.compute as &dyn Resource),
             ]),
-            PassId::SpacefillPass => ResourceGroup(vec![
+            PassId::Spacefill => ResourceGroup(vec![
                 (GroupIndex(0), &self.molecule_resource as &dyn Resource),
                 (GroupIndex(1), &self.camera_resource as &dyn Resource),
             ]),
-            PassId::RaymarchPass => ResourceGroup(vec![
+            PassId::SesRaymarching => ResourceGroup(vec![
                 (GroupIndex(0), &self.ses_resource as &dyn Resource),
                 (GroupIndex(1), &self.distance_field_resource.render as &dyn Resource),
                 (GroupIndex(2), &self.camera_resource as &dyn Resource),
             ]),
+        }
+    }
+
+    pub fn get_shader(pass_id: &PassId) -> ShaderModuleDescriptor {
+        match pass_id {
+            PassId::Probe => include_wgsl!("../shaders/probe.wgsl"),
+            PassId::DistanceFieldRefinement => include_wgsl!("../shaders/df_refinement.wgsl"),
+            PassId::Spacefill => include_wgsl!("../shaders/spacefill.wgsl"),
+            PassId::SesRaymarching => include_wgsl!("../shaders/ses_raymarching.wgsl"),
         }
     }
 }
