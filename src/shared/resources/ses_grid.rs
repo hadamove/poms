@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::shared::grid::{GridSpacing, GridUniform, MoleculeData};
+use crate::shared::grid::{GridSpacing, GridUniform, GriddedMolecule};
 
 use super::{Resource, SesSettings};
 
@@ -26,7 +26,7 @@ impl SesGridResource {
     pub fn update_grid(
         &self,
         queue: &wgpu::Queue,
-        molecule: &MoleculeData,
+        molecule: &GriddedMolecule,
         ses_settings: &SesSettings,
     ) {
         let ses_grid = GridUniform::from_atoms(

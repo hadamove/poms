@@ -57,22 +57,3 @@ impl Molecule for Vec<Atom> {
         })
     }
 }
-
-// pub struct MoleculeWithGrid {
-//     pub molecule: Molecule,
-//     pub neighbor_grid: MoleculeData,
-// }
-
-// impl MoleculeWithGrid {
-//     pub fn new(molecule: Molecule, probe_radius: f32) -> Self {
-//         let neighbor_grid = MoleculeData::from_atoms(&molecule, probe_radius);
-//         Self {
-//             molecule,
-//             neighbor_grid,
-//         }
-//     }
-
-//     pub fn recompute_grid(&mut self, probe_radius: f32) {
-//         self.neighbor_grid = MoleculeData::from_atoms(&self.molecule, probe_radius);
-//     }
-// }

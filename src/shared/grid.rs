@@ -57,13 +57,13 @@ pub struct GridCell {
 
 // Data structure for efficient lookup of neighboring atoms.
 #[derive(Debug, Default)]
-pub struct MoleculeData {
+pub struct GriddedMolecule {
     pub atoms_sorted: Vec<Atom>,
     pub neighbor_grid: GridUniform,
     pub grid_cells: Vec<GridCell>,
 }
 
-impl MoleculeData {
+impl GriddedMolecule {
     pub fn from_atoms(atoms: Vec<Atom>, probe_radius: f32) -> Self {
         let max_atom_radius = atoms.get_max_atom_radius();
         let grid_offset = probe_radius + max_atom_radius;

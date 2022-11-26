@@ -17,7 +17,8 @@ use self::distance_field::DistanceFieldResource;
 use self::molecule_grid::MoleculeGridResource;
 use self::ses_grid::SesGridResource;
 
-use super::grid::MoleculeData;
+use super::camera::ArcballCamera;
+use super::grid::GriddedMolecule;
 
 // TODO: move this into separate file.
 pub struct SesSettings {
@@ -36,7 +37,7 @@ impl Default for SesSettings {
 }
 
 pub struct GlobalResources {
-    molecule: Arc<MoleculeData>,
+    molecule: Arc<GriddedMolecule>,
     ses_settings: SesSettings,
 
     ses_resource: SesGridResource,
@@ -44,8 +45,7 @@ pub struct GlobalResources {
     distance_field_resource: DistanceFieldResource,
     depth_texture: DepthTexture,
 
-    // TODO: make this private
-    pub camera_resource: CameraResource,
+    camera_resource: CameraResource,
 }
 
 pub trait Resource {
@@ -74,7 +74,7 @@ impl GlobalResources {
         }
     }
 
-    pub fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<MoleculeData>) {
+    pub fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<GriddedMolecule>) {
         self.molecule = molecule.clone();
         self.molecule_resource.update_molecule(queue, &molecule);
         self.ses_resource
@@ -94,6 +94,10 @@ impl GlobalResources {
             .update_grid(&gpu.queue, &self.molecule, &self.ses_settings);
         self.distance_field_resource =
             DistanceFieldResource::new(&gpu.device, self.ses_settings.resolution);
+    }
+
+    pub fn update_camera(&mut self, queue: &wgpu::Queue, camera: &ArcballCamera) {
+        self.camera_resource.update(queue, camera);
     }
 
     pub fn resize(&mut self, gpu: &GpuState) {

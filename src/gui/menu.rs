@@ -12,8 +12,7 @@ impl GuiComponent for Menu {
             menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Load molecules").clicked() {
-                        let x = dispatch.send(AppEvent::OpenFileDialogRequested).ok();
-                        println!("Load molecules sentttt {:?}", x);
+                        dispatch.send(AppEvent::OpenFileDialogRequested).ok();
                     }
                 });
 

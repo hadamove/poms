@@ -1,7 +1,7 @@
 use cgmath::SquareMatrix;
 use wgpu::util::DeviceExt;
 
-use crate::render::shared::camera::{Camera, Projection};
+use crate::shared::camera::ArcballCamera;
 
 use super::Resource;
 
@@ -26,10 +26,10 @@ impl CameraUniform {
         }
     }
 
-    fn update_uniform(&mut self, camera: &Camera, projection: &Projection) {
-        self.position = camera.position.to_homogeneous().into();
-        let view_matrix = camera.calc_matrix();
-        let proj_matrix = projection.calc_matrix();
+    fn update_uniform(&mut self, camera: &ArcballCamera) {
+        self.position = camera.get_position().to_homogeneous().into();
+        let view_matrix = camera.get_view_matrix();
+        let proj_matrix = camera.get_projection_matrix();
 
         self.view_matrix = view_matrix.into();
         self.proj_matrix = proj_matrix.into();
@@ -89,8 +89,8 @@ impl CameraResource {
         }
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue, camera: &Camera, projection: &Projection) {
-        self.uniform.update_uniform(camera, projection);
+    pub fn update(&mut self, queue: &wgpu::Queue, camera: &ArcballCamera) {
+        self.uniform.update_uniform(camera);
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
     }
 }

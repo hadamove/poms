@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use crate::shared::events::{AppEvent, EventDispatch};
-use crate::shared::grid::MoleculeData;
+use crate::shared::grid::GriddedMolecule;
 use crate::shared::molecule::Molecule;
 
 use super::parse::parse_atoms_from_pdb_file;
 
 pub struct MoleculeStore {
-    pub molecules: Vec<Arc<MoleculeData>>,
+    pub molecules: Vec<Arc<GriddedMolecule>>,
     pub current_molecule_index: usize,
     dispatch: EventDispatch,
 }
@@ -41,7 +41,7 @@ impl MoleculeStore {
             .molecules
             .iter()
             .map(|molecule| {
-                Arc::new(MoleculeData::from_atoms(
+                Arc::new(GriddedMolecule::from_atoms(
                     molecule.atoms_sorted.clone(),
                     probe_radius,
                 ))
@@ -69,7 +69,7 @@ impl MoleculeStore {
             Ok(molecules) => {
                 self.molecules = molecules
                     .into_iter()
-                    .map(|atoms| Arc::new(MoleculeData::from_atoms(atoms, probe_radius)))
+                    .map(|atoms| Arc::new(GriddedMolecule::from_atoms(atoms, probe_radius)))
                     .collect();
 
                 if !self.molecules.is_empty() {

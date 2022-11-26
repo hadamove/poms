@@ -7,7 +7,9 @@ use crate::gpu::GpuState;
 use crate::gui::Gui;
 use crate::parser::store::MoleculeStore;
 use crate::render::Renderer;
+use crate::shared::camera::ArcballCamera;
 use crate::shared::events::AppEvent;
+use crate::shared::input::Input;
 use crate::shared::resources::GlobalResources;
 
 pub struct App {
@@ -16,8 +18,10 @@ pub struct App {
 
     pub compute: ComputeJobs,
     pub renderer: Renderer,
+    pub camera: ArcballCamera,
 
     pub gui: Gui,
+    pub input: Input,
     pub store: MoleculeStore,
 
     pub frame_count: u64,
@@ -32,12 +36,16 @@ impl App {
         let global_resources = GlobalResources::new(&gpu);
 
         let (dispatch, event_listener) = channel::<AppEvent>();
+
         App {
             global_resources: GlobalResources::new(&gpu),
+
             compute: ComputeJobs::new(&gpu, &global_resources),
             renderer: Renderer::new(&gpu, &global_resources),
+            camera: ArcballCamera::from_config(&gpu.config),
 
             gui: Gui::new(&gpu, dispatch.clone()),
+            input: Input::default(),
             store: MoleculeStore::new(dispatch),
 
             frame_count: 0,
@@ -51,14 +59,15 @@ impl App {
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.gpu.resize(new_size);
-            self.renderer.resize(new_size);
             self.global_resources.resize(&self.gpu);
+            self.camera.resize(new_size);
         }
     }
 
-    pub fn input<T>(&mut self, event: &Event<T>) -> bool {
-        self.gui.handle_winit_event(event)
-            || self.renderer.camera_controller.process_winit_event(event)
+    pub fn input<T>(&mut self, event: &Event<T>) {
+        if !self.gui.handle_winit_event(event) {
+            self.input.handle_winit_event(event);
+        }
     }
 
     pub fn render(&mut self, _window: &Window) -> anyhow::Result<()> {
@@ -74,12 +83,14 @@ impl App {
         Ok(())
     }
 
-    pub fn update(&mut self, time_delta: std::time::Duration) {
+    pub fn update(&mut self, _time_delta: std::time::Duration) {
         self.process_app_events();
+        self.camera.update(&self.input);
+        self.global_resources
+            .update_camera(&self.gpu.queue, &self.camera);
+
         // self.frame_count += 1;
         // self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
-        self.renderer
-            .update(&mut self.gpu, &mut self.global_resources, time_delta);
     }
 
     fn process_app_events(&mut self) {
@@ -108,9 +119,7 @@ impl App {
                 }
                 AppEvent::OpenFileDialogRequested => self.store.load_pdb_files_from_user(),
                 AppEvent::FilesLoaded(files) => self.store.parse_molecules_and_grids(files, 1.4),
-                AppEvent::FocusCamera(position) => {
-                    self.renderer.camera.focus(position);
-                }
+                AppEvent::FocusCamera(position) => self.camera.set_target(position),
                 AppEvent::DisplayError(_) => self.gui.handle_app_event(&event),
                 _ => {}
             }

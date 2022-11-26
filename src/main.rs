@@ -47,10 +47,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
         #[cfg(target_arch = "wasm32")]
         crate::shared::wasm::update_window_size_if_canvas_changed(&window, &mut app);
 
-        if app.input(&event) {
-            return;
-        }
-
+        app.input(&event);
         // TODO: Move this into app to make it more self-contained
         match event {
             Event::WindowEvent { event, .. } => match event {

@@ -1,7 +1,7 @@
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use super::grid::MoleculeData;
+use super::grid::GriddedMolecule;
 
 pub enum AppEvent {
     SesResolutionChanged(u32),
@@ -10,7 +10,7 @@ pub enum AppEvent {
     RenderSesChanged(bool),
     ComputeSesAlwaysChanged(bool),
     OpenFileDialogRequested,
-    MoleculeChanged(Arc<MoleculeData>),
+    MoleculeChanged(Arc<GriddedMolecule>),
     FocusCamera(cgmath::Point3<f32>),
 
     DisplayError(String),
