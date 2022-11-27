@@ -1,46 +1,36 @@
 use anyhow::Result;
 
 use crate::context::Context;
-use crate::gui::GuiOutput;
+use crate::gui::{GuiEvent, GuiEvents, GuiOutput};
 
 use self::gui_pass::GuiRenderPass;
 use self::render_pass::RenderPass;
-
-use super::compute::PassId;
-use super::resources::GlobalResources;
+use super::resources::{PassId, ResourceRepo};
 
 mod gui_pass;
 mod render_pass;
 
 pub struct Renderer {
-    pub gui_pass: GuiRenderPass,
+    gui_pass: GuiRenderPass,
     render_passes: Vec<RenderPass>,
 }
 
 impl Renderer {
-    pub fn new(context: &Context, resources: &GlobalResources) -> Renderer {
+    pub fn new(context: &Context, resources: &ResourceRepo) -> Renderer {
         Self {
             gui_pass: GuiRenderPass::new(context),
 
             render_passes: vec![
-                RenderPass::new(context, resources, PassId::Spacefill),
-                RenderPass::new(context, resources, PassId::SesRaymarching),
+                RenderPass::new(context, resources, PassId::RenderSpacefill),
+                RenderPass::new(context, resources, PassId::RenderSesRaymarching),
             ],
-        }
-    }
-
-    pub fn toggle_render_pass(&mut self, pass_id: PassId, enabled: bool) {
-        for pass in self.render_passes.iter_mut() {
-            if pass.get_id() == &pass_id {
-                pass.set_enabled(enabled);
-            }
         }
     }
 
     pub fn render(
         &mut self,
         context: &Context,
-        resources: &GlobalResources,
+        resources: &ResourceRepo,
         mut encoder: wgpu::CommandEncoder,
         gui_output: GuiOutput,
     ) -> Result<()> {
@@ -66,5 +56,27 @@ impl Renderer {
         output_texture.present();
 
         Ok(())
+    }
+
+    pub fn handle_events(&mut self, events: &GuiEvents) {
+        for event in events {
+            match event {
+                GuiEvent::RenderSesChanged(enabled) => {
+                    self.toggle_render_pass(PassId::RenderSesRaymarching, *enabled);
+                }
+                GuiEvent::RenderSpacefillChanged(enabled) => {
+                    self.toggle_render_pass(PassId::RenderSpacefill, *enabled);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn toggle_render_pass(&mut self, pass_id: PassId, enabled: bool) {
+        for pass in self.render_passes.iter_mut() {
+            if pass.get_id() == &pass_id {
+                pass.set_enabled(enabled);
+            }
+        }
     }
 }

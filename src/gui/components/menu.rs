@@ -1,18 +1,20 @@
 use egui::{menu, TopBottomPanel};
 
+use crate::gui::GuiEvent;
+
+use super::super::GuiEvents;
 use super::GuiComponent;
-use crate::shared::events::{AppEvent, EventDispatch};
 
 #[derive(Default)]
 pub struct Menu;
 
 impl GuiComponent for Menu {
-    fn draw(&mut self, context: &egui::Context, dispatch: &EventDispatch) {
+    fn draw(&mut self, context: &egui::Context, events: &mut GuiEvents) {
         TopBottomPanel::top("menu_bar").show(context, |ui| {
             menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Load molecules").clicked() {
-                        dispatch.send(AppEvent::OpenFileDialogRequested).ok();
+                        events.push(GuiEvent::OpenFileDialog);
                     }
                 });
 
@@ -26,5 +28,7 @@ impl GuiComponent for Menu {
         });
     }
 
-    fn update(&mut self, _event: &AppEvent) {}
+    fn should_close(&self) -> bool {
+        false
+    }
 }

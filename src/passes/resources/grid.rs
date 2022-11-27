@@ -1,6 +1,6 @@
 use cgmath::Vector3;
 
-use crate::shared::molecule::{Atom, Molecule};
+use super::molecule::{Atom, Molecule};
 
 pub mod molecule_grid;
 pub mod ses_grid;

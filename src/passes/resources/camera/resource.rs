@@ -1,9 +1,7 @@
 use cgmath::SquareMatrix;
 use wgpu::util::DeviceExt;
 
-use crate::shared::camera::ArcballCamera;
-
-use super::Resource;
+use super::{super::Resource, arcball::ArcballCamera};
 
 pub struct CameraResource {
     buffer: wgpu::Buffer,

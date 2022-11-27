@@ -1,9 +1,10 @@
 use std::f32::consts::PI;
 
-use cgmath::{InnerSpace, Matrix4, Point3, Rad, SquareMatrix, Vector3};
+use cgmath::{InnerSpace, Matrix4, MetricSpace, Point3, Rad, SquareMatrix, Vector3};
 
-use super::input::Input;
-#[derive(Debug, Clone, Copy)]
+use crate::utils::input::Input;
+
+#[derive(Debug)]
 pub struct ArcballCamera {
     offset: f32,
     target: Point3<f32>,
@@ -18,6 +19,15 @@ impl ArcballCamera {
     const FOVY: f32 = PI / 4.0;
 
     const INITIAL_OFFSET: f32 = 100.0;
+    const DISTANCE_THRESHOLD: f32 = 0.1;
+
+    #[rustfmt::skip]
+    const OPENGL_TO_WGPU_MATRIX: Matrix4<f32> = Matrix4::new(
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.5, 0.0,
+        0.0, 0.0, 0.5, 1.0,
+    );
 
     pub fn from_config(config: &wgpu::SurfaceConfiguration) -> Self {
         Self {
@@ -38,17 +48,19 @@ impl ArcballCamera {
     }
 
     pub fn get_projection_matrix(&self) -> Matrix4<f32> {
-        OPENGL_TO_WGPU_MATRIX
+        Self::OPENGL_TO_WGPU_MATRIX
             * cgmath::perspective(Rad(Self::FOVY), self.get_aspect(), Self::ZNEAR, Self::ZFAR)
     }
 
     pub fn set_target(&mut self, target: Point3<f32>) {
-        self.target = target;
-        self.set_position(target + Vector3::unit_z() * self.offset);
+        if target.distance(self.target) > Self::DISTANCE_THRESHOLD {
+            self.target = target;
+            self.set_position(target + Vector3::unit_z() * self.offset);
+        }
     }
 
-    pub fn resize(&mut self, size: winit::dpi::PhysicalSize<u32>) {
-        self.screen_size = (size.width, size.height);
+    pub fn resize(&mut self, config: &wgpu::SurfaceConfiguration) {
+        self.screen_size = (config.width, config.height);
     }
 
     pub fn update(&mut self, input: &Input) {
@@ -106,11 +118,3 @@ impl ArcballCamera {
         self.view = Matrix4::look_at_rh(self.position, self.target, Vector3::unit_y());
     }
 }
-
-#[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
-    1.0, 0.0, 0.0, 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 0.5, 0.0,
-    0.0, 0.0, 0.5, 1.0,
-);

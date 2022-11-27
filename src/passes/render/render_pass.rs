@@ -1,5 +1,5 @@
-use super::super::compute::PassId;
-use super::super::resources::{GlobalResources, GroupIndex};
+use super::super::resources::{GroupIndex, ResourceRepo};
+use super::PassId;
 use crate::context::Context;
 
 const VERTICES_PER_ATOM: u32 = 6;
@@ -12,8 +12,8 @@ pub struct RenderPass {
 }
 
 impl RenderPass {
-    pub fn new(context: &Context, resources: &GlobalResources, id: PassId) -> Self {
-        let shader = GlobalResources::get_shader(&id);
+    pub fn new(context: &Context, resources: &ResourceRepo, id: PassId) -> Self {
+        let shader = ResourceRepo::get_shader(&id);
         let shader_module = context.device.create_shader_module(shader);
         let resources = resources.get_resources(&id);
 
@@ -78,7 +78,7 @@ impl RenderPass {
         view: &wgpu::TextureView,
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        resources: &GlobalResources,
+        resources: &ResourceRepo,
     ) {
         if !self.enabled {
             return;
@@ -116,10 +116,10 @@ impl RenderPass {
         render_pass.draw(0..num_vertices, 0..1);
     }
 
-    fn get_num_vertices(&self, resources: &GlobalResources) -> u32 {
+    fn get_num_vertices(&self, resources: &ResourceRepo) -> u32 {
         match self.id {
-            PassId::SesRaymarching => FULLSCREEN_VERTICES,
-            PassId::Spacefill => resources.get_num_atoms() * VERTICES_PER_ATOM,
+            PassId::RenderSesRaymarching => FULLSCREEN_VERTICES,
+            PassId::RenderSpacefill => resources.get_num_atoms() * VERTICES_PER_ATOM,
             _ => unreachable!(),
         }
     }

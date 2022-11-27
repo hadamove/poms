@@ -1,6 +1,7 @@
 mod camera;
-pub mod grid;
-pub mod repo;
+mod grid;
+mod molecule;
+mod molecule_repo;
 mod textures;
 
 use std::sync::Arc;
@@ -8,15 +9,23 @@ use std::sync::Arc;
 use wgpu::{include_wgsl, ShaderModuleDescriptor};
 
 use crate::context::Context;
-use crate::passes::compute::PassId;
-use crate::shared::camera::ArcballCamera;
+use crate::gui::{GuiEvent, GuiEvents};
+use crate::utils::input::Input;
 
-use self::camera::CameraResource;
-use self::grid::molecule_grid::MoleculeGridResource;
-use self::grid::ses_grid::SesGridResource;
-use self::grid::GriddedMolecule;
-use self::textures::depth_texture::DepthTexture;
-use self::textures::df_texture::DistanceFieldTexture;
+use self::camera::{arcball::ArcballCamera, resource::CameraResource};
+use self::grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource, GriddedMolecule};
+use self::molecule::Molecule;
+use self::molecule_repo::MoleculeRepo;
+use self::textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
+
+// TODO: move this into separate file.
+#[derive(Debug, PartialEq)]
+pub enum PassId {
+    ComputeProbe,
+    ComputeDistanceFieldRefinement,
+    RenderSpacefill,
+    RenderSesRaymarching,
+}
 
 // TODO: move this into separate file.
 pub struct SesSettings {
@@ -34,19 +43,6 @@ impl Default for SesSettings {
     }
 }
 
-pub struct GlobalResources {
-    molecule: Arc<GriddedMolecule>,
-    ses_settings: SesSettings,
-
-    ses_resource: SesGridResource,
-    molecule_resource: MoleculeGridResource,
-
-    df_texture: DistanceFieldTexture,
-    depth_texture: DepthTexture,
-
-    camera_resource: CameraResource,
-}
-
 pub trait Resource {
     fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout;
     fn get_bind_group(&self) -> &wgpu::BindGroup;
@@ -55,47 +51,71 @@ pub trait Resource {
 #[derive(Debug, Clone, Copy)]
 pub struct GroupIndex(pub u32);
 
-impl GlobalResources {
+pub struct ResourceRepo {
+    molecule_repo: MoleculeRepo,
+
+    // TODO: try to remove this.
+    molecule: Arc<GriddedMolecule>,
+    ses_settings: SesSettings,
+
+    ses_resource: SesGridResource,
+    molecule_resource: MoleculeGridResource,
+    camera_resource: CameraResource,
+    camera: ArcballCamera,
+
+    df_texture: DistanceFieldTexture,
+    depth_texture: DepthTexture,
+}
+
+impl ResourceRepo {
     pub fn new(context: &Context) -> Self {
         let ses_settings = SesSettings::default();
 
         Self {
+            molecule_repo: MoleculeRepo::default(),
             molecule: Arc::default(),
             ses_resource: SesGridResource::new(&context.device),
             molecule_resource: MoleculeGridResource::new(&context.device),
+            camera_resource: CameraResource::new(&context.device),
+            camera: ArcballCamera::from_config(&context.config),
             df_texture: DistanceFieldTexture::new(&context.device, ses_settings.resolution),
             depth_texture: DepthTexture::new(&context.device, &context.config),
-            camera_resource: CameraResource::new(&context.device),
             ses_settings,
         }
     }
 
-    pub fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<GriddedMolecule>) {
-        self.molecule = molecule.clone();
-        self.molecule_resource.update_molecule(queue, &molecule);
-        self.ses_resource
-            .update(queue, &self.molecule, &self.ses_settings);
+    pub fn update(&mut self, context: &Context, input: &Input, gui_events: GuiEvents) {
+        self.camera.update(input);
+        self.camera_resource.update(&context.queue, &self.camera);
+        self.handle_gui_events(context, gui_events);
+
+        if let Some(new_molecule) = self.molecule_repo.get_new_molecule() {
+            self.update_molecule(&context.queue, new_molecule);
+        }
     }
 
-    pub fn update_probe_radius(&mut self, queue: &wgpu::Queue, probe_radius: f32) {
-        self.ses_settings.probe_radius = probe_radius;
-        self.ses_resource
-            .update(queue, &self.molecule, &self.ses_settings);
-    }
-
-    pub fn update_resolution(&mut self, context: &Context, resolution: u32) {
-        self.ses_settings.resolution = resolution;
-        self.ses_resource
-            .update(&context.queue, &self.molecule, &self.ses_settings);
-        self.df_texture = DistanceFieldTexture::new(&context.device, self.ses_settings.resolution);
-    }
-
-    pub fn update_camera(&mut self, queue: &wgpu::Queue, camera: &ArcballCamera) {
-        self.camera_resource.update(queue, camera);
+    fn handle_gui_events(&mut self, context: &Context, gui_events: GuiEvents) {
+        for event in gui_events {
+            #[allow(clippy::single_match)]
+            match event {
+                GuiEvent::LoadedMolecules(molecules) => {
+                    self.molecule_repo
+                        .load_from_parsed(molecules, self.ses_settings.probe_radius);
+                }
+                GuiEvent::SesResolutionChanged(resolution) => {
+                    self.update_resolution(context, resolution);
+                }
+                GuiEvent::ProbeRadiusChanged(probe_radius) => {
+                    self.update_probe_radius(&context.queue, probe_radius);
+                }
+                _ => {}
+            }
+        }
     }
 
     pub fn resize(&mut self, context: &Context) {
         self.depth_texture = DepthTexture::new(&context.device, &context.config);
+        self.camera.resize(&context.config);
     }
 
     pub fn get_num_grid_points(&self) -> u32 {
@@ -110,23 +130,46 @@ impl GlobalResources {
         &self.depth_texture
     }
 
+    fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<GriddedMolecule>) {
+        self.molecule = molecule.clone();
+        self.camera
+            .set_target(molecule.atoms_sorted.calculate_center());
+        self.molecule_resource.update_molecule(queue, &molecule);
+        self.ses_resource
+            .update(queue, &self.molecule, &self.ses_settings);
+    }
+
+    fn update_probe_radius(&mut self, queue: &wgpu::Queue, probe_radius: f32) {
+        self.ses_settings.probe_radius = probe_radius;
+        self.molecule_repo.recompute_molecule_grids(probe_radius);
+        self.ses_resource
+            .update(queue, &self.molecule, &self.ses_settings);
+    }
+
+    fn update_resolution(&mut self, context: &Context, resolution: u32) {
+        self.ses_settings.resolution = resolution;
+        self.ses_resource
+            .update(&context.queue, &self.molecule, &self.ses_settings);
+        self.df_texture = DistanceFieldTexture::new(&context.device, self.ses_settings.resolution);
+    }
+
     #[rustfmt::skip]
     pub fn get_resources(&self, pass_id: &PassId) -> ResourceGroup {
         match pass_id {
-            PassId::Probe => ResourceGroup(vec![
+            PassId::ComputeProbe => ResourceGroup(vec![
                 (GroupIndex(0), &self.ses_resource as &dyn Resource),
                 (GroupIndex(1), &self.molecule_resource as &dyn Resource),
             ]),
-            PassId::DistanceFieldRefinement => ResourceGroup(vec![
+            PassId::ComputeDistanceFieldRefinement => ResourceGroup(vec![
                 (GroupIndex(0), &self.ses_resource as &dyn Resource),
                 (GroupIndex(1), &self.molecule_resource as &dyn Resource),
                 (GroupIndex(2), &self.df_texture.compute as &dyn Resource),
             ]),
-            PassId::Spacefill => ResourceGroup(vec![
+            PassId::RenderSpacefill => ResourceGroup(vec![
                 (GroupIndex(0), &self.molecule_resource as &dyn Resource),
                 (GroupIndex(1), &self.camera_resource as &dyn Resource),
             ]),
-            PassId::SesRaymarching => ResourceGroup(vec![
+            PassId::RenderSesRaymarching => ResourceGroup(vec![
                 (GroupIndex(0), &self.ses_resource as &dyn Resource),
                 (GroupIndex(1), &self.df_texture.render as &dyn Resource),
                 (GroupIndex(2), &self.camera_resource as &dyn Resource),
@@ -136,10 +179,10 @@ impl GlobalResources {
 
     pub fn get_shader(pass_id: &PassId) -> ShaderModuleDescriptor {
         match pass_id {
-            PassId::Probe => include_wgsl!("./shaders/probe.wgsl"),
-            PassId::DistanceFieldRefinement => include_wgsl!("./shaders/df_refinement.wgsl"),
-            PassId::Spacefill => include_wgsl!("./shaders/spacefill.wgsl"),
-            PassId::SesRaymarching => include_wgsl!("./shaders/ses_raymarching.wgsl"),
+            PassId::ComputeProbe => include_wgsl!("./shaders/probe.wgsl"),
+            PassId::ComputeDistanceFieldRefinement => include_wgsl!("./shaders/df_refinement.wgsl"),
+            PassId::RenderSpacefill => include_wgsl!("./shaders/spacefill.wgsl"),
+            PassId::RenderSesRaymarching => include_wgsl!("./shaders/ses_raymarching.wgsl"),
         }
     }
 }

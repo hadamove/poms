@@ -20,6 +20,7 @@ impl Input {
     }
 
     fn handle_device_event(&mut self, event: &DeviceEvent) {
+        #[allow(clippy::single_match)]
         match event {
             DeviceEvent::MouseMotion { delta } => self.mouse_delta = *delta,
             _ => {}

@@ -3,7 +3,7 @@ mod context;
 mod gui;
 mod parser;
 mod passes;
-mod shared;
+mod utils;
 
 use crate::app::App;
 
@@ -27,7 +27,7 @@ fn main() {
     }
     #[cfg(target_arch = "wasm32")]
     {
-        crate::shared::wasm::init_browser_window(&window);
+        crate::utils::wasm::init_browser_window(&window);
         wasm_bindgen_futures::spawn_local(run_loop(event_loop, window));
     }
 }
@@ -41,10 +41,9 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
         }
 
         #[cfg(target_arch = "wasm32")]
-        crate::shared::wasm::update_window_size_if_canvas_changed(&window, &mut app);
+        crate::utils::wasm::update_window_size_if_canvas_changed(&window, &mut app);
 
         app.input(&event);
-        // TODO: Move this into app to make it more self-contained
         match event {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,

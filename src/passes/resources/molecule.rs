@@ -1,11 +1,24 @@
 use cgmath::{Bounded, Point3, Vector3};
 
+use crate::parser::parse::ParsedAtom;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Atom {
     pub position: [f32; 3],
     pub radius: f32,
     pub color: [f32; 4],
+}
+
+impl From<ParsedAtom> for Atom {
+    fn from(atom: ParsedAtom) -> Self {
+        let color = atom.element_data.jmol_color;
+        Self {
+            position: atom.position,
+            radius: atom.element_data.vdw_radius,
+            color: [color[0], color[1], color[2], 1.0],
+        }
+    }
 }
 
 pub trait Molecule {

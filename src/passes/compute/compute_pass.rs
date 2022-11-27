@@ -1,5 +1,5 @@
-use super::super::compute::PassId;
-use super::super::resources::{GlobalResources, GroupIndex};
+use super::super::resources::{GroupIndex, ResourceRepo};
+use super::PassId;
 use crate::context::Context;
 
 pub struct ComputePass {
@@ -8,9 +8,9 @@ pub struct ComputePass {
 }
 
 impl ComputePass {
-    pub fn new(context: &Context, resources: &GlobalResources, pass_id: PassId) -> Self {
+    pub fn new(context: &Context, resources: &ResourceRepo, pass_id: PassId) -> Self {
         let resources = resources.get_resources(&pass_id);
-        let shader = GlobalResources::get_shader(&pass_id);
+        let shader = ResourceRepo::get_shader(&pass_id);
 
         let compute_pipeline_layout =
             context
@@ -39,7 +39,7 @@ impl ComputePass {
         }
     }
 
-    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder, resources: &GlobalResources) {
+    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder, resources: &ResourceRepo) {
         let pass_resources = resources.get_resources(&self.id);
 
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
