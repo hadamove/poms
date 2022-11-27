@@ -38,9 +38,6 @@ pub struct GroupIndex(pub u32);
 
 pub struct ResourceRepo {
     molecule_repo: MoleculeRepo,
-
-    // TODO: try to remove this.
-    molecule: Arc<GriddedMolecule>,
     ses_settings: SesSettings,
 
     ses_resource: SesGridResource,
@@ -58,7 +55,6 @@ impl ResourceRepo {
 
         Self {
             molecule_repo: MoleculeRepo::default(),
-            molecule: Arc::default(),
             ses_resource: SesGridResource::new(&context.device),
             molecule_resource: MoleculeGridResource::new(&context.device),
             camera_resource: CameraResource::new(&context.device),
@@ -74,7 +70,7 @@ impl ResourceRepo {
         self.camera_resource.update(&context.queue, &self.camera);
         self.handle_gui_events(context, gui_events);
 
-        if let Some(new_molecule) = self.molecule_repo.get_new_molecule() {
+        if let Some(new_molecule) = self.molecule_repo.get_new() {
             self.update_molecule(&context.queue, new_molecule);
         }
     }
@@ -107,8 +103,11 @@ impl ResourceRepo {
         self.ses_settings.resolution.pow(3)
     }
 
-    pub fn get_num_atoms(&self) -> u32 {
-        self.molecule.atoms_sorted.len() as u32
+    pub fn get_num_atoms(&self) -> usize {
+        match self.molecule_repo.get_current() {
+            Some(molecule) => molecule.atoms_sorted.len(),
+            None => 0,
+        }
     }
 
     pub fn get_depth_texture(&self) -> &DepthTexture {
@@ -116,26 +115,29 @@ impl ResourceRepo {
     }
 
     fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<GriddedMolecule>) {
-        self.molecule = molecule.clone();
         self.camera
             .set_target(molecule.atoms_sorted.calculate_center());
         self.molecule_resource.update(queue, &molecule);
         self.ses_resource
-            .update(queue, &self.molecule, &self.ses_settings);
+            .update(queue, &molecule, &self.ses_settings);
     }
 
     fn update_probe_radius(&mut self, queue: &wgpu::Queue, probe_radius: f32) {
         self.ses_settings.probe_radius = probe_radius;
-        self.molecule_repo.recompute_molecule_grids(probe_radius);
-        self.ses_resource
-            .update(queue, &self.molecule, &self.ses_settings);
+        if let Some(molecule) = self.molecule_repo.get_current() {
+            self.molecule_repo.recompute_neighbor_grids(probe_radius);
+            self.ses_resource
+                .update(queue, &molecule, &self.ses_settings);
+        }
     }
 
     fn update_resolution(&mut self, context: &Context, resolution: u32) {
         self.ses_settings.resolution = resolution;
-        self.ses_resource
-            .update(&context.queue, &self.molecule, &self.ses_settings);
         self.df_texture = DistanceFieldTexture::new(&context.device, self.ses_settings.resolution);
+        if let Some(molecule) = self.molecule_repo.get_current() {
+            self.ses_resource
+                .update(&context.queue, &molecule, &self.ses_settings);
+        }
     }
 
     #[rustfmt::skip]

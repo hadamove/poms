@@ -118,7 +118,7 @@ impl RenderPass {
     fn get_num_vertices(&self, resources: &ResourceRepo) -> u32 {
         match self.id {
             PassId::RenderSesRaymarching => FULLSCREEN_VERTICES,
-            PassId::RenderSpacefill => resources.get_num_atoms() * VERTICES_PER_ATOM,
+            PassId::RenderSpacefill => resources.get_num_atoms() as u32 * VERTICES_PER_ATOM,
             _ => unreachable!(),
         }
     }
