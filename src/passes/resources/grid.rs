@@ -2,6 +2,9 @@ use cgmath::Vector3;
 
 use crate::shared::molecule::{Atom, Molecule};
 
+pub mod molecule_grid;
+pub mod ses_grid;
+
 #[repr(C)]
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct GridUniform {

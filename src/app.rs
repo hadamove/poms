@@ -2,19 +2,20 @@ use std::sync::mpsc::{channel, Receiver};
 
 use winit::{event::*, window::Window};
 
-use crate::compute::{ComputeJobs, PassId};
-use crate::gpu::GpuState;
+use crate::context::Context;
 use crate::gui::Gui;
-use crate::parser::store::MoleculeStore;
-use crate::render::Renderer;
+use crate::passes::resources::repo::MoleculeRepo;
+use crate::passes::resources::GlobalResources;
 use crate::shared::camera::ArcballCamera;
 use crate::shared::events::AppEvent;
 use crate::shared::input::Input;
-use crate::shared::resources::GlobalResources;
+
+use crate::passes::compute::{ComputeJobs, PassId};
+use crate::passes::render::Renderer;
 
 pub struct App {
-    pub gpu: GpuState,
-    pub global_resources: GlobalResources,
+    pub context: Context,
+    pub resources: GlobalResources,
 
     pub compute: ComputeJobs,
     pub renderer: Renderer,
@@ -22,44 +23,42 @@ pub struct App {
 
     pub gui: Gui,
     pub input: Input,
-    pub store: MoleculeStore,
+    pub molecule_repo: MoleculeRepo,
 
     pub frame_count: u64,
-    pub last_frame_time: f32,
 
     pub event_listener: Receiver<AppEvent>,
 }
 
 impl App {
     pub async fn new(window: &Window) -> Self {
-        let gpu = GpuState::new(window).await;
-        let global_resources = GlobalResources::new(&gpu);
+        let context = Context::new(window).await;
+        let resources = GlobalResources::new(&context);
 
         let (dispatch, event_listener) = channel::<AppEvent>();
 
         App {
-            global_resources: GlobalResources::new(&gpu),
+            resources: GlobalResources::new(&context),
 
-            compute: ComputeJobs::new(&gpu, &global_resources),
-            renderer: Renderer::new(&gpu, &global_resources),
-            camera: ArcballCamera::from_config(&gpu.config),
+            compute: ComputeJobs::new(&context, &resources),
+            renderer: Renderer::new(&context, &resources),
+            camera: ArcballCamera::from_config(&context.config),
 
-            gui: Gui::new(&gpu, dispatch.clone()),
+            gui: Gui::new(&context, dispatch.clone()),
             input: Input::default(),
-            store: MoleculeStore::new(dispatch),
+            molecule_repo: MoleculeRepo::new(dispatch),
 
             frame_count: 0,
-            last_frame_time: 0.0,
             event_listener,
 
-            gpu,
+            context,
         }
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
-            self.gpu.resize(new_size);
-            self.global_resources.resize(&self.gpu);
+            self.context.resize(new_size);
+            self.resources.resize(&self.context);
             self.camera.resize(new_size);
         }
     }
@@ -70,45 +69,40 @@ impl App {
         }
     }
 
-    pub fn render(&mut self, _window: &Window) -> anyhow::Result<()> {
-        let gui_output = self.gui.draw_frame();
-
-        let mut encoder = self.gpu.get_command_encoder();
-
-        self.compute
-            .execute_passes(&self.global_resources, &mut encoder);
-        self.renderer
-            .render(&self.gpu, &self.global_resources, encoder, gui_output)?;
-
-        Ok(())
-    }
-
-    pub fn update(&mut self, _time_delta: std::time::Duration) {
+    pub fn redraw(&mut self) {
         self.process_app_events();
         self.camera.update(&self.input);
-        self.global_resources
-            .update_camera(&self.gpu.queue, &self.camera);
+        self.resources
+            .update_camera(&self.context.queue, &self.camera);
+        self.render();
+    }
 
-        // self.frame_count += 1;
-        // self.gui.frame_time = 0.9 * self.gui.frame_time + 0.1 * time_delta.as_secs_f32();
+    fn render(&mut self) {
+        let gui_output = self.gui.draw_frame();
+
+        let mut encoder = self.context.get_command_encoder();
+
+        self.compute.execute_passes(&self.resources, &mut encoder);
+        self.renderer
+            .render(&self.context, &self.resources, encoder, gui_output)
+            .expect("Failed to render");
     }
 
     fn process_app_events(&mut self) {
         while let Ok(event) = self.event_listener.try_recv() {
             match event {
                 AppEvent::MoleculeChanged(molecule) => {
-                    self.global_resources
-                        .update_molecule(&self.gpu.queue, molecule);
+                    self.resources
+                        .update_molecule(&self.context.queue, molecule);
                 }
                 AppEvent::SesResolutionChanged(resolution) => {
-                    self.global_resources
-                        .update_resolution(&self.gpu, resolution);
+                    self.resources.update_resolution(&self.context, resolution);
                 }
                 AppEvent::ProbeRadiusChanged(probe_radius) => {
-                    self.global_resources
-                        .update_probe_radius(&self.gpu.queue, probe_radius);
+                    self.resources
+                        .update_probe_radius(&self.context.queue, probe_radius);
 
-                    self.store.recompute_molecule_grids(probe_radius);
+                    self.molecule_repo.recompute_molecule_grids(probe_radius);
                 }
                 AppEvent::RenderSesChanged(enabled) => {
                     self.renderer
@@ -117,8 +111,10 @@ impl App {
                 AppEvent::RenderSpacefillChanged(enabled) => {
                     self.renderer.toggle_render_pass(PassId::Spacefill, enabled);
                 }
-                AppEvent::OpenFileDialogRequested => self.store.load_pdb_files_from_user(),
-                AppEvent::FilesLoaded(files) => self.store.parse_molecules_and_grids(files, 1.4),
+                AppEvent::OpenFileDialogRequested => self.molecule_repo.load_pdb_files_from_user(),
+                AppEvent::FilesLoaded(files) => {
+                    self.molecule_repo.parse_molecules_and_grids(files, 1.4)
+                }
                 AppEvent::FocusCamera(position) => self.camera.set_target(position),
                 AppEvent::DisplayError(_) => self.gui.handle_app_event(&event),
                 _ => {}

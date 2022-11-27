@@ -1,8 +1,7 @@
 use wgpu::util::DeviceExt;
 
-use crate::shared::grid::{GridUniform, GriddedMolecule};
-
-use super::Resource;
+use super::super::Resource;
+use super::{GridUniform, GriddedMolecule};
 
 pub struct MoleculeGridResource {
     buffers: MoleculeGridBuffers,

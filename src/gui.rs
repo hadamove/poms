@@ -1,4 +1,4 @@
-use egui::{Context, FullOutput};
+use egui::FullOutput;
 use egui_winit_platform::{Platform, PlatformDescriptor};
 use error::ErrorMessage;
 use menu::Menu;
@@ -6,7 +6,7 @@ use settings::UserSettings;
 use winit::event::Event;
 
 use crate::{
-    gpu::GpuState,
+    context::Context,
     shared::events::{AppEvent, EventDispatch},
 };
 
@@ -14,7 +14,11 @@ mod error;
 mod menu;
 mod settings;
 
-pub struct GuiOutput(pub FullOutput, pub Context);
+pub struct GuiOutput(pub FullOutput, pub egui::Context);
+
+pub struct GuiEvents {
+    pub events: Vec<AppEvent>,
+}
 
 pub struct Gui {
     components: Vec<Box<dyn GuiComponent>>,
@@ -24,7 +28,7 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(gpu: &GpuState, dispatch: EventDispatch) -> Self {
+    pub fn new(context: &Context, dispatch: EventDispatch) -> Self {
         Self {
             components: vec![
                 Box::new(Menu::default()),
@@ -32,9 +36,9 @@ impl Gui {
                 Box::new(ErrorMessage::default()),
             ],
             platform: Platform::new(PlatformDescriptor {
-                physical_width: gpu.config.width,
-                physical_height: gpu.config.height,
-                scale_factor: gpu.scale_factor,
+                physical_width: context.config.width,
+                physical_height: context.config.height,
+                scale_factor: context.scale_factor,
                 ..Default::default()
             }),
             dispatch,
@@ -44,6 +48,7 @@ impl Gui {
     pub fn draw_frame(&mut self) -> GuiOutput {
         let context = self.platform.context();
         self.platform.begin_frame();
+
         for gui_component in self.components.iter_mut() {
             gui_component.draw(&context, &self.dispatch);
         }

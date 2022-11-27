@@ -1,6 +1,6 @@
 use winit::window::Window;
 
-pub struct GpuState {
+pub struct Context {
     pub surface: wgpu::Surface,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
@@ -9,7 +9,7 @@ pub struct GpuState {
     pub scale_factor: f64,
 }
 
-impl GpuState {
+impl Context {
     pub async fn new(window: &Window) -> Self {
         // TODO: Fix Vulkan
         let instance =

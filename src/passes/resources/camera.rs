@@ -5,41 +5,6 @@ use crate::shared::camera::ArcballCamera;
 
 use super::Resource;
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-struct CameraUniform {
-    position: [f32; 4],
-    view_matrix: [[f32; 4]; 4],
-    proj_matrix: [[f32; 4]; 4],
-    view_inverse_matrix: [[f32; 4]; 4],
-    proj_inverse_matrix: [[f32; 4]; 4],
-}
-
-impl CameraUniform {
-    fn default() -> Self {
-        Self {
-            position: [0.0, 0.0, 0.0, 0.0],
-            view_matrix: cgmath::Matrix4::identity().into(),
-            proj_matrix: cgmath::Matrix4::identity().into(),
-            view_inverse_matrix: cgmath::Matrix4::identity().into(),
-            proj_inverse_matrix: cgmath::Matrix4::identity().into(),
-        }
-    }
-
-    fn update_uniform(&mut self, camera: &ArcballCamera) {
-        self.position = camera.get_position().to_homogeneous().into();
-        let view_matrix = camera.get_view_matrix();
-        let proj_matrix = camera.get_projection_matrix();
-
-        self.view_matrix = view_matrix.into();
-        self.proj_matrix = proj_matrix.into();
-
-        // We can unwrap here because the matrices are invertible.
-        self.view_inverse_matrix = view_matrix.invert().unwrap().into();
-        self.proj_inverse_matrix = proj_matrix.invert().unwrap().into();
-    }
-}
-
 pub struct CameraResource {
     buffer: wgpu::Buffer,
     uniform: CameraUniform,
@@ -102,5 +67,40 @@ impl Resource for CameraResource {
 
     fn get_bind_group(&self) -> &wgpu::BindGroup {
         &self.bind_group
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct CameraUniform {
+    position: [f32; 4],
+    view_matrix: [[f32; 4]; 4],
+    proj_matrix: [[f32; 4]; 4],
+    view_inverse_matrix: [[f32; 4]; 4],
+    proj_inverse_matrix: [[f32; 4]; 4],
+}
+
+impl CameraUniform {
+    fn default() -> Self {
+        Self {
+            position: [0.0, 0.0, 0.0, 0.0],
+            view_matrix: cgmath::Matrix4::identity().into(),
+            proj_matrix: cgmath::Matrix4::identity().into(),
+            view_inverse_matrix: cgmath::Matrix4::identity().into(),
+            proj_inverse_matrix: cgmath::Matrix4::identity().into(),
+        }
+    }
+
+    fn update_uniform(&mut self, camera: &ArcballCamera) {
+        self.position = camera.get_position().to_homogeneous().into();
+        let view_matrix = camera.get_view_matrix();
+        let proj_matrix = camera.get_projection_matrix();
+
+        self.view_matrix = view_matrix.into();
+        self.proj_matrix = proj_matrix.into();
+
+        // We can unwrap here because the matrices are invertible.
+        self.view_inverse_matrix = view_matrix.invert().unwrap().into();
+        self.proj_inverse_matrix = proj_matrix.invert().unwrap().into();
     }
 }

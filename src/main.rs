@@ -1,10 +1,8 @@
 mod app;
-mod compute;
-mod gpu;
+mod context;
 mod gui;
 mod parser;
-mod render;
-mod render_pass;
+mod passes;
 mod shared;
 
 use crate::app::App;
@@ -37,8 +35,6 @@ fn main() {
 async fn run_loop(event_loop: EventLoop<()>, window: Window) {
     let mut app = App::new(&window).await;
 
-    let mut last_render_time = instant::Instant::now();
-
     event_loop.run(move |event, _, control_flow| {
         if app.gui.handle_winit_event(&event) {
             return;
@@ -59,11 +55,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
                 _ => {}
             },
             Event::RedrawRequested(window_id) if window_id == window.id() => {
-                let now = instant::Instant::now();
-                let time_delta = now - last_render_time;
-                last_render_time = now;
-                app.update(time_delta);
-                app.render(&window).unwrap();
+                app.redraw();
             }
             Event::MainEventsCleared => {
                 window.request_redraw();

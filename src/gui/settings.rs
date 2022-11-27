@@ -16,6 +16,7 @@ pub struct UserSettings {
 impl Default for UserSettings {
     fn default() -> Self {
         Self {
+            // TODO: use well defined constants.
             ses_resolution: 64,
             probe_radius: 1.4,
 

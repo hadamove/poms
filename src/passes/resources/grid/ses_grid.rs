@@ -1,8 +1,7 @@
 use wgpu::util::DeviceExt;
 
-use crate::shared::grid::{GridSpacing, GridUniform, GriddedMolecule};
-
-use super::{Resource, SesSettings};
+use super::super::{Resource, SesSettings};
+use super::{GridSpacing, GridUniform, GriddedMolecule};
 
 pub struct SesGridResource {
     buffers: SesGridBuffers,
@@ -23,7 +22,7 @@ impl SesGridResource {
         }
     }
 
-    pub fn update_grid(
+    pub fn update(
         &self,
         queue: &wgpu::Queue,
         molecule: &GriddedMolecule,
@@ -38,6 +37,11 @@ impl SesGridResource {
             &self.buffers.ses_grid_buffer,
             0,
             bytemuck::cast_slice(&[ses_grid]),
+        );
+        queue.write_buffer(
+            &self.buffers.probe_radius_buffer,
+            0,
+            bytemuck::cast_slice(&[ses_settings.probe_radius]),
         );
     }
 }

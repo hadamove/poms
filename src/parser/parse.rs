@@ -3,7 +3,7 @@ use anyhow::{bail, Result};
 use super::elements;
 use crate::shared::molecule::Atom;
 
-pub fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<Vec<Atom>> {
+fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<Vec<Atom>> {
     let mut atoms: Vec<Atom> = vec![];
     let content = std::str::from_utf8(file)?;
 
@@ -32,4 +32,11 @@ pub fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<Vec<Atom>> {
     }
 
     Ok(atoms)
+}
+
+pub fn parse_files(files: Vec<Vec<u8>>) -> Result<Vec<Vec<Atom>>> {
+    files
+        .iter()
+        .map(|file| parse_atoms_from_pdb_file(file))
+        .collect::<anyhow::Result<Vec<_>>>()
 }

@@ -1,18 +1,22 @@
 use std::sync::Arc;
 
-use crate::shared::events::{AppEvent, EventDispatch};
-use crate::shared::grid::GriddedMolecule;
-use crate::shared::molecule::Molecule;
+use crate::{
+    parser::parse::parse_files,
+    shared::{
+        events::{AppEvent, EventDispatch},
+        molecule::Molecule,
+    },
+};
 
-use super::parse::parse_atoms_from_pdb_file;
+use super::grid::GriddedMolecule;
 
-pub struct MoleculeStore {
+pub struct MoleculeRepo {
     pub molecules: Vec<Arc<GriddedMolecule>>,
     pub current_molecule_index: usize,
     dispatch: EventDispatch,
 }
 
-impl MoleculeStore {
+impl MoleculeRepo {
     pub fn new(dispatch: EventDispatch) -> Self {
         Self {
             molecules: vec![],
@@ -60,12 +64,7 @@ impl MoleculeStore {
     }
 
     pub fn parse_molecules_and_grids(&mut self, files: Vec<Vec<u8>>, probe_radius: f32) {
-        let parse_result = files
-            .iter()
-            .map(|file| parse_atoms_from_pdb_file(file))
-            .collect::<anyhow::Result<Vec<_>>>();
-
-        match parse_result {
+        match parse_files(files) {
             Ok(molecules) => {
                 self.molecules = molecules
                     .into_iter()
