@@ -1,5 +1,8 @@
 #[cfg(target_arch = "wasm32")]
-use winit::{dpi::PhysicalSize, window::Window};
+use crate::app::App;
+
+#[cfg(target_arch = "wasm32")]
+use winit::window::Window;
 
 #[cfg(target_arch = "wasm32")]
 pub fn init_browser_window(window: &Window) {

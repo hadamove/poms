@@ -36,10 +36,6 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
     let mut app = App::new(&window).await;
 
     event_loop.run(move |event, _, control_flow| {
-        if app.gui.handle_winit_event(&event) {
-            return;
-        }
-
         #[cfg(target_arch = "wasm32")]
         crate::utils::wasm::update_window_size_if_canvas_changed(&window, &mut app);
 

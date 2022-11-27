@@ -1,6 +1,5 @@
 use egui::FullOutput;
 use egui_winit_platform::{Platform, PlatformDescriptor};
-
 use winit::event::Event;
 
 use crate::{context::Context, parser::parse::ParsedFile};
@@ -98,5 +97,15 @@ impl Gui {
 
     fn spawn_error(&mut self, message: String) {
         self.components.push(Box::new(ErrorMessage::new(message)));
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    // Hot-fix for GUI not resizing with the window in the browser. There is probably a better way to fix this.
+    pub fn force_resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, context: &Context) {
+        let raw_input = self.platform.raw_input_mut();
+        raw_input.screen_rect = Some(egui::Rect::from_min_size(
+            Default::default(),
+            egui::vec2(new_size.width as f32, new_size.height as f32) / context.scale_factor as f32,
+        ));
     }
 }

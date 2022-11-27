@@ -9,15 +9,13 @@ use crate::passes::compute::ComputeJobs;
 use crate::passes::render::Renderer;
 
 pub struct App {
-    pub context: Context,
-    pub resources: ResourceRepo,
+    context: Context,
+    resources: ResourceRepo,
 
-    pub compute: ComputeJobs,
-    pub renderer: Renderer,
-    pub input: Input,
-    pub gui: Gui,
-
-    pub frame_count: u64,
+    compute: ComputeJobs,
+    renderer: Renderer,
+    input: Input,
+    gui: Gui,
 }
 
 impl App {
@@ -33,8 +31,6 @@ impl App {
 
             context,
             resources,
-
-            frame_count: 0,
         }
     }
 
@@ -42,6 +38,9 @@ impl App {
         if new_size.width > 0 && new_size.height > 0 {
             self.context.resize(new_size);
             self.resources.resize(&self.context);
+
+            #[cfg(target_arch = "wasm32")]
+            self.gui.force_resize(new_size, &self.context);
         }
     }
 
