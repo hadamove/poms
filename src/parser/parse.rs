@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use anyhow::{bail, Result};
 
-use super::elements;
+use super::elements::{self, ElementData};
 
 const MIN_LINE_LENGTH: usize = 78;
 const LINE_PREFIX: Range<usize> = 0..4;
@@ -13,7 +13,7 @@ const LINE_ELEMENT_SYMBOL: Range<usize> = 77..78;
 
 pub struct ParsedAtom {
     pub position: [f32; 3],
-    pub element_data: elements::ElementData,
+    pub element_data: ElementData,
 }
 
 pub type ParsedFile = Vec<ParsedAtom>;

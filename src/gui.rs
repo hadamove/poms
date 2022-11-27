@@ -4,10 +4,8 @@ use winit::event::Event;
 
 use crate::{context::Context, parser::parse::ParsedFile};
 
-use self::{
-    async_file::{AsyncFileLoader, FileResponse},
-    components::{error::ErrorMessage, menu::Menu, settings::UserSettings, GuiComponent},
-};
+use async_file::{AsyncFileLoader, FileResponse};
+use components::{error::ErrorMessage, menu::Menu, settings::UserSettings, GuiComponent};
 
 mod async_file;
 mod components;

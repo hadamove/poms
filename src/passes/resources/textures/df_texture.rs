@@ -1,6 +1,7 @@
 use super::super::Resource;
 
 pub struct DistanceFieldTexture {
+    // Binding groups are different for comptue (write) and render (read).
     pub compute: DistanceFieldTextureCompute,
     pub render: DistanceFieldTextureRender,
 }

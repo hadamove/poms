@@ -5,18 +5,17 @@ mod molecule_repo;
 mod textures;
 
 use std::sync::Arc;
-
 use wgpu::{include_wgsl, ShaderModuleDescriptor};
 
 use crate::context::Context;
 use crate::gui::{GuiEvent, GuiEvents};
 use crate::utils::input::Input;
 
-use self::camera::{arcball::ArcballCamera, resource::CameraResource};
-use self::grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource, GriddedMolecule};
-use self::molecule::Molecule;
-use self::molecule_repo::MoleculeRepo;
-use self::textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
+use camera::{arcball::ArcballCamera, resource::CameraResource};
+use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource, GriddedMolecule};
+use molecule::Molecule;
+use molecule_repo::MoleculeRepo;
+use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
 
 // TODO: move this into separate file.
 #[derive(Debug, PartialEq)]
@@ -134,7 +133,7 @@ impl ResourceRepo {
         self.molecule = molecule.clone();
         self.camera
             .set_target(molecule.atoms_sorted.calculate_center());
-        self.molecule_resource.update_molecule(queue, &molecule);
+        self.molecule_resource.update(queue, &molecule);
         self.ses_resource
             .update(queue, &self.molecule, &self.ses_settings);
     }

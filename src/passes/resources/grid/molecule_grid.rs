@@ -22,7 +22,7 @@ impl MoleculeGridResource {
         }
     }
 
-    pub fn update_molecule(&self, queue: &wgpu::Queue, molecule: &GriddedMolecule) {
+    pub fn update(&self, queue: &wgpu::Queue, molecule: &GriddedMolecule) {
         queue.write_buffer(
             &self.buffers.atoms_sorted_buffer,
             0,

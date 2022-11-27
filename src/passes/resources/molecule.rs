@@ -1,13 +1,18 @@
-use cgmath::{Bounded, Point3, Vector3};
-
 use crate::parser::parse::ParsedAtom;
+use cgmath::{Bounded, Point3, Vector3};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Atom {
-    pub position: [f32; 3],
-    pub radius: f32,
-    pub color: [f32; 4],
+    position: [f32; 3],
+    radius: f32,
+    color: [f32; 4],
+}
+
+impl Atom {
+    pub fn get_position(&self) -> Point3<f32> {
+        Point3::from(self.position)
+    }
 }
 
 impl From<ParsedAtom> for Atom {

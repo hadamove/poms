@@ -1,6 +1,5 @@
-use cgmath::Vector3;
-
 use super::molecule::{Atom, Molecule};
+use cgmath::{Point3, Vector3, Vector4};
 
 pub mod molecule_grid;
 pub mod ses_grid;
@@ -77,7 +76,7 @@ impl GriddedMolecule {
         // Divide atoms into grid cells for constant look up.
         let grid_cell_indices = atoms
             .iter()
-            .map(|atom| Self::compute_grid_cell_index(atom.position, &neighbor_grid))
+            .map(|atom| Self::compute_grid_cell_index(atom.get_position(), &neighbor_grid))
             .collect::<Vec<_>>();
 
         // Sort the atoms by cell index.
@@ -103,11 +102,10 @@ impl GriddedMolecule {
         }
     }
 
-    fn compute_grid_cell_index(position: [f32; 3], grid: &GridUniform) -> usize {
-        let res = grid.resolution as usize;
-        let x = ((position[0] - grid.origin[0]) / grid.offset).floor() as usize;
-        let y = ((position[1] - grid.origin[1]) / grid.offset).floor() as usize;
-        let z = ((position[2] - grid.origin[2]) / grid.offset).floor() as usize;
-        x + y * res + z * res * res
+    fn compute_grid_cell_index(position: Point3<f32>, grid: &GridUniform) -> usize {
+        let grid_origin = Vector4::from(grid.origin).truncate();
+        let Point3 { x, y, z } = (position - grid_origin) / grid.offset;
+        let r = grid.resolution as usize;
+        (x as usize) + (y as usize * r) + (z as usize * r * r)
     }
 }

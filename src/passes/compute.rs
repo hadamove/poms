@@ -1,6 +1,6 @@
-use self::compute_pass::ComputePass;
 use super::resources::{PassId, ResourceRepo};
 use crate::context::Context;
+use compute_pass::ComputePass;
 
 mod compute_pass;
 

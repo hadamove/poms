@@ -4,13 +4,11 @@ use super::GuiComponent;
 use crate::gui::{GuiEvent, GuiEvents};
 
 pub struct UserSettings {
-    pub ses_resolution: u32,
-    pub probe_radius: f32,
-
-    pub render_spacefill: bool,
-    pub render_ses: bool,
-
-    pub compute_ses_always: bool,
+    ses_resolution: u32,
+    probe_radius: f32,
+    render_spacefill: bool,
+    render_ses: bool,
+    compute_ses_always: bool,
 }
 
 impl Default for UserSettings {
@@ -19,10 +17,8 @@ impl Default for UserSettings {
             // TODO: use well defined constants.
             ses_resolution: 64,
             probe_radius: 1.4,
-
             render_spacefill: true,
             render_ses: true,
-
             compute_ses_always: false,
         }
     }

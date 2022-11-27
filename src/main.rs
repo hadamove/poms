@@ -5,7 +5,7 @@ mod parser;
 mod passes;
 mod utils;
 
-use crate::app::App;
+use app::App;
 
 use winit::{
     event::*,

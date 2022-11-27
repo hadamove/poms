@@ -3,9 +3,9 @@ use anyhow::Result;
 use crate::context::Context;
 use crate::gui::{GuiEvent, GuiEvents, GuiOutput};
 
-use self::gui_pass::GuiRenderPass;
-use self::render_pass::RenderPass;
 use super::resources::{PassId, ResourceRepo};
+use gui_pass::GuiRenderPass;
+use render_pass::RenderPass;
 
 mod gui_pass;
 mod render_pass;
@@ -38,7 +38,7 @@ impl Renderer {
         let output_texture = context.surface.get_current_texture()?;
 
         let view = output_texture.texture.create_view(&Default::default());
-        let depth_view = &resources.get_depth_texture().view;
+        let depth_view = &resources.get_depth_texture().get_view();
 
         // Render Spacefill and Ses.
         for render_pass in &mut self.render_passes {

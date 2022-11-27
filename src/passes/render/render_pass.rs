@@ -64,15 +64,6 @@ impl RenderPass {
             enabled: true,
         }
     }
-
-    pub fn get_id(&self) -> &PassId {
-        &self.id
-    }
-
-    pub fn set_enabled(&mut self, enabled: bool) {
-        self.enabled = enabled;
-    }
-
     pub fn render(
         &self,
         view: &wgpu::TextureView,
@@ -114,6 +105,14 @@ impl RenderPass {
 
         let num_vertices = self.get_num_vertices(resources);
         render_pass.draw(0..num_vertices, 0..1);
+    }
+
+    pub fn get_id(&self) -> &PassId {
+        &self.id
+    }
+
+    pub fn set_enabled(&mut self, enabled: bool) {
+        self.enabled = enabled;
     }
 
     fn get_num_vertices(&self, resources: &ResourceRepo) -> u32 {

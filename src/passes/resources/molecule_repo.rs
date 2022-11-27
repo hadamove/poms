@@ -1,14 +1,12 @@
-use std::sync::Arc;
-
-use crate::parser::parse::ParsedFile;
-
 use super::{grid::GriddedMolecule, molecule::Atom};
+use crate::parser::parse::ParsedFile;
+use std::sync::Arc;
 
 #[derive(Default)]
 pub struct MoleculeRepo {
-    pub molecules: Vec<Arc<GriddedMolecule>>,
-    pub current_molecule_index: usize,
-    pub update_molecule: bool,
+    molecules: Vec<Arc<GriddedMolecule>>,
+    current_molecule_index: usize,
+    update_molecule: bool,
 }
 
 impl MoleculeRepo {

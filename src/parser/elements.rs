@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use lazy_static::lazy_static;
+use std::collections::HashMap;
 
 #[derive(Debug, serde::Deserialize, Clone)]
 pub struct ElementData {
