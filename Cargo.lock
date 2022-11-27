@@ -497,23 +497,12 @@ dependencies = [
 
 [[package]]
 name = "egui"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a3cd1d47e12f7a17912595241622e373aa652a4e0fa90b3f9278f90a64aedf7"
-dependencies = [
- "ahash 0.7.6",
- "epaint 0.17.0",
- "nohash-hasher",
-]
-
-[[package]]
-name = "egui"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc9fcd393c3daaaf5909008a1d948319d538b79c51871e4df0993260260a94e4"
 dependencies = [
  "ahash 0.8.1",
- "epaint 0.19.0",
+ "epaint",
  "nohash-hasher",
  "tracing",
 ]
@@ -524,32 +513,10 @@ version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07ddc525334c416e11580123e147b970f738507f427c9fb1cd09ea2dd7416a3a"
 dependencies = [
- "egui 0.19.0",
+ "egui",
  "instant",
  "tracing",
  "winit",
-]
-
-[[package]]
-name = "egui_demo_lib"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c22edd72717f8eeeaa4fc0c8ba417d5a897781e4f164bfb19ac7ee6557bd11d"
-dependencies = [
- "egui 0.19.0",
- "egui_extras",
- "enum-map",
- "tracing",
- "unicode_names2",
-]
-
-[[package]]
-name = "egui_extras"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f698f685bb0ad39e87109e2f695ded0bccde77d5d40bbf7590cb5561c1e3039d"
-dependencies = [
- "egui 0.19.0",
 ]
 
 [[package]]
@@ -559,7 +526,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9a4a022610dec7cb5ccce43d397727d190ca38b7c988dece516d585c96caa6"
 dependencies = [
  "bytemuck",
- "egui 0.19.0",
+ "egui",
  "wgpu",
 ]
 
@@ -569,15 +536,9 @@ version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34fb1c870207c14b99fb7ed9a8760fd7be9a0d96b3516ead3a5e3abe7bb88400"
 dependencies = [
- "egui 0.19.0",
+ "egui",
  "winit",
 ]
-
-[[package]]
-name = "emath"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a977a80456be58a2c2d48e69c1d0baadef46cecef5a0c98df141c468da006f12"
 
 [[package]]
 name = "emath"
@@ -586,40 +547,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9542a40106fdba943a055f418d1746a050e1a903a049b030c2b097d4686a33cf"
 dependencies = [
  "bytemuck",
-]
-
-[[package]]
-name = "enum-map"
-version = "2.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5a56d54c8dd9b3ad34752ed197a4eb2a6601bc010808eb097a04a58ae4c43e1"
-dependencies = [
- "enum-map-derive",
- "serde",
-]
-
-[[package]]
-name = "enum-map-derive"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9045e2676cd5af83c3b167d917b0a5c90a4d8e266e2683d6631b235c457fc27"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "epaint"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "033292846059f08e03a71e1b5db2ee6ab7c9622c3b48da21f4bd13258ebee2db"
-dependencies = [
- "ab_glyph",
- "ahash 0.7.6",
- "atomic_refcell",
- "emath 0.17.0",
- "nohash-hasher",
 ]
 
 [[package]]
@@ -632,19 +559,9 @@ dependencies = [
  "ahash 0.8.1",
  "atomic_refcell",
  "bytemuck",
- "emath 0.19.0",
+ "emath",
  "nohash-hasher",
  "parking_lot",
-]
-
-[[package]]
-name = "epi"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c95445deccef4d29fa30488d3f7f2e942dd343eef01228becc7cefd5b918176e"
-dependencies = [
- "egui 0.17.0",
- "tracing",
 ]
 
 [[package]]
@@ -1193,6 +1110,33 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.42.0",
+]
+
+[[package]]
+name = "molasses"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "cgmath",
+ "console_error_panic_hook",
+ "egui",
+ "egui-winit",
+ "egui_wgpu_backend",
+ "egui_winit_platform",
+ "futures",
+ "lazy_static",
+ "log",
+ "permutation",
+ "rfd",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "wasm-bindgen-futures",
+ "wasm-logger",
+ "web-sys",
+ "wgpu",
+ "winit",
 ]
 
 [[package]]
@@ -1868,19 +1812,7 @@ checksum = "8ce8c33a8d48bd45d624a6e523445fd21ec13d3653cd51f681abf67418f54eb8"
 dependencies = [
  "cfg-if",
  "pin-project-lite",
- "tracing-attributes",
  "tracing-core",
-]
-
-[[package]]
-name = "tracing-attributes"
-version = "0.1.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4017f8f45139870ca7e672686113917c71c7a6e02d4924eda67186083c03081a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -1917,12 +1849,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
 
 [[package]]
-name = "unicode_names2"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "029df4cc8238cefc911704ff8fa210853a0f3bce2694d8f51181dd41ee0f3301"
-
-[[package]]
 name = "vec_map"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1939,37 +1865,6 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
-
-[[package]]
-name = "visitlab-wgpu"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytemuck",
- "cgmath",
- "console_error_panic_hook",
- "egui 0.19.0",
- "egui-winit",
- "egui_demo_lib",
- "egui_wgpu_backend",
- "egui_winit_platform",
- "epi",
- "futures",
- "getrandom",
- "instant",
- "lazy_static",
- "log",
- "permutation",
- "rfd",
- "serde",
- "serde_json",
- "simple_logger",
- "wasm-bindgen-futures",
- "wasm-logger",
- "web-sys",
- "wgpu",
- "winit",
-]
 
 [[package]]
 name = "wasi"

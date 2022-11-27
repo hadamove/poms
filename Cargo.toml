@@ -1,33 +1,28 @@
 [package]
-name = "visitlab-wgpu"
+name = "molasses"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-winit = { version = "0.27", features = ["x11"] }
-cgmath = "0.18"
-simple_logger = "4.0"
-wgpu = "0.14"
+anyhow = "1.0"
 bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
-futures = "0.3"
-log = "0.4"
-
-epi = "0.17"
+cgmath = "0.18"
 egui = { version = "0.19", default-features = false }
 egui-winit = { version = "0.19", default-features = false }
 egui_wgpu_backend = "0.20"
 egui_winit_platform = "0.16"
-egui_demo_lib = "0.19"
+futures = "0.3"
+lazy_static = "1.4.0"
+log = "0.4"
+permutation = "0.4"
 rfd = "0.10"
-instant = "0.1"
-permutation = "0.4.1"
-anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-lazy_static = "1.4.0"
+simple_logger = "4.0"
+wgpu = "0.14"
+winit = { version = "0.27", features = ["x11"] }
 
 [target.wasm32-unknown-unknown.dependencies]
-getrandom = { version = "0.2", features = ["js"] }
 console_error_panic_hook = "0.1"
 web-sys = { version = "0.3", features = ["Window"] }
 wasm-logger = "0.2.0"
