@@ -19,6 +19,11 @@ impl Input {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.mouse_delta = (0.0, 0.0);
+        self.scroll = 0.0;
+    }
+
     fn handle_device_event(&mut self, event: &DeviceEvent) {
         #[allow(clippy::single_match)]
         match event {

@@ -34,6 +34,17 @@ impl App {
         }
     }
 
+    pub fn redraw(&mut self) {
+        let (gui_output, gui_events) = self.gui.draw_frame();
+
+        self.renderer.handle_events(&gui_events);
+        self.resources
+            .update(&self.context, &self.input, gui_events);
+
+        self.render(gui_output);
+        self.input.reset();
+    }
+
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.context.resize(new_size);
@@ -44,20 +55,10 @@ impl App {
         }
     }
 
-    pub fn input<T>(&mut self, event: &Event<T>) {
+    pub fn handle_event<T>(&mut self, event: &Event<T>) {
         if !self.gui.handle_winit_event(event) {
             self.input.handle_winit_event(event);
         }
-    }
-
-    pub fn redraw(&mut self) {
-        let (gui_output, gui_events) = self.gui.draw_frame();
-
-        self.renderer.handle_events(&gui_events);
-        self.resources
-            .update(&self.context, &self.input, gui_events);
-
-        self.render(gui_output);
     }
 
     fn render(&mut self, gui_output: GuiOutput) {
