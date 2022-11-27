@@ -7,11 +7,9 @@ mod utils;
 
 use app::App;
 
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
-    window::{Window, WindowBuilder},
-};
+use winit::event::{Event, WindowEvent};
+use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
+use winit::window::{Window, WindowBuilder};
 
 fn main() {
     let event_loop = EventLoopBuilder::new().build();
@@ -37,7 +35,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
 
     event_loop.run(move |event, _, control_flow| {
         #[cfg(target_arch = "wasm32")]
-        crate::utils::wasm::update_window_size_if_canvas_changed(&window, &mut app);
+        utils::wasm::resize_app_if_canvas_changed(&window, &mut app);
 
         app.handle_event(&event);
         match event {

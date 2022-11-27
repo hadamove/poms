@@ -27,21 +27,19 @@ pub fn init_browser_window(window: &Window) {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn update_window_size_if_canvas_changed(window: &Window, app: &mut App) {
+pub fn resize_app_if_canvas_changed(window: &Window, app: &mut App) {
     use winit::platform::web::WindowExtWebSys;
-
-    let size = window.inner_size();
 
     let canvas = window.canvas();
     let (width, height) = (canvas.client_width(), canvas.client_height());
-    let factor = window.scale_factor();
 
-    let logical = winit::dpi::LogicalSize { width, height };
-    let new_size = logical.to_physical(factor);
+    let logical_size = winit::dpi::LogicalSize { width, height };
+    let scale_factor = window.scale_factor();
+    let canvas_size = logical_size.to_physical(scale_factor);
 
-    if new_size != size {
-        canvas.set_width(new_size.width);
-        canvas.set_height(new_size.height);
-        app.resize(new_size);
+    if canvas_size != window.inner_size() {
+        canvas.set_width(canvas_size.width);
+        canvas.set_height(canvas_size.height);
+        app.resize(canvas_size);
     }
 }

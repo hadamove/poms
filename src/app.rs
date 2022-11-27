@@ -2,11 +2,8 @@ use winit::{event::*, window::Window};
 
 use crate::context::Context;
 use crate::gui::{Gui, GuiOutput};
-use crate::passes::resources::ResourceRepo;
+use crate::passes::{compute::ComputeJobs, render::Renderer, resources::ResourceRepo};
 use crate::utils::input::Input;
-
-use crate::passes::compute::ComputeJobs;
-use crate::passes::render::Renderer;
 
 pub struct App {
     context: Context,
