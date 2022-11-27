@@ -2,6 +2,7 @@ use egui::{Checkbox, Pos2, Slider, Window};
 
 use super::GuiComponent;
 use crate::gui::{GuiEvent, GuiEvents};
+use crate::utils::constants::{DEFAULT_PROBE_RADIUS, DEFAULT_SES_RESOLUTION};
 
 pub struct UserSettings {
     ses_resolution: u32,
@@ -14,9 +15,8 @@ pub struct UserSettings {
 impl Default for UserSettings {
     fn default() -> Self {
         Self {
-            // TODO: use well defined constants.
-            ses_resolution: 64,
-            probe_radius: 1.4,
+            ses_resolution: DEFAULT_SES_RESOLUTION,
+            probe_radius: DEFAULT_PROBE_RADIUS,
             render_spacefill: true,
             render_ses: true,
             compute_ses_always: false,

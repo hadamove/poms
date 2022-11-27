@@ -2,6 +2,7 @@ mod camera;
 mod grid;
 mod molecule;
 mod molecule_repo;
+mod settings;
 mod textures;
 
 use std::sync::Arc;
@@ -15,6 +16,7 @@ use camera::{arcball::ArcballCamera, resource::CameraResource};
 use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource, GriddedMolecule};
 use molecule::Molecule;
 use molecule_repo::MoleculeRepo;
+use settings::SesSettings;
 use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
 
 // TODO: move this into separate file.
@@ -24,22 +26,6 @@ pub enum PassId {
     ComputeDistanceFieldRefinement,
     RenderSpacefill,
     RenderSesRaymarching,
-}
-
-// TODO: move this into separate file.
-pub struct SesSettings {
-    probe_radius: f32,
-    resolution: u32,
-}
-
-impl Default for SesSettings {
-    fn default() -> Self {
-        Self {
-            // TODO: use constants.
-            probe_radius: 1.4,
-            resolution: 64,
-        }
-    }
 }
 
 pub trait Resource {
