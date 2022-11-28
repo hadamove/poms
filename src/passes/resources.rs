@@ -67,6 +67,7 @@ impl ResourceRepo {
 
     pub fn update(&mut self, context: &Context, input: &Input, gui_events: GuiEvents) {
         self.camera.update(input);
+        self.molecule_repo.update();
         self.camera_resource.update(&context.queue, &self.camera);
         self.handle_gui_events(context, gui_events);
 
