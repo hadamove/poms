@@ -1,5 +1,5 @@
-import { app, BrowserWindow } from 'electron';
-import { join } from 'path';
+const { app, BrowserWindow } = require('electron');
+const { join } = require('path');
 
 
 app.commandLine.appendSwitch('enable-unsafe-webgpu')

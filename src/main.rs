@@ -18,6 +18,8 @@ fn main() {
         .build(&event_loop)
         .expect("Failed to create window");
 
+    window.set_title("Molasses");
+
     #[cfg(not(target_arch = "wasm32"))]
     {
         simple_logger::init_with_level(log::Level::Info).expect("Failed to initialize logger");
