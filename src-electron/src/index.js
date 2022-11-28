@@ -11,7 +11,9 @@ const createWindow = () => {
     });
 
     mainWindow.loadFile(join(__dirname, '../../index.html'));
-    mainWindow.webContents.openDevTools();
+
+    // Uncomment to open dev tools on start.
+    // mainWindow.webContents.openDevTools();
 };
 
 app.on('ready', createWindow);
