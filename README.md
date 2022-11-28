@@ -1,10 +1,10 @@
-# Interactive SES generation in WebGPU
+# Molasses - Interactive Molecular Surface Generation in WebGPU
 
 This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-rs/wgpu) to implement a proof-of-concept generation and visualization of molecular surfaces (SES) on multiple platforms. The application also supports simpler space-fill visualisation of molecules.
 
 ## Setup
 
-The project is currently built with Rust version `1.63.0`.
+The project is currently built with Rust version `1.65.0`.
 Setup instructions:
 
 1. Install `rustup` - Rust toolchain management: [rustup.rs - The Rust toolchain installer](https://rustup.rs/#), this should also install all necessary tools for building `rustc` - Rust compiler and `cargo` - Rust package manager.
@@ -37,13 +37,11 @@ To target web browsers, Rust code needs to be compiled to [WebAssembly](https://
 
 3. Install `wasm-bindgen` for generating JS glue: `cargo install wasm-bindgen-cli`
 
-4. Generate JS glue: `wasm-bindgen --out-dir target/generated/ --web target/wasm32-unknown-unknown/debug/visitlab-wgpu.wasm`
+4. Generate JS glue: `wasm-bindgen --out-dir target/generated/ --web target/wasm32-unknown-unknown/debug/molasses.wasm`
 
 5. Host the application: `python3 -m http.server`
 
 6. The application should be accessible at `http://localhost:8000/` in a browser with WebGPU support (e.g., Chrome Canary).
-
-![Chrome Canary](media/chrome-canary.png)
 
 ## Building Electron Application
 
