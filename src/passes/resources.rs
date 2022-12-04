@@ -131,9 +131,6 @@ impl ResourceRepo {
                 GuiEvent::ProbeRadiusChanged(probe_radius) => {
                     self.update_probe_radius(probe_radius);
                 }
-                GuiEvent::IncreaseSesFrame => {
-                    self.increase_ses_frame(context);
-                }
                 _ => {}
             }
         }

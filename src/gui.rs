@@ -17,9 +17,6 @@ pub enum GuiEvent {
     ProbeRadiusChanged(f32),
     RenderSpacefillChanged(bool),
     RenderSesChanged(bool),
-    ComputeSesAlwaysChanged(bool),
-
-    IncreaseSesFrame,
 }
 
 pub type GuiEvents = Vec<GuiEvent>;

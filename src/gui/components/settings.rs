@@ -9,7 +9,6 @@ pub struct UserSettings {
     probe_radius: f32,
     render_spacefill: bool,
     render_ses: bool,
-    compute_ses_always: bool,
 }
 
 impl Default for UserSettings {
@@ -19,7 +18,6 @@ impl Default for UserSettings {
             probe_radius: DEFAULT_PROBE_RADIUS,
             render_spacefill: true,
             render_ses: true,
-            compute_ses_always: false,
         }
     }
 }
@@ -46,16 +44,6 @@ impl GuiComponent for UserSettings {
             if ui.add(self.render_ses_checkbox()).changed() {
                 events.push(GuiEvent::RenderSesChanged(self.render_ses));
             }
-            ui.separator();
-
-            // Compute options.
-            if ui.add(self.compute_ses_always_checkbox()).changed() {
-                events.push(GuiEvent::ComputeSesAlwaysChanged(self.compute_ses_always));
-            }
-
-            if ui.add(self.increase_ses_frame_button()).clicked() {
-                events.push(GuiEvent::IncreaseSesFrame);
-            }
         });
     }
 
@@ -76,11 +64,5 @@ impl UserSettings {
     }
     fn render_ses_checkbox(&mut self) -> Checkbox {
         Checkbox::new(&mut self.render_ses, "Render SES surface")
-    }
-    fn compute_ses_always_checkbox(&mut self) -> Checkbox {
-        Checkbox::new(&mut self.compute_ses_always, "Compute SES always")
-    }
-    fn increase_ses_frame_button(&mut self) -> egui::Button {
-        egui::Button::new("Increase SES frame")
     }
 }
