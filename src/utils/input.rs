@@ -46,7 +46,7 @@ impl Input {
 
     fn process_scroll(&mut self, delta: &MouseScrollDelta) {
         self.scroll = -match delta {
-            MouseScrollDelta::LineDelta(_, scroll) => scroll * 100.0,
+            MouseScrollDelta::LineDelta(_, scroll) => scroll * 20.0,
             MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => *scroll as f32,
         };
     }
