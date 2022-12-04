@@ -1,4 +1,4 @@
-use egui::{Checkbox, Pos2, Slider, Window};
+use egui::{Button, Checkbox, Pos2, Slider, Window};
 
 use super::GuiComponent;
 use crate::gui::{GuiEvent, GuiEvents};
@@ -44,6 +44,11 @@ impl GuiComponent for UserSettings {
             if ui.add(self.render_ses_checkbox()).changed() {
                 events.push(GuiEvent::RenderSesChanged(self.render_ses));
             }
+
+            ui.separator();
+            if ui.add(self.toggle_animation_button()).clicked() {
+                events.push(GuiEvent::ToggleAnimation);
+            }
         });
     }
 
@@ -64,5 +69,8 @@ impl UserSettings {
     }
     fn render_ses_checkbox(&mut self) -> Checkbox {
         Checkbox::new(&mut self.render_ses, "Render SES surface")
+    }
+    fn toggle_animation_button(&mut self) -> Button {
+        Button::new("Play/Pause")
     }
 }

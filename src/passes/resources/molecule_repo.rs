@@ -8,6 +8,8 @@ pub struct MoleculeRepo {
     current_molecule_index: usize,
     update_molecule: bool,
     animation_frame: usize,
+
+    is_playing: bool,
 }
 
 impl MoleculeRepo {
@@ -25,9 +27,13 @@ impl MoleculeRepo {
         self.molecules.get(self.current_molecule_index).cloned()
     }
 
+    pub fn toggle_is_playing(&mut self) {
+        self.is_playing = !self.is_playing;
+    }
+
     pub fn increase_frame(&mut self) {
-        if self.molecules.len() > 1 {
-            self.current_molecule_index = self.animation_frame % self.molecules.len();
+        if self.is_playing && self.molecules.len() > 1 {
+            self.current_molecule_index = (self.animation_frame / 5) % self.molecules.len();
             self.update_molecule = true;
             self.animation_frame += 1;
         }
