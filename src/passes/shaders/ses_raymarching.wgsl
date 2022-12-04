@@ -17,7 +17,7 @@ struct GridUniform {
 };
 
 
-@group(0) @binding(0) var<uniform> ses_grid: GridUniform;
+@group(0) @binding(3) var<uniform> ses_grid: GridUniform;
 
 @group(1) @binding(0) var df_texture: texture_3d<f32>;
 @group(1) @binding(1) var df_sampler: sampler;

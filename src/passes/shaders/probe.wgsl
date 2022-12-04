@@ -21,6 +21,7 @@ struct GridCell {
 
 @group(0) @binding(0) var<uniform> ses_grid: GridUniform;
 @group(0) @binding(1) var<uniform> probe_radius: f32;
+@group(0) @binding(2) var<uniform> grid_point_index_offset: u32;
 
 // Input buffers
 @group(1) @binding(0) var<storage, read> atoms_sorted: array<Atom>;
@@ -40,7 +41,7 @@ fn main(
     var GRID_POINT_CLASS_INTERIOR: u32 = 1u;
     var GRID_POINT_CLASS_BOUNDARY: u32 = 2u;
 
-    var grid_point_index: u32 = global_invocation_id.x;
+    var grid_point_index: u32 = global_invocation_id.x + grid_point_index_offset;
     var total = ses_grid.resolution * ses_grid.resolution * ses_grid.resolution;
     if (grid_point_index >= total) {
         return;

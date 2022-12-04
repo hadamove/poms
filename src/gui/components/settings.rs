@@ -52,6 +52,10 @@ impl GuiComponent for UserSettings {
             if ui.add(self.compute_ses_always_checkbox()).changed() {
                 events.push(GuiEvent::ComputeSesAlwaysChanged(self.compute_ses_always));
             }
+
+            if ui.add(self.increase_ses_frame_button()).clicked() {
+                events.push(GuiEvent::IncreaseSesFrame);
+            }
         });
     }
 
@@ -62,7 +66,7 @@ impl GuiComponent for UserSettings {
 
 impl UserSettings {
     fn ses_slider(&mut self) -> Slider {
-        Slider::new(&mut self.ses_resolution, 8..=128).text("SES resolution")
+        Slider::new(&mut self.ses_resolution, 64..=256).text("SES resolution")
     }
     fn probe_slider(&mut self) -> Slider {
         Slider::new(&mut self.probe_radius, 1.0..=5.0).text("Probe radius")
@@ -75,5 +79,8 @@ impl UserSettings {
     }
     fn compute_ses_always_checkbox(&mut self) -> Checkbox {
         Checkbox::new(&mut self.compute_ses_always, "Compute SES always")
+    }
+    fn increase_ses_frame_button(&mut self) -> egui::Button {
+        egui::Button::new("Increase SES frame")
     }
 }

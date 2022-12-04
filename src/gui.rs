@@ -18,6 +18,8 @@ pub enum GuiEvent {
     RenderSpacefillChanged(bool),
     RenderSesChanged(bool),
     ComputeSesAlwaysChanged(bool),
+
+    IncreaseSesFrame,
 }
 
 pub type GuiEvents = Vec<GuiEvent>;
@@ -35,7 +37,9 @@ pub struct Gui {
 impl Gui {
     pub fn new(context: &Context) -> Self {
         Self {
+            #[allow(clippy::box_default)]
             components: vec![Box::new(Menu::default()), Box::new(UserSettings::default())],
+
             async_file: AsyncFileLoader::new(),
             platform: Platform::new(PlatformDescriptor {
                 physical_width: context.config.width,

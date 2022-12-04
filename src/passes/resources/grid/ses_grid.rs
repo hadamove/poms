@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use super::super::{Resource, SesSettings};
+use super::super::{Resource, SesState};
 use super::{GridSpacing, GridUniform, GriddedMolecule};
 
 pub struct SesGridResource {
@@ -22,26 +22,40 @@ impl SesGridResource {
         }
     }
 
-    pub fn update(
-        &self,
-        queue: &wgpu::Queue,
-        molecule: &GriddedMolecule,
-        ses_settings: &SesSettings,
-    ) {
-        let ses_grid = GridUniform::from_atoms(
+    pub fn update(&self, queue: &wgpu::Queue, molecule: &GriddedMolecule, ses_state: &SesState) {
+        if ses_state.switch_ready() {
+            let ses_grid_render = GridUniform::from_atoms(
+                &molecule.atoms_sorted,
+                GridSpacing::Resolution(ses_state.get_render_resolution()),
+                ses_state.probe_radius,
+            );
+            queue.write_buffer(
+                &self.buffers.ses_grid_render_buffer,
+                0,
+                bytemuck::cast_slice(&[ses_grid_render]),
+            );
+        }
+
+        let ses_grid_compute = GridUniform::from_atoms(
             &molecule.atoms_sorted,
-            GridSpacing::Resolution(ses_settings.resolution),
-            ses_settings.probe_radius,
+            GridSpacing::Resolution(ses_state.get_compute_resolution()),
+            ses_state.probe_radius,
         );
+
         queue.write_buffer(
-            &self.buffers.ses_grid_buffer,
+            &self.buffers.ses_grid_compute_buffer,
             0,
-            bytemuck::cast_slice(&[ses_grid]),
+            bytemuck::cast_slice(&[ses_grid_compute]),
         );
         queue.write_buffer(
             &self.buffers.probe_radius_buffer,
             0,
-            bytemuck::cast_slice(&[ses_settings.probe_radius]),
+            bytemuck::cast_slice(&[ses_state.probe_radius]),
+        );
+        queue.write_buffer(
+            &self.buffers.grid_point_index_offset_buffer,
+            0,
+            bytemuck::cast_slice(&[ses_state.get_grid_point_index_offset()]),
         );
     }
 }
@@ -57,17 +71,26 @@ impl Resource for SesGridResource {
 }
 
 struct SesGridBuffers {
-    ses_grid_buffer: wgpu::Buffer,
+    ses_grid_render_buffer: wgpu::Buffer,
+    ses_grid_compute_buffer: wgpu::Buffer,
     probe_radius_buffer: wgpu::Buffer,
+    grid_point_index_offset_buffer: wgpu::Buffer,
 }
 
 impl SesGridBuffers {
     fn new(device: &wgpu::Device) -> Self {
-        let ses_grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Ses Grid Uniform Buffer"),
+        let ses_grid_render_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Ses Grid Render Uniform Buffer"),
             contents: bytemuck::cast_slice(&[GridUniform::default()]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
+
+        let ses_grid_compute_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Ses Grid Compute Uniform Buffer"),
+                contents: bytemuck::cast_slice(&[GridUniform::default()]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            });
 
         let probe_radius_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Probe Radius Uniform Buffer"),
@@ -75,9 +98,18 @@ impl SesGridBuffers {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
+        let grid_point_index_offset_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Grid point index offset Buffer"),
+                contents: bytemuck::cast_slice(&[0u32]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            });
+
         Self {
-            ses_grid_buffer,
+            ses_grid_render_buffer,
+            ses_grid_compute_buffer,
             probe_radius_buffer,
+            grid_point_index_offset_buffer,
         }
     }
 }
@@ -95,11 +127,19 @@ impl SesGridBindGroup {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: buffers.ses_grid_buffer.as_entire_binding(),
+                    resource: buffers.ses_grid_compute_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
                     resource: buffers.probe_radius_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: buffers.grid_point_index_offset_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: buffers.ses_grid_render_buffer.as_entire_binding(),
                 },
             ],
             label: Some("Shared Bind Group"),
@@ -124,6 +164,26 @@ impl SesGridBindGroup {
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::all(),
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
