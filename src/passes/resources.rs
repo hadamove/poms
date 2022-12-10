@@ -132,7 +132,7 @@ impl ResourceRepo {
                     self.update_probe_radius(probe_radius);
                 }
                 GuiEvent::ToggleAnimation => {
-                    self.molecule_repo.toggle_is_playing();
+                    self.molecule_repo.toggle_animation();
                     self.ses_state.reset_stage();
                     self.df_texture_back =
                         DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION);

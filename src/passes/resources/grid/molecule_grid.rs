@@ -59,6 +59,7 @@ struct MoleculeGridBuffers {
 }
 
 impl MoleculeGridBuffers {
+    // TODO: refactor into constatns
     const MAX_NUM_ATOMS: usize = 1_000_000;
     const MAX_NUM_GRID_POINTS: usize = usize::pow(256, 3);
 

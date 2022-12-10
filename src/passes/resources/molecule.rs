@@ -36,11 +36,11 @@ pub trait Molecule {
 
 impl Molecule for Vec<Atom> {
     fn calculate_center(&self) -> Point3<f32> {
-        let mut centre = Point3::new(0.0, 0.0, 0.0);
+        let mut center = Point3::new(0.0, 0.0, 0.0);
         for atom in self.iter() {
-            centre += Vector3::from(atom.position);
+            center += Vector3::from(atom.position);
         }
-        centre / self.len() as f32
+        center / self.len() as f32
     }
 
     fn get_max_distance(&self) -> f32 {
@@ -57,9 +57,9 @@ impl Molecule for Vec<Atom> {
         self.iter().fold(Point3::min_value(), |res, atom| {
             let position = Point3::from(atom.position);
             Point3::new(
-                position.x.max(res.x),
-                position.y.max(res.y),
-                position.z.max(res.z),
+                f32::max(position.x, res.x),
+                f32::max(position.y, res.y),
+                f32::max(position.z, res.z),
             )
         })
     }
@@ -68,9 +68,9 @@ impl Molecule for Vec<Atom> {
         self.iter().fold(Point3::max_value(), |res, atom| {
             let position = Point3::from(atom.position);
             Point3::new(
-                position.x.min(res.x),
-                position.y.min(res.y),
-                position.z.min(res.z),
+                f32::min(position.x, res.x),
+                f32::min(position.y, res.y),
+                f32::min(position.z, res.z),
             )
         })
     }

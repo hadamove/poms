@@ -19,7 +19,6 @@ impl ErrorMessage {
 
 impl GuiComponent for ErrorMessage {
     fn draw(&mut self, context: &egui::Context, _events: &mut GuiEvents) {
-        // Clone so that we can mutate self.message.
         Window::new("Error")
             .collapsible(false)
             .default_pos((256.0, 256.0))

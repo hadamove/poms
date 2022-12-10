@@ -24,8 +24,6 @@ pub struct ComputeStage {
 
     pub num_grid_points: u32,
     pub grid_points_computed: u32,
-
-    pub executed: bool,
 }
 
 impl ComputeStage {
@@ -39,7 +37,6 @@ impl ComputeStage {
             previous_resolution,
             grid_points_computed: 0,
             num_grid_points: Self::PROBE_GRID_POINTS_PER_DISPATCH,
-            executed: false,
         }
     }
 
@@ -48,7 +45,6 @@ impl ComputeStage {
             self.phase = ComputePhase::Refinement;
             self.grid_points_computed = 0;
             self.num_grid_points = Self::REFINEMENT_GRID_POINTS_PER_DISPATCH;
-            self.executed = false;
         }
     }
 }

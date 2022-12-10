@@ -7,9 +7,9 @@ pub struct MoleculeRepo {
     molecules: Vec<Arc<GriddedMolecule>>,
     current_molecule_index: usize,
     update_molecule: bool,
-    animation_frame: usize,
 
-    is_playing: bool,
+    animation_frame: usize,
+    is_animation_active: bool,
 }
 
 impl MoleculeRepo {
@@ -27,12 +27,12 @@ impl MoleculeRepo {
         self.molecules.get(self.current_molecule_index).cloned()
     }
 
-    pub fn toggle_is_playing(&mut self) {
-        self.is_playing = !self.is_playing;
+    pub fn toggle_animation(&mut self) {
+        self.is_animation_active = !self.is_animation_active;
     }
 
     pub fn increase_frame(&mut self) {
-        if self.is_playing && self.molecules.len() > 1 {
+        if self.is_animation_active && self.molecules.len() > 1 {
             self.current_molecule_index = (self.animation_frame / 5) % self.molecules.len();
             self.update_molecule = true;
             self.animation_frame += 1;
