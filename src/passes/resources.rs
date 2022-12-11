@@ -22,7 +22,7 @@ use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
 use self::ses_state::SesStage;
 
 // TODO: move this into separate file.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum PassId {
     ComputeProbe,
     ComputeRefinement,

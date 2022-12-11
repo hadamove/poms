@@ -2,6 +2,7 @@ use anyhow::Result;
 
 use crate::context::Context;
 use crate::gui::{GuiEvent, GuiEvents, GuiOutput};
+use crate::utils::constants::ColorTheme;
 
 use super::resources::{PassId, ResourceRepo};
 use gui_pass::GuiRenderPass;
@@ -13,6 +14,7 @@ mod render_pass;
 pub struct Renderer {
     gui_pass: GuiRenderPass,
     render_passes: Vec<RenderPass>,
+    clear_color: wgpu::Color,
 }
 
 impl Renderer {
@@ -24,6 +26,7 @@ impl Renderer {
                 RenderPass::new(context, resources, PassId::RenderSpacefill),
                 RenderPass::new(context, resources, PassId::RenderSesRaymarching),
             ],
+            clear_color: wgpu::Color::BLACK,
         }
     }
 
@@ -42,7 +45,7 @@ impl Renderer {
 
         // Render Spacefill and Ses.
         for render_pass in &mut self.render_passes {
-            render_pass.render(&view, depth_view, &mut encoder, resources);
+            render_pass.render(&view, depth_view, &mut encoder, resources, self.clear_color);
         }
 
         // Render GUI.
@@ -67,6 +70,9 @@ impl Renderer {
                 GuiEvent::RenderSpacefillChanged(enabled) => {
                     self.toggle_render_pass(PassId::RenderSpacefill, *enabled);
                 }
+                GuiEvent::ToggleTheme(theme) => {
+                    self.toggle_theme(theme);
+                }
                 _ => {}
             }
         }
@@ -77,6 +83,13 @@ impl Renderer {
             if pass.get_id() == &pass_id {
                 pass.set_enabled(enabled);
             }
+        }
+    }
+
+    fn toggle_theme(&mut self, theme: &ColorTheme) {
+        match theme {
+            ColorTheme::Dark => self.clear_color = wgpu::Color::BLACK,
+            ColorTheme::Light => self.clear_color = wgpu::Color::WHITE,
         }
     }
 }

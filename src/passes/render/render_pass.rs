@@ -64,12 +64,14 @@ impl RenderPass {
             enabled: true,
         }
     }
+
     pub fn render(
         &self,
         view: &wgpu::TextureView,
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         resources: &ResourceRepo,
+        clear_color: wgpu::Color,
     ) {
         if !self.enabled {
             return;
@@ -83,7 +85,7 @@ impl RenderPass {
                 view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                    load: wgpu::LoadOp::Clear(clear_color),
                     store: true,
                 },
             })],

@@ -2,7 +2,7 @@ use egui::FullOutput;
 use egui_winit_platform::{Platform, PlatformDescriptor};
 use winit::event::Event;
 
-use crate::{context::Context, parser::parse::ParsedFile};
+use crate::{context::Context, parser::parse::ParsedFile, utils::constants::ColorTheme};
 
 use async_file::{AsyncFileLoader, FileResponse};
 use components::{error::ErrorMessage, menu::Menu, settings::UserSettings, GuiComponent};
@@ -18,6 +18,7 @@ pub enum GuiEvent {
     RenderSpacefillChanged(bool),
     RenderSesChanged(bool),
     ToggleAnimation,
+    ToggleTheme(ColorTheme),
 }
 
 pub type GuiEvents = Vec<GuiEvent>;
@@ -35,7 +36,6 @@ pub struct Gui {
 impl Gui {
     pub fn new(context: &Context) -> Self {
         Self {
-            #[allow(clippy::box_default)]
             components: vec![Box::new(Menu::default()), Box::new(UserSettings::default())],
 
             async_file: AsyncFileLoader::new(),
