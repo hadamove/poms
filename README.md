@@ -1,13 +1,14 @@
 # POMS - Portable Molecular Surface
 
-This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-rs/wgpu) to implement a proof-of-concept generation and visualization of molecular surfaces (SES) that easy easily portable to the majority of platforms on which it runs natively. The application also supports simpler space-fill visualisation of molecules.
+This project uses [wgpu, a Rust implementation of WebGPU,](https://github.com/gfx-rs/wgpu) to implement a proof-of-concept generation and visualization of molecular surfaces (SES) that easy easily portable to the majority of platforms on which it runs natively. The application also supports simpler space-fill visualisation of molecules.
 
 ## Setup
 
-The only prerequisite for building the application is to have Rust toolchain installed, which installs the Rust compiler `rustc` and `cargo` - Rust’s build system and package manager. If you wish to build the application for the web, you will also need to add the platform target `wasm32-unknown-unknown` to the Rust toolchain:
+### Requirements
+
+The only prerequisite for building the application is to have Rust toolchain installed, which installs the Rust compiler `rustc` and `cargo` - Rust’s build system and package manager.
 
 - Install rust toolchain - [rustup.rs - The Rust toolchain installer](https://rustup.rs/#).
-- (Web & Electron only) Run in terminal `rustup target add wasm32-unknown-unknown` to add the WebAssembly target to the toolchain.
 
 The project is currently built with Rust version `1.65.0` (as of writing, the latest stable version). Once you have installed Rust, you can check the version by running `rustc --version` in your terminal. If you have a different version, you can install the version `1.65.0` by running `rustup default 1.65`.
 
@@ -17,18 +18,16 @@ The project is currently built with Rust version `1.65.0` (as of writing, the la
     cargo build
     ```
 
-- To start the application run:
+- To run the application natively (this will also build the application if it hasn't been built yet):
 
     ```bash
     cargo run
     ```
 
- (this will also build the application if it hasn't been built yet).
-
 ## Project Structure
 
-- `data` - sample molecular data in PDB format
-- `scripts` - scripts for building the application
+- `data` - sample molecular data in PDB format, which can be used for testing
+- `scripts` - scripts for building the application into WASM
 - `src` - application source code in Rust
   - `src/gui` - graphical user interface code
   - `src/parser` - PDB file parser
@@ -36,12 +35,14 @@ The project is currently built with Rust version `1.65.0` (as of writing, the la
   - `src/utils` - common utility functions
   - `src/app.rs` - application state and logic
   - `src/context.rs` - wrapper around `wgpu`'s context - the device, surface, queue, etc.
-  - `src/main.rs` - entry point of the application.
+  - `src/main.rs` - entry point of the application, handles window creation and event loop
 - `src-electron` - minimal Electron application source code in JavaScript
 - `target` - built application binaries and WASM files
-- `Cargo.toml` - Cargo configuration file
-- `Trunk.toml` - Trunk configuration file
+- `Cargo.toml` - Rust package manager configuration file containing the list of dependencies
 - `index.html` - HTML file that hosts the WASM application
+- `LICENSE.md` - MIT license
+- `README.md` - this file
+- `Trunk.toml` - Trunk configuration file which handles WASM bundling
 
 ## Build Status
 
@@ -55,7 +56,15 @@ The project has been tested on the following platforms:
 
 ## Building for the Web
 
-To target web browsers, Rust code needs to be compiled to [WebAssembly](https://webassembly.org/), a common language supported by browsers. One of the simplest solutions is to use [Trunk](https://trunkrs.dev) - a WASM web application bundler.
+### Requirements
+
+- To build the application for the web, we first need to add `wasm32-unknown-unknown` platform target to our Rust toolchain, which allows us to compile Rust code to WASM bytecode:
+
+  ```bash
+  rustup target add wasm32-unknown-unknown
+  ```
+
+To target web browsers, Rust code needs to be compiled to [WebAssembly](https://webassembly.org/) (WASM), a common language supported by browsers. One of the simplest solutions is to use [Trunk](https://trunkrs.dev) - a WASM web application bundler.
 
 To build for the web, simply run script `scripts/build-web.sh` which installs `Trunk` and runs it with necessary configuration. This will build our WASM code and start a web server that hosts the application at `http://localhost:8080`.
 
@@ -63,15 +72,16 @@ To build for the web, simply run script `scripts/build-web.sh` which installs `T
 
 `Trunk` takes care of several things, which would have to be done manually otherwise:
 
-- Builds our Rust code to WebAssembly bytecode using `wasm32-unknown-unknown` platform target.
+- Builds our Rust code to WASM bytecode using `wasm32-unknown-unknown` platform target.
 - Generates necessarry glue between WASM and JavaScript using [wasm-bindgen](https://rustwasm.github.io/docs/wasm-bindgen/).
 - Bundles the application into a single HTML file that can be hosted on a web server.
 - Starts a web server that hosts the application.
 
 ## Building Electron Application
 
-Prerequisites:
+### Requirements
 
+- `wasm32-unknown-unknown` target for Rust toolchain (see **Building for the Web** section)
 - `Node.js`, which can be downloded from [here](https://nodejs.org/en/download/).
 
 To build the Electron application, run script `scripts/build-electron.sh` which first builds the WASM code using `Trunk` and then builds and runs an Electron app from `src-electron` using Node's `npm`. The Electron app automatically injects the `index.html` file generated by `Trunk` into the application and loads the WASM code.
