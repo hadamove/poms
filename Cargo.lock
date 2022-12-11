@@ -1113,33 +1113,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "molasses"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytemuck",
- "cgmath",
- "console_error_panic_hook",
- "egui",
- "egui-winit",
- "egui_wgpu_backend",
- "egui_winit_platform",
- "futures",
- "lazy_static",
- "log",
- "permutation",
- "rfd",
- "serde",
- "serde_json",
- "simple_logger",
- "wasm-bindgen-futures",
- "wasm-logger",
- "web-sys",
- "wgpu",
- "winit",
-]
-
-[[package]]
 name = "naga"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1413,6 +1386,33 @@ dependencies = [
  "crc32fast",
  "flate2",
  "miniz_oxide 0.6.2",
+]
+
+[[package]]
+name = "poms"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "cgmath",
+ "console_error_panic_hook",
+ "egui",
+ "egui-winit",
+ "egui_wgpu_backend",
+ "egui_winit_platform",
+ "futures",
+ "lazy_static",
+ "log",
+ "permutation",
+ "rfd",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "wasm-bindgen-futures",
+ "wasm-logger",
+ "web-sys",
+ "wgpu",
+ "winit",
 ]
 
 [[package]]

@@ -18,7 +18,7 @@ fn main() {
         .build(&event_loop)
         .expect("Failed to create window");
 
-    window.set_title("Molasses");
+    window.set_title("POMS");
 
     #[cfg(not(target_arch = "wasm32"))]
     {

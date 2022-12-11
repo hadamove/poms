@@ -1,8 +1,8 @@
 {
-  "name": "molasses",
-  "productName": "Molasses",
+  "name": "poms",
+  "productName": "POMS",
   "version": "0.1",
-  "description": "Molecular Surface Visualizer",
+  "description": "Portable Molecular Surface",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",

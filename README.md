@@ -1,6 +1,6 @@
-# Molasses - Interactive Molecular Surface Generation in WebGPU
+# POMS - Portable Molecular Surface
 
-This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-rs/wgpu) to implement a proof-of-concept generation and visualization of molecular surfaces (SES) on multiple platforms. The application also supports simpler space-fill visualisation of molecules.
+This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-rs/wgpu) to implement a proof-of-concept generation and visualization of molecular surfaces (SES) that easy easily portable to the majority of platforms on which it runs natively. The application also supports simpler space-fill visualisation of molecules.
 
 ## Setup
 
