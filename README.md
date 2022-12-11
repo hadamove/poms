@@ -4,51 +4,74 @@ This project uses WebGPU implementation in Rust - [wgpu](https://github.com/gfx-
 
 ## Setup
 
-The project is currently built with Rust version `1.65.0`.
-Setup instructions:
+The only prerequisite for building the application is to have Rust toolchain installed, which installs the Rust compiler `rustc` and `cargo` - Rust’s build system and package manager. If you wish to build the application for the web, you will also need to add the platform target `wasm32-unknown-unknown` to the Rust toolchain:
 
-1. Install `rustup` - Rust toolchain management: [rustup.rs - The Rust toolchain installer](https://rustup.rs/#), this should also install all necessary tools for building `rustc` - Rust compiler and `cargo` - Rust package manager.
+- Install rust toolchain - [rustup.rs - The Rust toolchain installer](https://rustup.rs/#).
+- (Web & Electron only) Run in terminal `rustup target add wasm32-unknown-unknown` to add the WebAssembly target to the toolchain.
 
-2. Build and run the application with `cargo run` in root directory.
+The project is currently built with Rust version `1.65.0` (as of writing, the latest stable version). Once you have installed Rust, you can check the version by running `rustc --version` in your terminal. If you have a different version, you can install the version `1.65.0` by running `rustup default 1.65`.
 
-## Build status
+- To build the application simply run in terminal:
 
-Currently, the project can be built on multiple platform, tested platforms include:
+    ```bash
+    cargo build
+    ```
 
+- To start the application run:
+
+    ```bash
+    cargo run
+    ```
+
+ (this will also build the application if it hasn't been built yet).
+
+## Project Structure
+
+- `data` - sample molecular data in PDB format
+- `scripts` - scripts for building the application
+- `src` - application source code in Rust
+  - `src/gui` - graphical user interface code
+  - `src/parser` - PDB file parser
+  - `src/passes` - the majority of compute and rendering code
+  - `src/utils` - common utility functions
+  - `src/app.rs` - application state and logic
+  - `src/context.rs` - wrapper around `wgpu`'s context - the device, surface, queue, etc.
+  - `src/main.rs` - entry point of the application.
+- `src-electron` - minimal Electron application source code in JavaScript
+- `target` - built application binaries and WASM files
+- `Cargo.toml` - Cargo configuration file
+- `Trunk.toml` - Trunk configuration file
+- `index.html` - HTML file that hosts the WASM application
+
+## Build Status
+
+The project has been tested on the following platforms:
+
+- Windows 10 (DX12)
+- Ubuntu 20.04 (Vulkan)
 - macOS Ventura 13.0
+- Chrome Canary 110.0.5468.0
+- Electron 22.0.0-nightly.20220926
 
-- Ubuntu 20.04
+## Building for the Web
 
-- Windows 10
+To target web browsers, Rust code needs to be compiled to [WebAssembly](https://webassembly.org/), a common language supported by browsers. One of the simplest solutions is to use [Trunk](https://trunkrs.dev) - a WASM web application bundler.
 
-- Chrome Canary 109.0.5403.0
+To build for the web, simply run script `scripts/build-web.sh` which installs `Trunk` and runs it with necessary configuration. This will build our WASM code and start a web server that hosts the application at `http://localhost:8080`.
 
-- (Electron 22.0.0-nightly.20220926)
+### What happens behind the scenes?
 
-## Building for the web
+`Trunk` takes care of several things, which would have to be done manually otherwise:
 
-To target web browsers, Rust code needs to be compiled to [WebAssembly](https://webassembly.org/), a common language supported by browsers. For this purpose, we use `wasm32-unknown-unknown` as target and use crate `wasm-bindgen` that generates the needed JavaScript glue. Finally, we set up a simple web server that will host our application, which uses `index.html` as an entry point to our WebAssembly bytecode. To put in simple steps:
-
-> Alternatively, you can use `scripts/build-web.sh` script to run the following five commands for you.
-
-1. Add wasm compilation target: `rustup target add wasm32-unknown-unknown`
-
-2. Compile to wasm: `cargo build --target wasm32-unknown-unknown`
-
-3. Install `wasm-bindgen` for generating JS glue: `cargo install wasm-bindgen-cli`
-
-4. Generate JS glue: `wasm-bindgen --out-dir target/generated/ --web target/wasm32-unknown-unknown/debug/molasses.wasm`
-
-5. Host the application: `python3 -m http.server`
-
-6. The application should be accessible at `http://localhost:8000/` in a browser with WebGPU support (e.g., Chrome Canary).
+- Builds our Rust code to WebAssembly bytecode using `wasm32-unknown-unknown` platform target.
+- Generates necessarry glue between WASM and JavaScript using [wasm-bindgen](https://rustwasm.github.io/docs/wasm-bindgen/).
+- Bundles the application into a single HTML file that can be hosted on a web server.
+- Starts a web server that hosts the application.
 
 ## Building Electron Application
 
-Building the Electron Application requires `Node.js`, which can be downloded from <https://nodejs.org/en/download/>.
+Prerequisites:
 
-> Alternatively, you can use `scripts/build-electron.sh` script to run the following commands for you.
+- `Node.js`, which can be downloded from [here](https://nodejs.org/en/download/).
 
-1. Build and host the web application either manually as described above in **Building for the web** section or using `scripts/build-web.sh` script.
-2. In a new terminal window navigate to `src/electron` and run `npm i` to install Electron dependencies.
-3. Run `npm start` to run the Electron application.
+To build the Electron application, run script `scripts/build-electron.sh` which first builds the WASM code using `Trunk` and then builds and runs an Electron app from `src-electron` using Node's `npm`. The Electron app automatically injects the `index.html` file generated by `Trunk` into the application and loads the WASM code.
