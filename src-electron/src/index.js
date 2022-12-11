@@ -10,7 +10,7 @@ const createWindow = () => {
         height: 600,
     });
 
-    mainWindow.loadFile(join(__dirname, '../../index.html'));
+    mainWindow.loadFile(join(__dirname, '../../dist/index.html'));
 
     // Uncomment to open dev tools on start.
     // mainWindow.webContents.openDevTools();
