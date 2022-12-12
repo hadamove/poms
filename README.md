@@ -1,6 +1,6 @@
 # POMS - Portable Molecular Surface
 
-This project uses [wgpu, a Rust implementation of WebGPU,](https://github.com/gfx-rs/wgpu) to implement a proof-of-concept generation and visualization of molecular surfaces (SES) that easy easily portable to the majority of platforms on which it runs natively. The application also supports simpler space-fill visualisation of molecules.
+This project uses [wgpu, a Rust implementation of WebGPU,](https://github.com/gfx-rs/wgpu) to implement a proof-of-concept generation and visualization of molecular surfaces (SES) that is easily portable to the majority of platforms. Besides hte SES representation, the application also supports simpler space-fill visualisation of molecules.
 
 ## Setup
 
