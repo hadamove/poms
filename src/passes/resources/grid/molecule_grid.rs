@@ -1,5 +1,7 @@
 use wgpu::util::DeviceExt;
 
+use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS, MAX_SES_RESOLUTION};
+
 use super::super::Resource;
 use super::{GridUniform, GriddedMolecule};
 
@@ -59,14 +61,10 @@ struct MoleculeGridBuffers {
 }
 
 impl MoleculeGridBuffers {
-    // TODO: refactor into constatns
-    const MAX_NUM_ATOMS: usize = 1_000_000;
-    const MAX_NUM_GRID_POINTS: usize = usize::pow(256, 3);
-
     fn new(device: &wgpu::Device) -> Self {
         let atoms_sorted_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Sorted Atoms Buffer"),
-            contents: bytemuck::cast_slice(&[0u32; Self::MAX_NUM_ATOMS]),
+            contents: bytemuck::cast_slice(&[0u32; MAX_NUM_ATOMS]),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -78,14 +76,14 @@ impl MoleculeGridBuffers {
 
         let grid_cells_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Grid cells buffer"),
-            contents: bytemuck::cast_slice(&[0u32; Self::MAX_NUM_GRID_POINTS]),
+            contents: bytemuck::cast_slice(&[0u32; MAX_NUM_GRID_POINTS]),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
 
         let grid_point_class_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Grid point classification buffer"),
-                contents: bytemuck::cast_slice(&vec![0u32; Self::MAX_NUM_GRID_POINTS]),
+                contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
                 usage: wgpu::BufferUsages::STORAGE,
             });
 

@@ -2,13 +2,18 @@ use egui::{Button, Checkbox, Pos2, Slider, Window};
 
 use super::GuiComponent;
 use crate::gui::{GuiEvent, GuiEvents};
-use crate::utils::constants::{DEFAULT_PROBE_RADIUS, DEFAULT_SES_RESOLUTION};
+use crate::utils::constants::{DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION};
+use crate::utils::constants::{DEFAULT_PROBE_RADIUS, MAX_PROBE_RADIUS};
+use crate::utils::constants::{DEFAULT_SES_RESOLUTION, MAX_SES_RESOLUTION};
 
 pub struct UserSettings {
     ses_resolution: u32,
     probe_radius: f32,
     render_spacefill: bool,
     render_ses: bool,
+
+    direction: [f32; 3],
+    light_color: [f32; 3],
 }
 
 impl Default for UserSettings {
@@ -18,6 +23,9 @@ impl Default for UserSettings {
             probe_radius: DEFAULT_PROBE_RADIUS,
             render_spacefill: true,
             render_ses: true,
+
+            direction: DEFAULT_LIGHT_DIRECTION,
+            light_color: DEFAULT_LIGHT_COLOR,
         }
     }
 }
@@ -25,7 +33,7 @@ impl Default for UserSettings {
 impl GuiComponent for UserSettings {
     #[rustfmt::skip]
     fn draw(&mut self, context: &egui::Context, events: &mut GuiEvents) {
-        let window = Window::new("Settings").default_pos(Pos2::new(100.0, 100.0));
+        let window = Window::new("Settings").default_pos(Pos2::new(100.0, 100.0)).default_width(100.0);
 
         window.show(context, |ui| {
             // Model parameters.
@@ -45,6 +53,19 @@ impl GuiComponent for UserSettings {
                 events.push(GuiEvent::RenderSesChanged(self.render_ses));
             }
 
+            // Light options.
+            ui.separator();
+            for (i, coord) in ["X", "Y", "Z"].iter().enumerate() {
+                if ui.add(Slider::new(&mut self.direction[i], -1.0..=1.0).text(format!("Light {}", coord))).changed() {
+                    events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));
+                }
+            }
+
+            if ui.color_edit_button_rgb(&mut self.light_color).changed() {
+                events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));
+            }
+
+            // Animation.
             ui.separator();
             if ui.add(self.toggle_animation_button()).clicked() {
                 events.push(GuiEvent::ToggleAnimation);
@@ -59,10 +80,18 @@ impl GuiComponent for UserSettings {
 
 impl UserSettings {
     fn ses_slider(&mut self) -> Slider {
-        Slider::new(&mut self.ses_resolution, 64..=256).text("SES resolution")
+        Slider::new(
+            &mut self.ses_resolution,
+            DEFAULT_SES_RESOLUTION..=MAX_SES_RESOLUTION,
+        )
+        .text("SES resolution")
     }
     fn probe_slider(&mut self) -> Slider {
-        Slider::new(&mut self.probe_radius, 1.0..=5.0).text("Probe radius")
+        Slider::new(
+            &mut self.probe_radius,
+            DEFAULT_PROBE_RADIUS..=MAX_PROBE_RADIUS,
+        )
+        .text("Probe radius")
     }
     fn render_spacefill_checkbox(&mut self) -> Checkbox {
         Checkbox::new(&mut self.render_spacefill, "Render spacefill")

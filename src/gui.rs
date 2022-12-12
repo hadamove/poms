@@ -19,6 +19,7 @@ pub enum GuiEvent {
     RenderSesChanged(bool),
     ToggleAnimation,
     ToggleTheme(ColorTheme),
+    UpdateLight(([f32; 3], [f32; 3])),
 }
 
 pub type GuiEvents = Vec<GuiEvent>;

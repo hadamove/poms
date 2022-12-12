@@ -1,5 +1,6 @@
 mod camera;
 mod grid;
+mod light;
 mod molecule;
 mod molecule_repo;
 pub mod ses_state;
@@ -19,6 +20,7 @@ use molecule_repo::MoleculeRepo;
 use ses_state::SesState;
 use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
 
+use self::light::LightResource;
 use self::ses_state::SesStage;
 
 // TODO: move this into separate file.
@@ -50,6 +52,7 @@ pub struct ResourceRepo {
     df_texture_front: DistanceFieldTexture,
     df_texture_back: DistanceFieldTexture,
 
+    light_resource: LightResource,
     depth_texture: DepthTexture,
 }
 
@@ -69,6 +72,7 @@ impl ResourceRepo {
             df_texture_back: DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION),
 
             depth_texture: DepthTexture::new(&context.device, &context.config),
+            light_resource: LightResource::new(&context.device),
             ses_state,
         }
     }
@@ -137,6 +141,9 @@ impl ResourceRepo {
                     self.df_texture_back =
                         DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION);
                 }
+                GuiEvent::UpdateLight((position, color)) => {
+                    self.light_resource.update(&context.queue, position, color);
+                }
                 _ => {}
             }
         }
@@ -195,6 +202,7 @@ impl ResourceRepo {
                 (GroupIndex(0), &self.ses_resource as &dyn Resource),
                 (GroupIndex(1), &self.df_texture_front.render as &dyn Resource),
                 (GroupIndex(2), &self.camera_resource as &dyn Resource),
+                (GroupIndex(3), &self.light_resource as &dyn Resource),
             ]),
         }
     }

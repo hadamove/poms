@@ -16,6 +16,11 @@ struct GridUniform {
     _padding: f32,
 };
 
+struct LightUniform {
+    direction: vec3<f32>,
+    color: vec3<f32>,
+};
+
 
 @group(0) @binding(3) var<uniform> ses_grid: GridUniform;
 
@@ -23,6 +28,8 @@ struct GridUniform {
 @group(1) @binding(1) var df_sampler: sampler;
 
 @group(2) @binding(0) var<uniform> camera: CameraUniform;
+
+@group(3) @binding(0) var<uniform> light: LightUniform; 
 
 
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {
@@ -82,7 +89,7 @@ struct RayHit {
 fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
     var MAX_STEPS = 128u;
     var MINIMUM_HIT_DISTANCE: f32 = 0.05;
-    var TRICUBIC_THRESHOLD: f32 = 0.3;
+    var TRICUBIC_THRESHOLD: f32 = 0.1;
 
     var rayhit: RayHit;
     rayhit.hit = false;
@@ -126,8 +133,17 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
             var gradient_z = distance_from_df_tricubic(p + small_step.yyx) - distance_from_df_tricubic(p - small_step.yyx);
 
             var normal = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
-            // TODO: Add lighting model
-            rayhit.color = normal * 0.5 + 0.5;
+
+            var color = vec3<f32>(0.8);
+            var ambient = 0.15;
+
+            var light_dir = normalize(light.direction);
+            var diff =  max(0.0, dot(normal, light_dir));
+
+            var reflect_dir = reflect(light_dir, normal);  
+            var spec = pow(max(dot(direction, reflect_dir), 0.0), 16.0) * 0.3;
+
+            rayhit.color = color * (ambient + spec + diff) * light.color;
 
             rayhit.hit = true;
             rayhit.position = p;
