@@ -10,6 +10,9 @@ pub const MAX_PROBE_RADIUS: f32 = 5.0;
 pub const DEFAULT_LIGHT_DIRECTION: [f32; 3] = [0.0, 0.0, 1.0];
 pub const DEFAULT_LIGHT_COLOR: [f32; 3] = [1.0, 0.7, 0.7];
 
+pub const ANIMATION_ACTIVE_BY_DEFAULT: bool = true;
+pub const DEFAULT_ANIMATION_SPEED: u32 = 5;
+
 pub enum ColorTheme {
     Light,
     Dark,

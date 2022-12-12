@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS, MAX_SES_RESOLUTION};
+use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 
 use super::super::Resource;
 use super::{GridUniform, GriddedMolecule};

@@ -141,6 +141,9 @@ impl ResourceRepo {
                     self.df_texture_back =
                         DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION);
                 }
+                GuiEvent::AnimationSpeedChanged(speed) => {
+                    self.molecule_repo.set_animation_speed(speed);
+                }
                 GuiEvent::UpdateLight((position, color)) => {
                     self.light_resource.update(&context.queue, position, color);
                 }

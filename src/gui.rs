@@ -20,6 +20,7 @@ pub enum GuiEvent {
     ToggleAnimation,
     ToggleTheme(ColorTheme),
     UpdateLight(([f32; 3], [f32; 3])),
+    AnimationSpeedChanged(u32),
 }
 
 pub type GuiEvents = Vec<GuiEvent>;

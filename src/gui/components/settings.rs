@@ -2,9 +2,10 @@ use egui::{Button, Checkbox, Pos2, Slider, Window};
 
 use super::GuiComponent;
 use crate::gui::{GuiEvent, GuiEvents};
-use crate::utils::constants::{DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION};
-use crate::utils::constants::{DEFAULT_PROBE_RADIUS, MAX_PROBE_RADIUS};
-use crate::utils::constants::{DEFAULT_SES_RESOLUTION, MAX_SES_RESOLUTION};
+use crate::utils::constants::{
+    ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION,
+    DEFAULT_PROBE_RADIUS, DEFAULT_SES_RESOLUTION, MAX_PROBE_RADIUS, MAX_SES_RESOLUTION,
+};
 
 pub struct UserSettings {
     ses_resolution: u32,
@@ -14,6 +15,9 @@ pub struct UserSettings {
 
     direction: [f32; 3],
     light_color: [f32; 3],
+
+    is_animation_active: bool,
+    animation_speed: u32,
 }
 
 impl Default for UserSettings {
@@ -26,6 +30,9 @@ impl Default for UserSettings {
 
             direction: DEFAULT_LIGHT_DIRECTION,
             light_color: DEFAULT_LIGHT_COLOR,
+
+            is_animation_active: ANIMATION_ACTIVE_BY_DEFAULT,
+            animation_speed: 5,
         }
     }
 }
@@ -45,31 +52,47 @@ impl GuiComponent for UserSettings {
             }
             ui.separator();
 
-            // Render options.
-            if ui.add(self.render_spacefill_checkbox()).changed() {
-                events.push(GuiEvent::RenderSpacefillChanged(self.render_spacefill));
-            }
-            if ui.add(self.render_ses_checkbox()).changed() {
-                events.push(GuiEvent::RenderSesChanged(self.render_ses));
-            }
+            ui.collapsing("Render Passes", |ui| {
+                if ui.add(self.render_spacefill_checkbox()).changed() {
+                    events.push(GuiEvent::RenderSpacefillChanged(self.render_spacefill));
+                }
+                if ui.add(self.render_ses_checkbox()).changed() {
+                    events.push(GuiEvent::RenderSesChanged(self.render_ses));
+                }
+            });
 
             // Light options.
-            ui.separator();
-            for (i, coord) in ["X", "Y", "Z"].iter().enumerate() {
-                if ui.add(Slider::new(&mut self.direction[i], -1.0..=1.0).text(format!("Light {}", coord))).changed() {
-                    events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));
+            ui.collapsing("Lighting", |ui| {
+                ui.label("Light direction:");
+                for (i, coord) in ["X", "Y", "Z"].iter().enumerate() {
+                    if ui.add(Slider::new(&mut self.direction[i], -1.0..=1.0).text(coord)).changed() {
+                        events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));
+                    }
                 }
-            }
 
-            if ui.color_edit_button_rgb(&mut self.light_color).changed() {
-                events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));
-            }
+                ui.label("Light color:");
+                if ui.color_edit_button_rgb(&mut self.light_color).changed() {
+                    events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));}
+            });
+
 
             // Animation.
-            ui.separator();
-            if ui.add(self.toggle_animation_button()).clicked() {
-                events.push(GuiEvent::ToggleAnimation);
-            }
+            ui.collapsing("Animation", |ui| {
+                if ui.add(Slider::new(&mut self.animation_speed, 1..=10).text("Speed")).changed() {
+                    events.push(GuiEvent::AnimationSpeedChanged(self.animation_speed));
+                }
+                ui.horizontal(|ui| {
+                    if ui.add(self.toggle_animation_button()).clicked() {
+                        events.push(GuiEvent::ToggleAnimation);
+                        self.is_animation_active = !self.is_animation_active;
+                    }
+                    match self.is_animation_active {
+                        true => ui.label("Playing ✅"),
+                        false => ui.label("Paused ❌"),
+                    };
+                });
+            });
+
         });
     }
 
@@ -94,12 +117,15 @@ impl UserSettings {
         .text("Probe radius")
     }
     fn render_spacefill_checkbox(&mut self) -> Checkbox {
-        Checkbox::new(&mut self.render_spacefill, "Render spacefill")
+        Checkbox::new(&mut self.render_spacefill, "Spacefill")
     }
     fn render_ses_checkbox(&mut self) -> Checkbox {
-        Checkbox::new(&mut self.render_ses, "Render SES surface")
+        Checkbox::new(&mut self.render_ses, "SES")
     }
     fn toggle_animation_button(&mut self) -> Button {
-        Button::new("Play/Pause")
+        match self.is_animation_active {
+            true => Button::new("⏸"),
+            false => Button::new("▶"),
+        }
     }
 }
