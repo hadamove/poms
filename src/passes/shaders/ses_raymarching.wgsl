@@ -86,7 +86,7 @@ struct RayHit {
 };
 
 fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
-    var MAX_STEPS = 128u;
+    var MAX_STEPS = 160u;
     var MINIMUM_HIT_DISTANCE: f32 = 0.05;
     var TRICUBIC_THRESHOLD: f32 = 0.1;
 
