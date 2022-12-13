@@ -77,8 +77,8 @@ impl ArcballCamera {
 
     pub fn update_on_mouse_drag(&mut self, mouse_delta: (f64, f64)) {
         let (dx, dy) = mouse_delta;
-        let max_angle_x = 2. * PI / self.screen_size.0 as f32;
-        let max_angle_y = PI / self.screen_size.1 as f32;
+        let max_angle_x = PI / self.screen_size.0 as f32;
+        let max_angle_y = 0.5 * PI / self.screen_size.1 as f32;
 
         let angle_x = -dx as f32 * max_angle_x;
         let angle_y = -dy as f32 * max_angle_y;
