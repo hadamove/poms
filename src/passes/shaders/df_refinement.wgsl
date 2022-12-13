@@ -70,11 +70,6 @@ fn compute_distance(grid_point_index: u32) -> f32 {
 fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {
-    // TODO: replace everywhere with constants when updating syntax
-    var GRID_POINT_CLASS_EXTERIOR: u32 = 0u;
-    var GRID_POINT_CLASS_INTERIOR: u32 = 1u;
-    var GRID_POINT_CLASS_BOUNDARY: u32 = 2u;
-
     var grid_point_index: u32 = global_invocation_id.x + grid_point_index_offset;
     var total = ses_grid.resolution * ses_grid.resolution * ses_grid.resolution;
     if (grid_point_index >= total) {
@@ -87,16 +82,17 @@ fn main(
         i32(grid_point_index / (ses_grid.resolution * ses_grid.resolution))
     );
 
+    // Switch cases with constants are not supported yet.
     switch (grid_point_class[grid_point_index]) {
-        case 0u: {
+        case 0u: { // Exterior point
             textureStore(distance_texture, texture_index, vec4<f32>(probe_radius));
             return;
         }
-        case 1u: {
+        case 1u: { // Interior point
             textureStore(distance_texture, texture_index, vec4<f32>(-ses_grid.offset));
             return;
         }
-        case 2u: {
+        case 2u: { // Boundary point
             var distance = compute_distance(grid_point_index);
             textureStore(distance_texture, texture_index, vec4<f32>(distance));
             return;

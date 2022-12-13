@@ -11,10 +11,7 @@ pub struct Context {
 
 impl Context {
     pub async fn new(window: &Window) -> Self {
-        // TODO: Fix Vulkan
-        let instance =
-            wgpu::Instance::new(wgpu::Backends::all().difference(wgpu::Backends::VULKAN));
-
+        let instance = wgpu::Instance::new(wgpu::Backends::all());
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {

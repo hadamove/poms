@@ -23,7 +23,6 @@ use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
 use self::light::LightResource;
 use self::ses_state::SesStage;
 
-// TODO: move this into separate file.
 #[derive(Debug, PartialEq, Eq)]
 pub enum PassId {
     ComputeProbe,
