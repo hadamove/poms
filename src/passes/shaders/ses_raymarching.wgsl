@@ -28,7 +28,6 @@ struct LightUniform {
 @group(1) @binding(1) var df_sampler: sampler;
 
 @group(2) @binding(0) var<uniform> camera: CameraUniform;
-
 @group(3) @binding(0) var<uniform> light: LightUniform; 
 
 
@@ -134,7 +133,7 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
 
             var normal = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
 
-            var color = vec3<f32>(0.8);
+            var color = vec3<f32>(1.0);
             var ambient = 0.15;
 
             var light_dir = normalize(light.direction);

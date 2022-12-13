@@ -26,7 +26,7 @@ impl GuiComponent for Menu {
 
                 // File menu.
                 ui.menu_button("File", |ui| {
-                    if ui.button("Load molecules").clicked() {
+                    if ui.button("Open").clicked() {
                         events.push(GuiEvent::OpenFileDialog);
                     }
                 });

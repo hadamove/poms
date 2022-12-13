@@ -61,6 +61,7 @@ fn compute_distance(grid_point_index: u32) -> f32 {
     if min_distance < HUGE_DISTANCE + 1.0 {
         return probe_radius - min_distance;
     }
+    // No exterior point found.
     return -ses_grid.offset;
 }
 

@@ -92,10 +92,21 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     var offset_z = camera.proj * vec4<f32>(0.0, 0.0, z * in.atom_radius, 0.0);
     var proj_surface_position = in.proj_position + offset_z;
 
-    var shading = vec4<f32>(in.uv, 1.0, 1.0) * 0.2;
-
     var out: FragmentOutput;
-    out.color = in.color + shading;
+
+    var normal = vec3<f32>(in.uv, z);
+    var ambient = 0.15;
+
+    var view_dir = vec3<f32>(0.0, 0.0, -1.0);
+    var light_dir = normalize(-view_dir);
+    var diff =  max(0.0, dot(normal, light_dir));
+
+    var reflect_dir = reflect(light_dir, normal);  
+    var spec = pow(max(dot(view_dir, reflect_dir), 0.0), 16.0) * 0.3;
+
+    var color = in.color.xyz * (ambient + spec + diff);
+
+    out.color = vec4<f32>(color, 1.0);
     out.depth = proj_surface_position.z / proj_surface_position.w;
 
     return out;
