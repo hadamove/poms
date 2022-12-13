@@ -7,13 +7,13 @@ use winit::{
 pub struct Input {
     pub scroll: f32,
     pub mouse_pressed: bool,
+    pub last_mouse_position: (f64, f64),
     pub mouse_delta: (f64, f64),
 }
 
 impl Input {
     pub fn handle_winit_event<T>(&mut self, event: &Event<T>) {
         match event {
-            Event::DeviceEvent { event, .. } => self.handle_device_event(event),
             Event::WindowEvent { event, .. } => self.handle_window_event(event),
             _ => {}
         }
@@ -24,17 +24,10 @@ impl Input {
         self.scroll = 0.0;
     }
 
-    fn handle_device_event(&mut self, event: &DeviceEvent) {
-        #[allow(clippy::single_match)]
-        match event {
-            DeviceEvent::MouseMotion { delta } => self.mouse_delta = *delta,
-            _ => {}
-        }
-    }
-
     fn handle_window_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::MouseWheel { delta, .. } => self.process_scroll(delta),
+            WindowEvent::CursorMoved { position, .. } => self.process_cursor(*position),
             WindowEvent::MouseInput {
                 button: MouseButton::Left,
                 state,
@@ -49,5 +42,16 @@ impl Input {
             MouseScrollDelta::LineDelta(_, scroll) => scroll * 20.0,
             MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => *scroll as f32,
         };
+    }
+
+    fn process_cursor(&mut self, position: PhysicalPosition<f64>) {
+        let delta = (
+            position.x - self.last_mouse_position.0,
+            position.y - self.last_mouse_position.1,
+        );
+        if delta != (0.0, 0.0) {
+            self.mouse_delta = delta;
+        }
+        self.last_mouse_position = position.into();
     }
 }
