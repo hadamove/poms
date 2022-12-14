@@ -45,6 +45,9 @@ impl Context {
             format: supported_format,
             width: size.width,
             height: size.height,
+            #[cfg(not(feature = "no-vsync"))]
+            present_mode: wgpu::PresentMode::Fifo,
+            #[cfg(feature = "no-vsync")]
             present_mode: wgpu::PresentMode::AutoNoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
         };

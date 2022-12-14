@@ -24,6 +24,19 @@ The project is currently built with Rust version `1.65.0` (as of writing, the la
     cargo run
     ```
 
+- Performance is bottlenecked by the CPU in debug builds, to build/run the application in release mode, run:
+
+    ```bash
+    cargo build --release
+    cargo run --release
+    ```
+
+- To uncap the FPS, run the application with flag `--features no-vsync` flag:
+
+    ```bash
+    cargo run --features no-vsync
+    ```
+
 ## Project Structure
 
 - `data` - sample molecular data in PDB format, which can be used for testing
