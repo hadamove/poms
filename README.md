@@ -31,7 +31,7 @@ The project is currently built with Rust version `1.65.0` (as of writing, the la
     cargo run --release
     ```
 
-- To uncap the FPS, run the application with flag `--features no-vsync` flag:
+- To uncap the FPS, add flag `--features no-vsync`:
 
     ```bash
     cargo run --features no-vsync
