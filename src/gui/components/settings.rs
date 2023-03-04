@@ -65,7 +65,7 @@ impl GuiComponent for UserSettings {
             ui.collapsing("Lighting", |ui| {
                 ui.label("Light direction:");
                 for (i, coord) in ["X", "Y", "Z"].iter().enumerate() {
-                    if ui.add(Slider::new(&mut self.direction[i], -1.0..=1.0).text(coord)).changed() {
+                    if ui.add(Slider::new(&mut self.direction[i], -1.0..=1.0).text(*coord)).changed() {
                         events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));
                     }
                 }

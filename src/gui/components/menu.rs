@@ -30,13 +30,6 @@ impl GuiComponent for Menu {
                         events.push(GuiEvent::OpenFileDialog);
                     }
                 });
-
-                ui.menu_button("View", |ui| {
-                    if ui.button("Organize windows").clicked() {
-                        ui.ctx().memory().reset_areas();
-                        ui.close_menu();
-                    }
-                });
             });
         });
     }
