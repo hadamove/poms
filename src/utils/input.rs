@@ -13,9 +13,8 @@ pub struct Input {
 
 impl Input {
     pub fn handle_winit_event<T>(&mut self, event: &Event<T>) {
-        match event {
-            Event::WindowEvent { event, .. } => self.handle_window_event(event),
-            _ => {}
+        if let Event::WindowEvent { event, .. } = event {
+            self.handle_window_event(event);
         }
     }
 

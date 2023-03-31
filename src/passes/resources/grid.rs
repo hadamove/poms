@@ -77,7 +77,7 @@ impl MoleculeWithNeighborGrid {
         let atoms = molecule.get_atoms();
 
         let neighbor_grid_uniform =
-            GridUniform::from_molecule(&molecule, GridSpacing::Offset(grid_offset), probe_radius);
+            GridUniform::from_molecule(molecule, GridSpacing::Offset(grid_offset), probe_radius);
 
         // Divide atoms into grid cells for constant look up.
         let grid_cell_indices = atoms
@@ -87,7 +87,7 @@ impl MoleculeWithNeighborGrid {
 
         // Sort the atoms by cell index.
         let permutation = permutation::sort(&grid_cell_indices);
-        let atoms_sorted = permutation.apply_slice(&atoms);
+        let atoms_sorted = permutation.apply_slice(atoms);
         let grid_cell_indices = permutation.apply_slice(&grid_cell_indices);
 
         let grid_cell_count = u32::pow(neighbor_grid_uniform.resolution, 3) as usize;

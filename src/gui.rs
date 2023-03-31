@@ -38,7 +38,7 @@ pub struct Gui {
 impl Gui {
     pub fn new(context: &Context) -> Self {
         Self {
-            components: vec![Box::new(Menu::default()), Box::new(UserSettings::default())],
+            components: vec![Box::<Menu>::default(), Box::<UserSettings>::default()],
 
             async_file: AsyncFileLoader::new(),
             platform: Platform::new(PlatformDescriptor {

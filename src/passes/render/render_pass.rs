@@ -21,7 +21,7 @@ impl RenderPass {
             context
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some(&format!("{:?} Render Pipeline Layout", id)),
+                    label: Some(&format!("{id:?} Render Pipeline Layout")),
                     bind_group_layouts: &resources.get_bind_group_layouts(),
                     ..Default::default()
                 });
@@ -30,7 +30,7 @@ impl RenderPass {
             context
                 .device
                 .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                    label: Some(&format!("{:?} Render Pipeline", id)),
+                    label: Some(&format!("{id:?} Render Pipeline")),
                     layout: Some(&render_pipeline_layout),
                     vertex: wgpu::VertexState {
                         module: &shader_module,

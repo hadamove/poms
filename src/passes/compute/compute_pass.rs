@@ -16,7 +16,7 @@ impl ComputePass {
             context
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some(&format!("{:?} Compute Pipeline Layout", pass_id)),
+                    label: Some(&format!("{pass_id:?} Compute Pipeline Layout")),
                     bind_group_layouts: &resources.get_bind_group_layouts(),
                     ..Default::default()
                 });
@@ -27,7 +27,7 @@ impl ComputePass {
             context
                 .device
                 .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                    label: Some(&format!("{:?} Compute Pipeline", pass_id)),
+                    label: Some(&format!("{pass_id:?} Compute Pipeline")),
                     layout: Some(&compute_pipeline_layout),
                     module: &shader_module,
                     entry_point: "main",
