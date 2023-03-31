@@ -1,4 +1,4 @@
-use super::molecule::{Atom, Molecule};
+use super::molecule::Molecule;
 use cgmath::{Point3, Vector3, Vector4};
 
 pub mod molecule_grid;
@@ -24,12 +24,12 @@ pub enum GridSpacing {
 }
 
 impl GridUniform {
-    pub fn from_atoms(atoms: &Vec<Atom>, spacing: GridSpacing, probe_radius: f32) -> Self {
-        let max_atom_radius = atoms.get_max_atom_radius();
+    pub fn from_molecule(molecule: &Molecule, spacing: GridSpacing, probe_radius: f32) -> Self {
+        let max_atom_radius = molecule.get_max_atom_radius();
         let margin = 2.0 * probe_radius + max_atom_radius;
 
-        let origin = atoms.get_min_position() - margin * Vector3::from((1.0, 1.0, 1.0));
-        let size = atoms.get_max_distance() + 2.0 * margin;
+        let origin = molecule.get_min_position() - margin * Vector3::from((1.0, 1.0, 1.0));
+        let size = molecule.get_max_distance() + 2.0 * margin;
 
         let (resolution, offset) = Self::compute_resolution_and_offset(spacing, size);
 
@@ -59,24 +59,30 @@ pub struct GridCell {
 
 // Data structure for efficient lookup of neighboring atoms.
 #[derive(Debug, Default)]
-pub struct GriddedMolecule {
-    pub atoms_sorted: Vec<Atom>,
-    pub neighbor_grid: GridUniform,
+pub struct NeighborGrid {
+    pub uniform: GridUniform,
     pub grid_cells: Vec<GridCell>,
 }
 
-impl GriddedMolecule {
-    pub fn from_atoms(atoms: Vec<Atom>, probe_radius: f32) -> Self {
-        let max_atom_radius = atoms.get_max_atom_radius();
-        let grid_offset = probe_radius + max_atom_radius;
+pub struct MoleculeWithNeighborGrid {
+    pub molecule: Molecule,
+    pub neighbor_grid: NeighborGrid,
+}
 
-        let neighbor_grid =
-            GridUniform::from_atoms(&atoms, GridSpacing::Offset(grid_offset), probe_radius);
+
+impl MoleculeWithNeighborGrid {
+    pub fn from_molecule(molecule: &Molecule, probe_radius: f32) -> Self {
+        let max_atom_radius = molecule.get_max_atom_radius();
+        let grid_offset = probe_radius + max_atom_radius;
+        let atoms = molecule.get_atoms();
+
+        let neighbor_grid_uniform =
+            GridUniform::from_molecule(&molecule, GridSpacing::Offset(grid_offset), probe_radius);
 
         // Divide atoms into grid cells for constant look up.
         let grid_cell_indices = atoms
             .iter()
-            .map(|atom| Self::compute_grid_cell_index(atom.get_position(), &neighbor_grid))
+            .map(|atom| compute_grid_cell_index(atom.get_position(), &neighbor_grid_uniform))
             .collect::<Vec<_>>();
 
         // Sort the atoms by cell index.
@@ -84,7 +90,7 @@ impl GriddedMolecule {
         let atoms_sorted = permutation.apply_slice(&atoms);
         let grid_cell_indices = permutation.apply_slice(&grid_cell_indices);
 
-        let grid_cell_count = u32::pow(neighbor_grid.resolution, 3) as usize;
+        let grid_cell_count = u32::pow(neighbor_grid_uniform.resolution, 3) as usize;
         let mut grid_cells = vec![GridCell::default(); grid_cell_count];
 
         // Compute grid cell start indices and size in the atoms vector
@@ -96,16 +102,18 @@ impl GriddedMolecule {
         }
 
         Self {
-            neighbor_grid,
-            atoms_sorted,
-            grid_cells,
+            molecule: Molecule::new(atoms_sorted),
+            neighbor_grid: NeighborGrid {
+                uniform: neighbor_grid_uniform,
+                grid_cells,
+            }
         }
     }
+}
 
-    fn compute_grid_cell_index(position: Point3<f32>, grid: &GridUniform) -> usize {
-        let grid_origin = Vector4::from(grid.origin).truncate();
-        let Point3 { x, y, z } = (position - grid_origin) / grid.offset;
-        let r = grid.resolution as usize;
-        (x as usize) + (y as usize * r) + (z as usize * r * r)
-    }
+fn compute_grid_cell_index(position: Point3<f32>, grid: &GridUniform) -> usize {
+    let grid_origin = Vector4::from(grid.origin).truncate();
+    let Point3 { x, y, z } = (position - grid_origin) / grid.offset;
+    let r = grid.resolution as usize;
+    (x as usize) + (y as usize * r) + (z as usize * r * r)
 }

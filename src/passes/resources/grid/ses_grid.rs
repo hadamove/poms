@@ -1,7 +1,7 @@
 use wgpu::util::DeviceExt;
 
-use super::super::{Resource, SesState};
-use super::{GridSpacing, GridUniform, GriddedMolecule};
+use super::super::{molecule::Molecule, Resource, SesState};
+use super::{GridSpacing, GridUniform};
 
 pub struct SesGridResource {
     buffers: SesGridBuffers,
@@ -22,10 +22,10 @@ impl SesGridResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, molecule: &GriddedMolecule, ses_state: &SesState) {
+    pub fn update(&self, queue: &wgpu::Queue, molecule: &Molecule, ses_state: &SesState) {
         if ses_state.switch_ready() {
-            let ses_grid_render = GridUniform::from_atoms(
-                &molecule.atoms_sorted,
+            let ses_grid_render = GridUniform::from_molecule(
+                molecule,
                 GridSpacing::Resolution(ses_state.get_render_resolution()),
                 ses_state.probe_radius,
             );
@@ -36,8 +36,8 @@ impl SesGridResource {
             );
         }
 
-        let ses_grid_compute = GridUniform::from_atoms(
-            &molecule.atoms_sorted,
+        let ses_grid_compute = GridUniform::from_molecule(
+            molecule,
             GridSpacing::Resolution(ses_state.get_compute_resolution()),
             ses_state.probe_radius,
         );

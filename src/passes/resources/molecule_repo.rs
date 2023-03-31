@@ -1,10 +1,11 @@
-use super::{grid::GriddedMolecule, molecule::Atom};
+use super::molecule::Molecule;
+use super::{grid::MoleculeWithNeighborGrid, molecule::Atom};
 use crate::parser::parse::ParsedFile;
 use crate::utils::constants::{ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_ANIMATION_SPEED};
 use std::sync::Arc;
 
 pub struct MoleculeRepo {
-    molecules: Vec<Arc<GriddedMolecule>>,
+    molecules: Vec<Arc<MoleculeWithNeighborGrid>>,
     current_molecule_index: usize,
     update_molecule: bool,
 
@@ -28,7 +29,7 @@ impl Default for MoleculeRepo {
 }
 
 impl MoleculeRepo {
-    pub fn get_new(&mut self) -> Option<Arc<GriddedMolecule>> {
+    pub fn get_new(&mut self) -> Option<Arc<MoleculeWithNeighborGrid>> {
         match self.update_molecule {
             true => {
                 self.update_molecule = false;
@@ -38,7 +39,7 @@ impl MoleculeRepo {
         }
     }
 
-    pub fn get_current(&self) -> Option<Arc<GriddedMolecule>> {
+    pub fn get_current(&self) -> Option<Arc<MoleculeWithNeighborGrid>> {
         self.molecules.get(self.current_molecule_index).cloned()
     }
 
@@ -60,10 +61,12 @@ impl MoleculeRepo {
 
     pub fn load_from_parsed(&mut self, molecules: Vec<ParsedFile>, probe_radius: f32) {
         let molecules = molecules.into_iter().map(|molecule| {
-            molecule
-                .into_iter()
-                .map(|atom| atom.into())
-                .collect::<Vec<Atom>>()
+            Molecule::new(
+                molecule
+                    .into_iter()
+                    .map(|atom| atom.into())
+                    .collect::<Vec<Atom>>(),
+            )
         });
 
         self.molecules = self.compute_neighbor_grids(molecules, probe_radius);
@@ -72,25 +75,26 @@ impl MoleculeRepo {
     }
 
     pub fn recompute_neighbor_grids(&mut self, probe_radius: f32) {
-        // The collect is necessary to avoid double borrowing of self.
-        #[allow(clippy::needless_collect)]
-        let atoms_cloned = self
-            .molecules
-            .iter()
-            .map(|molecule| molecule.atoms_sorted.clone())
-            .collect::<Vec<_>>();
+        let molecules = self.molecules.clone();
+        self.molecules = self.compute_neighbor_grids(
+            molecules
+                .into_iter()
+                .map(|molecule| molecule.molecule.clone()),
+            probe_radius,
+        );
 
-        self.molecules = self.compute_neighbor_grids(atoms_cloned.into_iter(), probe_radius);
         self.update_molecule = true;
     }
 
     fn compute_neighbor_grids(
         &mut self,
-        molecules: impl Iterator<Item = Vec<Atom>>,
+        molecules: impl Iterator<Item = Molecule>,
         probe_radius: f32,
-    ) -> Vec<Arc<GriddedMolecule>> {
+    ) -> Vec<Arc<MoleculeWithNeighborGrid>> {
         molecules
-            .map(|molecule| Arc::new(GriddedMolecule::from_atoms(molecule, probe_radius)))
+            .map(|molecule| {
+                Arc::new(MoleculeWithNeighborGrid::from_molecule(&molecule, probe_radius))
+            })
             .collect()
     }
 }

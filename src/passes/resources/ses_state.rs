@@ -39,14 +39,6 @@ impl ComputeStage {
             num_grid_points: Self::PROBE_GRID_POINTS_PER_DISPATCH,
         }
     }
-
-    pub fn next_phrase(&mut self) {
-        if let ComputePhase::Probe = self.phase {
-            self.phase = ComputePhase::Refinement;
-            self.grid_points_computed = 0;
-            self.num_grid_points = Self::REFINEMENT_GRID_POINTS_PER_DISPATCH;
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -82,7 +74,10 @@ impl SesState {
                     match stage.phase {
                         ComputePhase::Probe => {
                             // Probe stage is finished, start refinement stage.
-                            stage.next_phrase();
+                            stage.phase = ComputePhase::Refinement;
+                            stage.grid_points_computed = 0;
+                            stage.num_grid_points =
+                                ComputeStage::REFINEMENT_GRID_POINTS_PER_DISPATCH;
                         }
                         ComputePhase::Refinement => {
                             // We are done. Ready to switch textures.

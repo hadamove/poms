@@ -14,8 +14,7 @@ use crate::utils::constants::DEFAULT_SES_RESOLUTION;
 use crate::utils::input::Input;
 
 use camera::{arcball::ArcballCamera, resource::CameraResource};
-use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource, GriddedMolecule};
-use molecule::Molecule;
+use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource, MoleculeWithNeighborGrid};
 use molecule_repo::MoleculeRepo;
 use ses_state::SesState;
 use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
@@ -97,7 +96,7 @@ impl ResourceRepo {
         if let Some(molecule) = self.molecule_repo.get_current() {
             self.ses_state.increase_frame();
             self.ses_resource
-                .update(&context.queue, &molecule, &self.ses_state);
+                .update(&context.queue, &molecule.molecule, &self.ses_state);
 
             if self.ses_state.switch_ready() {
                 self.df_texture_front = std::mem::replace(
@@ -162,7 +161,7 @@ impl ResourceRepo {
 
     pub fn get_num_atoms(&self) -> usize {
         match self.molecule_repo.get_current() {
-            Some(molecule) => molecule.atoms_sorted.len(),
+            Some(molecule) => molecule.molecule.get_atoms().len(),
             None => 0,
         }
     }
@@ -171,10 +170,10 @@ impl ResourceRepo {
         &self.depth_texture
     }
 
-    fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<GriddedMolecule>) {
-        self.camera
-            .set_target(molecule.atoms_sorted.calculate_center());
-        self.molecule_resource.update(queue, &molecule);
+    fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<MoleculeWithNeighborGrid>) {
+        self.camera.set_target(molecule.molecule.calculate_center());
+        self.molecule_resource
+            .update(queue, &molecule.molecule, &molecule.neighbor_grid);
         self.ses_state.reset_stage();
     }
 

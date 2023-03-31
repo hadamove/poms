@@ -1,9 +1,10 @@
 use wgpu::util::DeviceExt;
 
+use crate::passes::resources::molecule::Molecule;
 use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 
 use super::super::Resource;
-use super::{GridUniform, GriddedMolecule};
+use super::{GridUniform, NeighborGrid};
 
 pub struct MoleculeGridResource {
     buffers: MoleculeGridBuffers,
@@ -24,21 +25,21 @@ impl MoleculeGridResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, molecule: &GriddedMolecule) {
+    pub fn update(&self, queue: &wgpu::Queue, molecule: &Molecule, grid: &NeighborGrid) {
         queue.write_buffer(
             &self.buffers.atoms_sorted_buffer,
             0,
-            bytemuck::cast_slice(&molecule.atoms_sorted),
+            bytemuck::cast_slice(molecule.get_atoms()),
         );
         queue.write_buffer(
             &self.buffers.neighbor_grid_buffer,
             0,
-            bytemuck::cast_slice(&[molecule.neighbor_grid]),
+            bytemuck::cast_slice(&[grid.uniform]),
         );
         queue.write_buffer(
             &self.buffers.grid_cells_buffer,
             0,
-            bytemuck::cast_slice(&molecule.grid_cells),
+            bytemuck::cast_slice(&grid.grid_cells),
         );
     }
 }
