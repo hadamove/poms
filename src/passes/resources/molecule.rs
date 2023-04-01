@@ -19,7 +19,7 @@ impl From<ParsedAtom> for Atom {
     fn from(atom: ParsedAtom) -> Self {
         let color = atom.element_data.jmol_color;
         Self {
-            position: atom.position,
+            position: [atom.position.0 as f32, atom.position.1 as f32, atom.position.2 as f32],
             radius: atom.element_data.vdw_radius,
             color: [color[0], color[1], color[2], 1.0],
         }

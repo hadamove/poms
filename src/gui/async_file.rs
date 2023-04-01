@@ -27,7 +27,7 @@ impl AsyncFileLoader {
     pub fn load_pdb_files(&self) {
         let dispatch = self.channel.0.clone();
         execute(async move {
-            let file_dialog = rfd::AsyncFileDialog::new().add_filter("PDB", &["pdb"]);
+            let file_dialog = rfd::AsyncFileDialog::new().add_filter("PDB", &["pdb", "cif"]);
 
             if let Some(files) = file_dialog.pick_files().await {
                 let mut contents = Vec::new();

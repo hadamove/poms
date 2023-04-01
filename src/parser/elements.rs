@@ -19,22 +19,24 @@ impl Default for ElementData {
 }
 
 lazy_static! {
-    static ref ELEMENTS: HashMap<String, ElementData> = {
+    static ref ELEMENTS: HashMap<pdbtbx::Element, ElementData> = {
         // Load element data into program memory during compile time.
         let data_json: &str = include_str!("./data/elements.json");
         let data: Vec<ElementData> = serde_json::from_str(data_json).unwrap();
 
         let mut map = HashMap::new();
-        for element in data {
-            map.insert(element.symbol.clone(), element);
+        for element_data in data {
+            if let Some(element) = pdbtbx::Element::from_symbol(&element_data.symbol) {
+                map.insert(element, element_data);
+            }
         }
         map
     };
 }
 
-pub fn get_element_data(element_symbol: &str) -> ElementData {
+pub fn get_element_data(element: &pdbtbx::Element) -> ElementData {
     ELEMENTS
-        .get(element_symbol)
+        .get(element)
         .unwrap_or(&ElementData::default())
         .clone()
 }

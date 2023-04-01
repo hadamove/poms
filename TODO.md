@@ -3,7 +3,9 @@
 ## Easy, high priority
 
 - Extract parser to a completely different module / use some other parser?
-- Allow parsing of larger molecules - different file types
+  - Allow parsing of larger molecules - different file types ✅
+  - Refactor parser so that it uses file streams instead of files (figure out if it's even possible with wasm)
+  - Allow fetching of molecules from the internet
 - Fix camera movement and make it work across different platforms
 - Fix windows build
 
