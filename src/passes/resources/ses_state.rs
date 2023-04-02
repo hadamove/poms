@@ -5,6 +5,8 @@ pub struct SesState {
     pub probe_radius: f32,
     pub max_resolution: u32,
     pub stage: SesStage,
+
+    pub should_clear_predecessor: bool,
 }
 
 #[derive(Debug)]
@@ -28,7 +30,7 @@ pub struct ComputeStage {
 
 impl ComputeStage {
     const PROBE_GRID_POINTS_PER_DISPATCH: u32 = u32::pow(128, 3);
-    const REFINEMENT_GRID_POINTS_PER_DISPATCH: u32 = u32::pow(64, 3);
+    const REFINEMENT_GRID_POINTS_PER_DISPATCH: u32 = u32::pow(128, 3);
 
     pub fn new(previous_resolution: u32, resolution: u32) -> Self {
         Self {
@@ -44,7 +46,7 @@ impl ComputeStage {
 #[derive(Debug)]
 pub enum ComputePhase {
     Probe,
-    Refinement,
+    Refinement(u64),
 }
 
 impl Default for SesState {
@@ -53,12 +55,13 @@ impl Default for SesState {
             probe_radius: DEFAULT_PROBE_RADIUS,
             max_resolution: DEFAULT_SES_RESOLUTION,
             stage: SesStage::Init,
+            should_clear_predecessor: false
         }
     }
 }
 
 impl SesState {
-    pub fn increase_frame(&mut self) {
+    pub fn increase_frame(&mut self, offset: f32) {
         match self.stage {
             SesStage::Init => {
                 self.stage = SesStage::Compute(ComputeStage::new(0, DEFAULT_SES_RESOLUTION));
@@ -71,17 +74,24 @@ impl SesState {
                 stage.grid_points_computed += stage.num_grid_points;
 
                 if stage.grid_points_computed >= stage.resolution.pow(3) {
-                    match stage.phase {
+                    match &mut stage.phase {
                         ComputePhase::Probe => {
                             // Probe stage is finished, start refinement stage.
-                            stage.phase = ComputePhase::Refinement;
+                            stage.phase = ComputePhase::Refinement(0);
                             stage.grid_points_computed = 0;
                             stage.num_grid_points =
                                 ComputeStage::REFINEMENT_GRID_POINTS_PER_DISPATCH;
+                            self.should_clear_predecessor = true;
                         }
-                        ComputePhase::Refinement => {
+                        ComputePhase::Refinement(index) => {
                             // We are done. Ready to switch textures.
-                            self.stage = SesStage::SwitchReady(stage.resolution);
+                            if *index == (self.probe_radius / offset) as u64 {
+                                self.stage = SesStage::SwitchReady(stage.resolution);
+                            } else {
+                                // We are not done with refinement, start next refinement stage.
+                                stage.grid_points_computed = 0;
+                                stage.phase = ComputePhase::Refinement(*index + 1);
+                            }
                         }
                     }
                 }

@@ -22,7 +22,7 @@ impl ComputeJobs {
         if let SesStage::Compute(stage) = resources.get_ses_stage() {
             match stage.phase {
                 ComputePhase::Probe => self.probe_pass.execute(encoder, resources),
-                ComputePhase::Refinement => self.refinement_pass.execute(encoder, resources),
+                ComputePhase::Refinement(_) => self.refinement_pass.execute(encoder, resources),
             }
         }
     }
