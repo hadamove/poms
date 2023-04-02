@@ -20,6 +20,7 @@ use molecule_repo::MoleculeRepo;
 use ses_state::SesState;
 use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
 
+use self::grid::{GridSpacing, GridUniform};
 use self::light::LightResource;
 use self::ses_state::SesStage;
 
@@ -95,7 +96,18 @@ impl ResourceRepo {
 
     fn increase_ses_frame(&mut self, context: &Context) {
         if let Some(molecule) = self.molecule_repo.get_current() {
-            self.ses_state.increase_frame();
+            let ses_grid = GridUniform::from_atoms(
+                &molecule.atoms_sorted,
+                GridSpacing::Resolution(self.ses_state.get_compute_resolution()),
+                self.ses_state.probe_radius,
+            );
+
+            self.ses_state.increase_frame(ses_grid.offset);
+            if self.ses_state.should_clear_predecessor {
+                self.molecule_resource
+                    .clear_predecessor_buffer(&context.queue);
+                self.ses_state.should_clear_predecessor = false;
+            }
             self.ses_resource
                 .update(&context.queue, &molecule, &self.ses_state);
 
@@ -107,7 +119,7 @@ impl ResourceRepo {
                         self.ses_state.get_compute_resolution(),
                     ),
                 );
-                self.ses_state.increase_frame();
+                self.ses_state.increase_frame(ses_grid.offset);
                 self.molecule_repo.increase_frame();
             }
         }

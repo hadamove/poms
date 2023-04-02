@@ -11,7 +11,7 @@ pub struct GridUniform {
     // Number of grid points in each direction.
     resolution: u32,
     // The offset between each grid point.
-    offset: f32,
+    pub offset: f32,
     // Size of the grid.
     size: f32,
     // Add 4 bytes padding to avoid alignment issues.
