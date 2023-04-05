@@ -102,11 +102,6 @@ impl ResourceRepo {
             );
 
             self.ses_state.increase_frame(ses_grid.offset);
-            if self.ses_state.should_clear_predecessor {
-                self.molecule_resource
-                    .clear_predecessor_buffer(&context.queue);
-                self.ses_state.should_clear_predecessor = false;
-            }
             self.ses_resource
                 .update(&context.queue, &molecule.molecule, &self.ses_state);
 

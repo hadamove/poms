@@ -6,7 +6,6 @@ pub struct SesState {
     pub max_resolution: u32,
     pub stage: SesStage,
 
-    pub should_clear_predecessor: bool,
 }
 
 #[derive(Debug)]
@@ -55,7 +54,6 @@ impl Default for SesState {
             probe_radius: DEFAULT_PROBE_RADIUS,
             max_resolution: DEFAULT_SES_RESOLUTION,
             stage: SesStage::Init,
-            should_clear_predecessor: false
         }
     }
 }
@@ -81,7 +79,6 @@ impl SesState {
                             stage.grid_points_computed = 0;
                             stage.num_grid_points =
                                 ComputeStage::REFINEMENT_GRID_POINTS_PER_DISPATCH;
-                            self.should_clear_predecessor = true;
                         }
                         ComputePhase::Refinement(index) => {
                             // We are done. Ready to switch textures.

@@ -14,9 +14,9 @@
 - Refactor resources & ses-state
 - Resolution up to 512^3 => change array buffers to 3d textures
 - Ambient space occlusion SSAO (use module from github? or implement own)
-- Fast distance refinement (chebychev)
-  - Fix buggy behvaior
-  - Remove the need for gridpoint class buffer -> only use predecessor
+- Fast distance refinement (chebychev) ✅
+  - Fix buggy behvaior ✅
+  - Remove the need for gridpoint class buffer -> only use predecessor ✅
 
 ## Easy, low priority
 

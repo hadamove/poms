@@ -43,13 +43,6 @@ impl MoleculeGridResource {
         );
     }
 
-    pub fn clear_predecessor_buffer(&self, queue: &wgpu::Queue) {
-        queue.write_buffer(
-            &self.buffers.predecessor_buffer,
-            0,
-            bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
-        );
-    }
 }
 
 impl Resource for MoleculeGridResource {
@@ -68,7 +61,6 @@ struct MoleculeGridBuffers {
     grid_cells_buffer: wgpu::Buffer,
 
     grid_point_class_buffer: wgpu::Buffer,
-    predecessor_buffer: wgpu::Buffer,
 }
 
 impl MoleculeGridBuffers {
@@ -95,21 +87,14 @@ impl MoleculeGridBuffers {
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Grid point classification buffer"),
                 contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
-                usage: wgpu::BufferUsages::STORAGE,
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
-
-        let predecessor_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Predecessor buffer"),
-            contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
-            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-        });
 
         Self {
             atoms_sorted_buffer,
             neighbor_grid_buffer,
             grid_cells_buffer,
             grid_point_class_buffer,
-            predecessor_buffer,
         }
     }
 }
@@ -140,10 +125,6 @@ impl MoleculeGridBindGroup {
                 wgpu::BindGroupEntry {
                     binding: 3,
                     resource: buffers.grid_point_class_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 4,
-                    resource: buffers.predecessor_buffer.as_entire_binding(),
                 },
             ],
             label: Some("Molecule Grid Bind Group"),
@@ -186,16 +167,6 @@ impl MoleculeGridBindGroup {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 3,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: false },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 4,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { read_only: false },
