@@ -20,7 +20,6 @@ impl DistanceFieldTexture {
             dimension: wgpu::TextureDimension::D3,
             format: wgpu::TextureFormat::Rgba16Float,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
-            view_formats: &[],
         });
         let view = texture.create_view(&Default::default());
 
