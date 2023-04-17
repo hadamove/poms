@@ -48,7 +48,7 @@ impl RenderPass {
                     }),
                     primitive: wgpu::PrimitiveState::default(),
                     depth_stencil: Some(wgpu::DepthStencilState {
-                        format: wgpu::TextureFormat::Depth32Float,
+                        format: wgpu::TextureFormat::Depth24PlusStencil8,
                         depth_write_enabled: true,
                         depth_compare: wgpu::CompareFunction::Less,
                         stencil: wgpu::StencilState::default(),
@@ -95,6 +95,10 @@ impl RenderPass {
                     load: wgpu::LoadOp::Clear(1.0),
                     store: true,
                 }),
+                // stencil_ops: Some(wgpu::Operations {
+                //     load: wgpu::LoadOp::Clear(0),
+                //     store: true,
+                // }),
                 stencil_ops: None,
             }),
         });
