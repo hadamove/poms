@@ -69,7 +69,6 @@ pub struct MoleculeWithNeighborGrid {
     pub neighbor_grid: NeighborGrid,
 }
 
-
 impl MoleculeWithNeighborGrid {
     pub fn from_molecule(molecule: &Molecule, probe_radius: f32) -> Self {
         let max_atom_radius = molecule.get_max_atom_radius();
@@ -106,7 +105,7 @@ impl MoleculeWithNeighborGrid {
             neighbor_grid: NeighborGrid {
                 uniform: neighbor_grid_uniform,
                 grid_cells,
-            }
+            },
         }
     }
 }

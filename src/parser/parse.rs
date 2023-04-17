@@ -33,12 +33,13 @@ fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedFile> {
         }
     };
 
-    let atoms = pdb.atoms().map(|atom| {
-        ParsedAtom {
+    let atoms = pdb
+        .atoms()
+        .map(|atom| ParsedAtom {
             position: atom.pos().into(),
             element_data: elements::get_element_data(atom.element().unwrap_or(&pdbtbx::Element::H)),
-        }
-    }).collect::<Vec<_>>();
+        })
+        .collect::<Vec<_>>();
 
     Ok(atoms)
 }

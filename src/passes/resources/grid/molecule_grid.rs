@@ -42,7 +42,6 @@ impl MoleculeGridResource {
             bytemuck::cast_slice(&grid.grid_cells),
         );
     }
-
 }
 
 impl Resource for MoleculeGridResource {

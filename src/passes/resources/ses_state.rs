@@ -5,7 +5,6 @@ pub struct SesState {
     pub probe_radius: f32,
     pub max_resolution: u32,
     pub stage: SesStage,
-
 }
 
 #[derive(Debug)]

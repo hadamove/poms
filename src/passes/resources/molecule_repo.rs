@@ -93,7 +93,10 @@ impl MoleculeRepo {
     ) -> Vec<Arc<MoleculeWithNeighborGrid>> {
         molecules
             .map(|molecule| {
-                Arc::new(MoleculeWithNeighborGrid::from_molecule(&molecule, probe_radius))
+                Arc::new(MoleculeWithNeighborGrid::from_molecule(
+                    &molecule,
+                    probe_radius,
+                ))
             })
             .collect()
     }
