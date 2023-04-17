@@ -43,6 +43,10 @@ impl ArcballCamera {
         self.position
     }
 
+    pub fn get_look_direction(&self) -> Vector3<f32> {
+        (self.position - self.target).normalize()
+    }
+
     pub fn get_view_matrix(&self) -> Matrix4<f32> {
         self.view
     }

@@ -6,6 +6,7 @@ use crate::utils::constants::{
     ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION,
     DEFAULT_PROBE_RADIUS, DEFAULT_SES_RESOLUTION, MAX_PROBE_RADIUS, MAX_SES_RESOLUTION,
 };
+use crate::utils::dtos::LightData;
 
 pub struct UserSettings {
     ses_resolution: u32,
@@ -13,7 +14,8 @@ pub struct UserSettings {
     render_spacefill: bool,
     render_ses: bool,
 
-    direction: [f32; 3],
+    light_follow_camera: bool,
+    light_direction: [f32; 3],
     light_color: [f32; 3],
 
     is_animation_active: bool,
@@ -28,7 +30,8 @@ impl Default for UserSettings {
             render_spacefill: true,
             render_ses: true,
 
-            direction: DEFAULT_LIGHT_DIRECTION,
+            light_follow_camera: true,
+            light_direction: DEFAULT_LIGHT_DIRECTION,
             light_color: DEFAULT_LIGHT_COLOR,
 
             is_animation_active: ANIMATION_ACTIVE_BY_DEFAULT,
@@ -63,16 +66,32 @@ impl GuiComponent for UserSettings {
 
             // Light options.
             ui.collapsing("Lighting", |ui| {
+                if ui.add(Checkbox::new(&mut self.light_follow_camera, "Light follows camera")).changed() {
+                    events.push(GuiEvent::UpdateLight(LightData {
+                        follow_camera: Some(self.light_follow_camera),
+                        ..Default::default()
+                    }));
+                }
+
+                if !self.light_follow_camera {
                 ui.label("Light direction:");
                 for (i, coord) in ["X", "Y", "Z"].iter().enumerate() {
-                    if ui.add(Slider::new(&mut self.direction[i], -1.0..=1.0).text(coord)).changed() {
-                        events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));
+                    if ui.add(Slider::new(&mut self.light_direction[i], -1.0..=1.0).text(coord)).changed() {
+                        events.push(GuiEvent::UpdateLight(LightData {
+                            direction: Some(self.light_direction),
+                            ..Default::default()
+                        }));
                     }
                 }
+            }
 
                 ui.label("Light color:");
                 if ui.color_edit_button_rgb(&mut self.light_color).changed() {
-                    events.push(GuiEvent::UpdateLight((self.direction, self.light_color)));}
+                    events.push(GuiEvent::UpdateLight(LightData {
+                        color: Some(self.light_color),
+                        ..Default::default()
+                    }));
+                }
             });
 
 

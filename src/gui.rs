@@ -2,7 +2,11 @@ use egui::FullOutput;
 use egui_winit_platform::{Platform, PlatformDescriptor};
 use winit::event::Event;
 
-use crate::{context::Context, parser::parse::ParsedFile, utils::constants::ColorTheme};
+use crate::{
+    context::Context,
+    parser::parse::ParsedFile,
+    utils::{constants::ColorTheme, dtos::LightData},
+};
 
 use async_file::{AsyncFileLoader, FileResponse};
 use components::{error::ErrorMessage, menu::Menu, settings::UserSettings, GuiComponent};
@@ -19,7 +23,7 @@ pub enum GuiEvent {
     RenderSesChanged(bool),
     ToggleAnimation,
     ToggleTheme(ColorTheme),
-    UpdateLight(([f32; 3], [f32; 3])),
+    UpdateLight(LightData),
     AnimationSpeedChanged(u32),
 }
 

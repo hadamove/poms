@@ -1,6 +1,9 @@
 use wgpu::util::DeviceExt;
 
-use crate::utils::constants::{DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION};
+use crate::utils::{
+    constants::{DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION},
+    dtos::LightData,
+};
 
 use super::Resource;
 
@@ -25,6 +28,7 @@ impl LightUniform {
 }
 
 pub struct LightResource {
+    pub follow_camera: bool,
     buffer: wgpu::Buffer,
     uniform: LightUniform,
     bind_group_layout: wgpu::BindGroupLayout,
@@ -69,12 +73,14 @@ impl LightResource {
             uniform: light_uniform,
             bind_group_layout: light_bind_group_layout,
             bind_group: light_bind_group,
+            follow_camera: true,
         }
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue, direction: [f32; 3], color: [f32; 3]) {
-        self.uniform.direction = direction;
-        self.uniform.color = color;
+    pub fn update(&mut self, queue: &wgpu::Queue, light_data: LightData) {
+        self.follow_camera = light_data.follow_camera.unwrap_or(self.follow_camera);
+        self.uniform.direction = light_data.direction.unwrap_or(self.uniform.direction);
+        self.uniform.color = light_data.color.unwrap_or(self.uniform.color);
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
     }
 }
