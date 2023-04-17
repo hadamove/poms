@@ -122,11 +122,7 @@ impl GuiComponent for UserSettings {
 
 impl UserSettings {
     fn ses_slider(&mut self) -> Slider {
-        Slider::new(
-            &mut self.ses_resolution,
-            DEFAULT_SES_RESOLUTION..=MAX_SES_RESOLUTION,
-        )
-        .text("SES resolution")
+        Slider::new(&mut self.ses_resolution, 64..=MAX_SES_RESOLUTION).text("SES resolution")
     }
     fn probe_slider(&mut self) -> Slider {
         Slider::new(

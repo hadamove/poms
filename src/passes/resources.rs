@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use crate::context::Context;
 use crate::gui::{GuiEvent, GuiEvents};
-use crate::utils::constants::DEFAULT_SES_RESOLUTION;
+use crate::utils::constants::MIN_SES_RESOLUTION;
 use crate::utils::dtos::LightData;
 use crate::utils::input::Input;
 
@@ -70,8 +70,8 @@ impl ResourceRepo {
             camera_resource: CameraResource::new(&context.device),
             camera: ArcballCamera::from_config(&context.config),
 
-            df_texture_front: DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION),
-            df_texture_back: DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION),
+            df_texture_front: DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION),
+            df_texture_back: DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION),
 
             depth_texture: DepthTexture::new(&context.device, &context.config),
             light_resource: LightResource::new(&context.device),
@@ -95,9 +95,9 @@ impl ResourceRepo {
 
         if let Some(new_molecule) = self.molecule_repo.get_new() {
             self.update_molecule(&context.queue, new_molecule);
-            if self.ses_state.get_compute_resolution() != DEFAULT_SES_RESOLUTION {
+            if self.ses_state.get_compute_resolution() != MIN_SES_RESOLUTION {
                 self.df_texture_back =
-                    DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION);
+                    DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION);
             }
             self.ses_state.reset_stage();
         }
@@ -147,7 +147,7 @@ impl ResourceRepo {
                     self.ses_state.max_resolution = resolution;
                     self.ses_state.reset_stage();
                     self.df_texture_back =
-                        DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION);
+                        DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION);
                 }
                 GuiEvent::ProbeRadiusChanged(probe_radius) => {
                     self.update_probe_radius(probe_radius);
@@ -156,7 +156,7 @@ impl ResourceRepo {
                     self.molecule_repo.toggle_animation();
                     self.ses_state.reset_stage();
                     self.df_texture_back =
-                        DistanceFieldTexture::new(&context.device, DEFAULT_SES_RESOLUTION);
+                        DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION);
                 }
                 GuiEvent::AnimationSpeedChanged(speed) => {
                     self.molecule_repo.set_animation_speed(speed);

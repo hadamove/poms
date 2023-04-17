@@ -1,4 +1,4 @@
-use crate::utils::constants::{DEFAULT_PROBE_RADIUS, DEFAULT_SES_RESOLUTION};
+use crate::utils::constants::{DEFAULT_PROBE_RADIUS, DEFAULT_SES_RESOLUTION, MIN_SES_RESOLUTION};
 
 #[derive(Debug)]
 pub struct SesState {
@@ -61,7 +61,7 @@ impl SesState {
     pub fn increase_frame(&mut self, offset: f32) {
         match self.stage {
             SesStage::Init => {
-                self.stage = SesStage::Compute(ComputeStage::new(0, DEFAULT_SES_RESOLUTION));
+                self.stage = SesStage::Compute(ComputeStage::new(0, MIN_SES_RESOLUTION));
             }
             SesStage::Compute(ref mut stage) => {
                 let remaining_grid_points =

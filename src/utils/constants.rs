@@ -1,5 +1,6 @@
-pub const DEFAULT_SES_RESOLUTION: u32 = 64;
+pub const MIN_SES_RESOLUTION: u32 = 64;
 pub const MAX_SES_RESOLUTION: u32 = 256;
+pub const DEFAULT_SES_RESOLUTION: u32 = 256;
 
 pub const MAX_NUM_ATOMS: usize = 1_000_000;
 pub const MAX_NUM_GRID_POINTS: usize = u32::pow(MAX_SES_RESOLUTION, 3) as usize;
