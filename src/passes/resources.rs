@@ -6,18 +6,13 @@ mod molecule_repo;
 pub mod ses_state;
 mod textures;
 
-use std::sync::Arc;
-
 use crate::context::Context;
 use crate::gui::{GuiEvent, GuiEvents};
 use crate::utils::constants::MIN_SES_RESOLUTION;
-use crate::utils::dtos::LightData;
 use crate::utils::input::Input;
 
 use camera::{arcball::ArcballCamera, resource::CameraResource};
-use grid::{
-    molecule_grid::MoleculeGridResource, ses_grid::SesGridResource, MoleculeWithNeighborGrid,
-};
+use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource};
 use molecule_repo::MoleculeRepo;
 use ses_state::SesState;
 use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
@@ -82,24 +77,15 @@ impl ResourceRepo {
     pub fn update(&mut self, context: &Context, input: &Input, gui_events: GuiEvents) {
         self.camera.update(input);
         self.camera_resource.update(&context.queue, &self.camera);
-        if self.light_resource.follow_camera {
-            self.light_resource.update(
-                &context.queue,
-                LightData {
-                    direction: Some(self.camera.get_look_direction().into()),
-                    ..Default::default()
-                },
-            );
-        }
+        self.light_resource
+            .update_camera(&context.queue, &self.camera);
         self.handle_gui_events(context, gui_events);
 
-        if let Some(new_molecule) = self.molecule_repo.get_new() {
-            self.update_molecule(&context.queue, new_molecule);
-            if self.ses_state.get_compute_resolution() != MIN_SES_RESOLUTION {
-                self.df_texture_back =
-                    DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION);
-            }
-            self.ses_state.reset_stage();
+        if let Some(mol) = self.molecule_repo.get_new() {
+            self.camera.set_target(mol.molecule.calculate_center());
+            self.molecule_resource
+                .update(&context.queue, &mol.molecule, &mol.neighbor_grid);
+            self.reset_ses_stage(&context);
         }
 
         self.increase_ses_frame(context);
@@ -145,18 +131,16 @@ impl ResourceRepo {
                 }
                 GuiEvent::SesResolutionChanged(resolution) => {
                     self.ses_state.max_resolution = resolution;
-                    self.ses_state.reset_stage();
-                    self.df_texture_back =
-                        DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION);
+                    self.reset_ses_stage(context);
                 }
                 GuiEvent::ProbeRadiusChanged(probe_radius) => {
-                    self.update_probe_radius(probe_radius);
+                    self.ses_state.probe_radius = probe_radius;
+                    self.molecule_repo.recompute_neighbor_grids(probe_radius);
+                    self.reset_ses_stage(context);
                 }
                 GuiEvent::ToggleAnimation => {
                     self.molecule_repo.toggle_animation();
-                    self.ses_state.reset_stage();
-                    self.df_texture_back =
-                        DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION);
+                    self.reset_ses_stage(context);
                 }
                 GuiEvent::AnimationSpeedChanged(speed) => {
                     self.molecule_repo.set_animation_speed(speed);
@@ -167,6 +151,11 @@ impl ResourceRepo {
                 _ => {}
             }
         }
+    }
+
+    fn reset_ses_stage(&mut self, context: &Context) {
+        self.ses_state.stage = SesStage::Init;
+        self.df_texture_back = DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION);
     }
 
     pub fn resize(&mut self, context: &Context) {
@@ -187,19 +176,6 @@ impl ResourceRepo {
 
     pub fn get_depth_texture(&self) -> &DepthTexture {
         &self.depth_texture
-    }
-
-    fn update_molecule(&mut self, queue: &wgpu::Queue, molecule: Arc<MoleculeWithNeighborGrid>) {
-        self.camera.set_target(molecule.molecule.calculate_center());
-        self.molecule_resource
-            .update(queue, &molecule.molecule, &molecule.neighbor_grid);
-        self.ses_state.reset_stage();
-    }
-
-    fn update_probe_radius(&mut self, probe_radius: f32) {
-        self.ses_state.probe_radius = probe_radius;
-        self.molecule_repo.recompute_neighbor_grids(probe_radius);
-        self.ses_state.reset_stage();
     }
 
     #[rustfmt::skip]

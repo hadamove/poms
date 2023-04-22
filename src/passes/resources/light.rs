@@ -5,7 +5,7 @@ use crate::utils::{
     dtos::LightData,
 };
 
-use super::Resource;
+use super::{camera::arcball::ArcballCamera, Resource};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -82,6 +82,13 @@ impl LightResource {
         self.uniform.direction = light_data.direction.unwrap_or(self.uniform.direction);
         self.uniform.color = light_data.color.unwrap_or(self.uniform.color);
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
+    }
+
+    pub fn update_camera(&mut self, queue: &wgpu::Queue, camera: &ArcballCamera) {
+        if self.follow_camera {
+            self.uniform.direction = camera.get_look_direction().into();
+            queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
+        }
     }
 }
 

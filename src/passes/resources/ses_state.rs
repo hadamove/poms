@@ -105,10 +105,6 @@ impl SesState {
         };
     }
 
-    pub fn reset_stage(&mut self) {
-        self.stage = SesStage::Init;
-    }
-
     pub fn switch_ready(&self) -> bool {
         matches!(self.stage, SesStage::SwitchReady(_))
     }
