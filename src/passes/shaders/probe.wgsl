@@ -42,7 +42,7 @@ fn main(
     var GRID_POINT_CLASS_BOUNDARY: u32 = 2u;
 
     var grid_point_index: u32 = global_invocation_id.x + grid_point_index_offset;
-    var total = ses_grid.resolution * ses_grid.resolution * ses_grid.resolution;
+    var total: u32 = ses_grid.resolution * ses_grid.resolution * ses_grid.resolution;
     if (grid_point_index >= total) {
         return;
     }
@@ -56,7 +56,7 @@ fn main(
         f32(grid_point_index / (ses_grid.resolution * ses_grid.resolution))
     ) * ses_grid.offset;
 
-    var offset_grid_point = grid_point - neighbor_grid.origin.xyz;
+    var offset_grid_point: vec3<f32> = grid_point - neighbor_grid.origin.xyz;
 
     var res: i32 = i32(neighbor_grid.resolution);
     var grid_cell_index: i32 = i32(offset_grid_point.x / neighbor_grid.offset) +
@@ -73,7 +73,7 @@ fn main(
                 if (neighbor_cell_index >= res * res * res || neighbor_cell_index < 0) {
                     continue;
                 }
-                var grid_cell = grid_cells[neighbor_cell_index];
+                var grid_cell: GridCell = grid_cells[neighbor_cell_index];
 
                 for (var i: i32 = 0; i < i32(grid_cell.atoms_count); i = i + 1) {
                     var atom_index: u32 = grid_cell.first_atom_index + u32(i);

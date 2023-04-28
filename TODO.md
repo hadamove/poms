@@ -2,6 +2,7 @@
 
 ## Easy, high priority
 
+- Add types to wgsl shaders & refine them
 - Extract parser to a completely different module / use some other parser?
   - Allow parsing of larger molecules - different file types ✅
   - Refactor parser so that it uses file streams instead of files (figure out if it's even possible with wasm)
@@ -13,6 +14,8 @@
 
 - Refactor resources & ses-state
 - Resolution up to 512^3 => change array buffers to 3d textures
+  - Deal with the TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES problem for read_write 3D textures.
+    - Use two textures, one for reading one for writing?
 - Ambient space occlusion SSAO (use module from github? or implement own)
 - Fast distance refinement (chebychev) ✅
   - Fix buggy behvaior ✅

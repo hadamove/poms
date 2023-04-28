@@ -12,6 +12,7 @@ struct GridUniform {
 @group(0) @binding(1) var<uniform> probe_radius: f32;
 @group(0) @binding(2) var<uniform> grid_point_index_offset: u32;
 
+// TODO: give this a better name as it also contains predecessor indices.
 @group(1) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
 
 @group(2) @binding(0) var distance_texture: texture_storage_3d<rgba16float, write>;
@@ -26,34 +27,32 @@ fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
 
 
 fn compute_distance(grid_point_index: u32) -> f32 {
-    var HUGE_DISTANCE = 100000.0;
+    var HUGE_DISTANCE: f32 = 100000.0;
 
-    var grid_point: vec3<f32> = grid_point_index_to_position(grid_point_index);
-    var res = i32(ses_grid.resolution);
+    var grid_point_pos: vec3<f32> = grid_point_index_to_position(grid_point_index);
+    var res: i32 = i32(ses_grid.resolution);
 
-    // We need to check points at maximum probe_radius distance from the current point.
     var search_range: i32 = 1;
-    var min_distance = HUGE_DISTANCE;
-    var min_neighbor = 0u;
+    var min_distance: f32 = HUGE_DISTANCE;
 
-    // Loop over all neighboring points in the search range, find the closest exterior point.
-    for (var x: i32 = -search_range; x <= search_range; x = x + 1) {
-        for (var y: i32 = -search_range; y <= search_range; y = y + 1) {
+    // Loop over all 3x3x3 neighboring points, find the closest exterior point.
+    for (var x: i32 = -1; x <= 1; x = x + 1) {
+        for (var y: i32 = -1; y <= 1; y = y + 1) {
             for (var z: i32 = -search_range; z <= search_range; z = z + 1) {
-                var neighbor_index = u32(i32(grid_point_index) + x + y * res + z * res * res);
+                var neighbor_index: u32 = u32(i32(grid_point_index) + x + y * res + z * res * res);
 
                 if neighbor_index >= arrayLength(&grid_point_class) {
                     continue;
                 }
 
-                var neighbor_point = grid_point_index_to_position(neighbor_index);
-                var distance = HUGE_DISTANCE;
+                var neighbor_point_pos: vec3<f32> = grid_point_index_to_position(neighbor_index);
+                var distance: f32 = HUGE_DISTANCE;
 
                 if grid_point_class[neighbor_index] == 0u {
-                    distance = length(neighbor_point - grid_point);
+                    distance = length(neighbor_point_pos - grid_point_pos);
                 } else if grid_point_class[neighbor_index] != 0u {
-                    var pred = grid_point_index_to_position(grid_point_class[neighbor_index] - 3u);
-                    distance = length(pred - grid_point);
+                    var predecessor_pos: vec3<f32> = grid_point_index_to_position(grid_point_class[neighbor_index] - 3u);
+                    distance = length(predecessor_pos - grid_point_pos);
                 }
 
                 if distance < min_distance {
@@ -81,7 +80,7 @@ fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {
     var grid_point_index: u32 = global_invocation_id.x + grid_point_index_offset;
-    var total = ses_grid.resolution * ses_grid.resolution * ses_grid.resolution;
+    var total: u32 = ses_grid.resolution * ses_grid.resolution * ses_grid.resolution;
     if (grid_point_index >= total) {
         return;
     }

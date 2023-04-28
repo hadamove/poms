@@ -36,8 +36,8 @@ fn vs_main(
     @builtin(vertex_index) vertex_index: u32,
 ) -> VertexOutput {
 
-    var atom_index = vertex_index / 6u;
-    var atom = atoms.atoms[atom_index];
+    var atom_index: u32 = vertex_index / 6u;
+    var atom: Atom = atoms.atoms[atom_index];
 
     var quad_vertices = array<vec2<f32>, 6>(
         vec2<f32>(-1.0,  1.0),
@@ -49,8 +49,8 @@ fn vs_main(
     );
 
     var atom_pos = vec4<f32>(atom.position, 1.0);
-    var quad_pos = quad_vertices[vertex_index % 6u];
-    var vertex_pos = atom.radius * quad_pos;
+    var quad_pos: vec2<f32> = quad_vertices[vertex_index % 6u];
+    var vertex_pos: vec2<f32> = atom.radius * quad_pos;
 
     var camera_right_worldspace = vec3<f32>(camera.view[0][0], camera.view[1][0], camera.view[2][0]);
     var camera_up_worldspace = vec3<f32>(camera.view[0][1], camera.view[1][1], camera.view[2][1]);
@@ -80,7 +80,7 @@ struct FragmentOutput {
 @fragment
 fn fs_main(in: VertexOutput) -> FragmentOutput {
 
-    var dist_xy = dot(in.uv, in.uv);
+    var dist_xy: f32 = dot(in.uv, in.uv);
 
     // Discard fragments outside of the unit circle.
     if (dist_xy > 1.0) {
@@ -88,23 +88,23 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     }
 
     // Compute the distance to the sphere surface.
-    var z = sqrt(1.0 - dist_xy);
-    var offset_z = camera.proj * vec4<f32>(0.0, 0.0, z * in.atom_radius, 0.0);
-    var proj_surface_position = in.proj_position + offset_z;
+    var z: f32 = sqrt(1.0 - dist_xy);
+    var offset_z: vec4<f32> = camera.proj * vec4<f32>(0.0, 0.0, z * in.atom_radius, 0.0);
+    var proj_surface_position: vec4<f32> = in.proj_position + offset_z;
 
     var out: FragmentOutput;
 
     var normal = vec3<f32>(in.uv, z);
-    var ambient = 0.15;
+    var ambient: f32 = 0.15;
 
     var view_dir = vec3<f32>(0.0, 0.0, -1.0);
-    var light_dir = normalize(-view_dir);
-    var diff =  max(0.0, dot(normal, light_dir));
+    var light_dir: vec3<f32> = normalize(-view_dir);
+    var diffuse: f32 =  max(0.0, dot(normal, light_dir));
 
-    var reflect_dir = reflect(light_dir, normal);  
-    var spec = pow(max(dot(view_dir, reflect_dir), 0.0), 16.0) * 0.3;
+    var reflect_dir: vec3<f32> = reflect(light_dir, normal);  
+    var specular: f32 = pow(max(dot(view_dir, reflect_dir), 0.0), 16.0) * 0.3;
 
-    var color = in.color.xyz * (ambient + spec + diff);
+    var color: vec3<f32> = in.color.xyz * (ambient + specular + diffuse);
 
     out.color = vec4<f32>(color, 1.0);
     out.depth = proj_surface_position.z / proj_surface_position.w;
