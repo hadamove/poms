@@ -131,7 +131,7 @@ impl MoleculeGridBindGroup {
         Self(bind_group)
     }
 
-    const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'_> =
+    const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
         wgpu::BindGroupLayoutDescriptor {
             entries: &[
                 wgpu::BindGroupLayoutEntry {

@@ -58,7 +58,7 @@ impl DistanceFieldTextureCompute {
         }
     }
 
-    const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'_> =
+    const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
         wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
@@ -117,7 +117,7 @@ impl DistanceFieldTextureRender {
         }
     }
 
-    const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'_> =
+    const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
         wgpu::BindGroupLayoutDescriptor {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
