@@ -8,13 +8,14 @@ mod utils;
 use app::App;
 
 use winit::event::{Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
+use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
 
 fn main() {
-    let event_loop = EventLoopBuilder::new().build();
+    let event_loop = EventLoop::new().expect("Failed to create event loop");
 
     let window = WindowBuilder::new()
+        .with_title("POMS")
         .build(&event_loop)
         .expect("Failed to create window");
 
@@ -35,27 +36,32 @@ fn main() {
 async fn run_loop(event_loop: EventLoop<()>, window: Window) {
     let mut app = App::new(&window).await;
 
-    event_loop.run(move |event, _, control_flow| {
-        #[cfg(target_arch = "wasm32")]
-        utils::wasm::resize_app_if_canvas_changed(&window, &mut app);
+    event_loop
+        .run(|event, elwt| {
+            #[cfg(target_arch = "wasm32")]
+            utils::wasm::resize_app_if_canvas_changed(&window, &mut app);
 
-        match event {
-            Event::WindowEvent { event, .. } if !app.handle_event(&event) => match event {
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::Resized(physical_size) => app.resize(physical_size),
-                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                    app.resize(*new_inner_size)
+            match event {
+                Event::WindowEvent { event, .. } if !app.handle_event(&window, &event) => {
+                    match event {
+                        WindowEvent::CloseRequested => elwt.exit(),
+                        WindowEvent::Resized(physical_size) => app.resize(physical_size),
+                        // TODO: Fix Scale Factor
+                        // WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                        //     app.resize(*new_inner_size)
+                        // }
+                        WindowEvent::RedrawRequested => {
+                            app.redraw(&window);
+                        }
+                        _ => {}
+                    }
+                }
+                // TODO: Is this the right event?
+                Event::AboutToWait => {
+                    window.request_redraw();
                 }
                 _ => {}
-            },
-            Event::RedrawRequested(window_id) if window_id == window.id() => {
-                // TODO: is window necessary here?
-                app.redraw(&window);
             }
-            Event::MainEventsCleared => {
-                window.request_redraw();
-            }
-            _ => {}
-        }
-    });
+        })
+        .expect("Failed to run event loop");
 }

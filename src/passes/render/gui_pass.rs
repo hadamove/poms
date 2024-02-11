@@ -1,4 +1,4 @@
-use egui_wgpu::renderer::ScreenDescriptor;
+use egui_wgpu::ScreenDescriptor;
 
 use crate::{context::Context, gui::GuiOutput};
 

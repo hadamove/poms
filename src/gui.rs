@@ -46,6 +46,7 @@ impl Gui {
         let egui_context = egui::Context::default();
 
         let state = egui_winit::State::new(
+            egui_context.clone(),
             egui::ViewportId::ROOT,
             window,
             Some(window.scale_factor() as f32),
@@ -81,9 +82,8 @@ impl Gui {
         (GuiOutput(textures_delta, paint_jobs), events)
     }
 
-    pub fn handle_winit_event(&mut self, window_event: &WindowEvent) -> bool {
-        let EventResponse { consumed, .. } =
-            self.state.on_window_event(&self.context, window_event);
+    pub fn handle_winit_event(&mut self, window: &Window, window_event: &WindowEvent) -> bool {
+        let EventResponse { consumed, .. } = self.state.on_window_event(window, window_event);
 
         consumed
     }

@@ -1,7 +1,7 @@
 use winit::window::Window;
 
-pub struct Context {
-    pub surface: wgpu::Surface,
+pub struct Context<'a> {
+    pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -9,8 +9,8 @@ pub struct Context {
     pub scale_factor: f64,
 }
 
-impl Context {
-    pub async fn new(window: &Window) -> Self {
+impl<'a> Context<'a> {
+    pub async fn new(window: &'a Window) -> Self {
         #[cfg(feature = "vulkan")]
         let backends = wgpu::Backends::all();
 
@@ -22,8 +22,9 @@ impl Context {
             ..Default::default()
         });
 
-        // TODO: repalce with safe method
-        let surface = unsafe { instance.create_surface(window).unwrap() };
+        let surface = instance
+            .create_surface(window)
+            .expect("Failed to create surface");
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -32,15 +33,18 @@ impl Context {
                 force_fallback_adapter: false,
             })
             .await
-            .expect("Could not find a suitable adapter");
+            .expect("Failed to find a suitable adapter");
 
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor::default(), None)
             .await
-            .expect("Could not create device");
+            .expect("Failed to create device");
 
-        // TODO: remove unwrap
-        let supported_format = *surface.get_capabilities(&adapter).formats.first().unwrap();
+        let supported_format = *surface
+            .get_capabilities(&adapter)
+            .formats
+            .first()
+            .expect("No supported format");
 
         let size = window.inner_size();
         let config = wgpu::SurfaceConfiguration {
@@ -54,7 +58,7 @@ impl Context {
             present_mode: wgpu::PresentMode::AutoNoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             view_formats: vec![supported_format],
-            // desired_maximum_frame_latency: 1,
+            desired_maximum_frame_latency: 1,
         };
         surface.configure(&device, &config);
 

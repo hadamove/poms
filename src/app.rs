@@ -5,8 +5,8 @@ use crate::gui::{Gui, GuiOutput};
 use crate::passes::{compute::ComputeJobs, render::Renderer, resources::ResourceRepo};
 use crate::utils::input::Input;
 
-pub struct App {
-    pub context: Context,
+pub struct App<'a> {
+    pub context: Context<'a>,
     resources: ResourceRepo,
 
     compute: ComputeJobs,
@@ -15,8 +15,8 @@ pub struct App {
     gui: Gui,
 }
 
-impl App {
-    pub async fn new(window: &Window) -> Self {
+impl<'a> App<'a> {
+    pub async fn new(window: &'a Window) -> Self {
         let context = Context::new(window).await;
         let resources = ResourceRepo::new(&context);
 
@@ -52,13 +52,12 @@ impl App {
         }
     }
 
-    pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
-        if !self.gui.handle_winit_event(event) {
-            // TODO: change return type to bool?
+    // TODO: Refactor this
+    pub fn handle_event(&mut self, window: &Window, event: &WindowEvent) -> bool {
+        if !self.gui.handle_winit_event(window, event) {
             self.input.handle_window_event(event);
-            return false;
         }
-        true
+        false
     }
 
     fn render(&mut self, gui_output: GuiOutput) {

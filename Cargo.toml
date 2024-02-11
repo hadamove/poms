@@ -8,13 +8,11 @@ anyhow = "1.0"
 bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
 cgmath = "0.18"
 
-# TODO: turn off default features
-# TODO: bump to 0.19
-wgpu = "0.18"
-winit = { version = "0.28", features = ["x11"] }
-egui = "0.24"
-egui-wgpu = "0.24"
-egui-winit = "0.24"
+wgpu = "0.19"
+winit = { version = "0.29", features = ["x11"] }
+egui = "0.26"
+egui-wgpu = "0.26"
+egui-winit = "0.26"
 
 futures = "0.3"
 lazy_static = "1.4.0"
