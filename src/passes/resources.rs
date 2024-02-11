@@ -85,7 +85,7 @@ impl ResourceRepo {
             self.camera.set_target(mol.molecule.calculate_center());
             self.molecule_resource
                 .update(&context.queue, &mol.molecule, &mol.neighbor_grid);
-            self.reset_ses_stage(&context);
+            self.reset_ses_stage(context);
         }
 
         self.increase_ses_frame(context);

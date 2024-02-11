@@ -1,4 +1,3 @@
-use egui::FullOutput;
 use egui_winit_platform::{Platform, PlatformDescriptor};
 use winit::event::Event;
 
@@ -29,7 +28,7 @@ pub enum GuiEvent {
 
 pub type GuiEvents = Vec<GuiEvent>;
 
-pub struct GuiOutput(pub FullOutput, pub egui::Context);
+pub struct GuiOutput(pub egui::FullOutput, pub egui::Context);
 
 pub struct Gui {
     components: Vec<Box<dyn GuiComponent>>,
@@ -69,7 +68,7 @@ impl Gui {
         (GuiOutput(output, context), events)
     }
 
-    pub fn handle_winit_event<T>(&mut self, winit_event: &Event<T>) -> bool {
+    pub fn handle_winit_event<T: 'static>(&mut self, winit_event: &Event<T>) -> bool {
         self.platform.handle_event(winit_event);
         self.platform.captures_event(winit_event)
     }

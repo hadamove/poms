@@ -33,7 +33,8 @@ impl GuiComponent for Menu {
 
                 ui.menu_button("View", |ui| {
                     if ui.button("Organize windows").clicked() {
-                        ui.ctx().memory().reset_areas();
+                        // TODO: fix this or remove it.
+                        // ui.ctx().memory().reset_areas();
                         ui.close_menu();
                     }
                 });

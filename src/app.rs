@@ -6,7 +6,7 @@ use crate::passes::{compute::ComputeJobs, render::Renderer, resources::ResourceR
 use crate::utils::input::Input;
 
 pub struct App {
-    context: Context,
+    pub context: Context,
     resources: ResourceRepo,
 
     compute: ComputeJobs,

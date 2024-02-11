@@ -17,8 +17,14 @@ impl Context {
         #[cfg(not(feature = "vulkan"))]
         let backends = wgpu::Backends::all() & !wgpu::Backends::VULKAN;
 
-        let instance = wgpu::Instance::new(backends);
-        let surface = unsafe { instance.create_surface(window) };
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
+        });
+
+        // TODO: repalce with safe method
+        let surface = unsafe { instance.create_surface(window).unwrap() };
+
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
@@ -33,11 +39,8 @@ impl Context {
             .await
             .expect("Could not create device");
 
-        let supported_format = surface
-            .get_supported_formats(&adapter)
-            .get(0)
-            .expect("No format supported")
-            .to_owned();
+        // TODO: remove unwrap
+        let supported_format = *surface.get_capabilities(&adapter).formats.first().unwrap();
 
         let size = window.inner_size();
         let config = wgpu::SurfaceConfiguration {
@@ -50,6 +53,8 @@ impl Context {
             #[cfg(feature = "no-vsync")]
             present_mode: wgpu::PresentMode::AutoNoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            view_formats: vec![supported_format],
+            // desired_maximum_frame_latency: 1,
         };
         surface.configure(&device, &config);
 

@@ -75,7 +75,7 @@ impl GuiComponent for UserSettings {
 
                 if !self.light_follow_camera {
                 ui.label("Light direction:");
-                for (i, coord) in ["X", "Y", "Z"].iter().enumerate() {
+                for (i, &coord) in ["X", "Y", "Z"].iter().enumerate() {
                     if ui.add(Slider::new(&mut self.light_direction[i], -1.0..=1.0).text(coord)).changed() {
                         events.push(GuiEvent::UpdateLight(LightData {
                             direction: Some(self.light_direction),

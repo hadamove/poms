@@ -26,7 +26,7 @@ fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedFile> {
     let pdb = match result {
         Err(e) => bail!("❌ Something went wrong with parsing: {}", format_errors(e)),
         Ok((pdb, e)) => {
-            if e.len() > 0 {
+            if !e.is_empty() {
                 println!("❗️ Errors during parsing: {}", format_errors(e));
             }
             pdb
@@ -36,7 +36,7 @@ fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedFile> {
     let atoms = pdb
         .atoms()
         .map(|atom| ParsedAtom {
-            position: atom.pos().into(),
+            position: atom.pos(),
             element_data: elements::get_element_data(atom.element().unwrap_or(&pdbtbx::Element::H)),
         })
         .collect::<Vec<_>>();
