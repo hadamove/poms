@@ -39,9 +39,8 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
         #[cfg(target_arch = "wasm32")]
         utils::wasm::resize_app_if_canvas_changed(&window, &mut app);
 
-        app.handle_event(&event);
         match event {
-            Event::WindowEvent { event, .. } => match event {
+            Event::WindowEvent { event, .. } if !app.handle_event(&event) => match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                 WindowEvent::Resized(physical_size) => app.resize(physical_size),
                 WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
@@ -50,7 +49,8 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
                 _ => {}
             },
             Event::RedrawRequested(window_id) if window_id == window.id() => {
-                app.redraw();
+                // TODO: is window necessary here?
+                app.redraw(&window);
             }
             Event::MainEventsCleared => {
                 window.request_redraw();

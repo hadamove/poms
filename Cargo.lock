@@ -605,16 +605,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui_winit_platform"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cff2b0729f7c0ae1d7fb4a95aa4c3432d1a1d03476b22b2946247504a012cea4"
-dependencies = [
- "egui",
- "winit",
-]
-
-[[package]]
 name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1711,7 +1701,6 @@ dependencies = [
  "egui",
  "egui-wgpu",
  "egui-winit",
- "egui_winit_platform",
  "futures",
  "lazy_static",
  "log",

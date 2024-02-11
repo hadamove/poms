@@ -1,6 +1,6 @@
 use winit::{
     dpi::PhysicalPosition,
-    event::{ElementState, Event, MouseButton, MouseScrollDelta, WindowEvent},
+    event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent},
 };
 
 #[derive(Debug, Default)]
@@ -12,18 +12,12 @@ pub struct Input {
 }
 
 impl Input {
-    pub fn handle_winit_event<T>(&mut self, event: &Event<T>) {
-        if let Event::WindowEvent { event, .. } = event {
-            self.handle_window_event(event);
-        }
-    }
-
     pub fn reset(&mut self) {
         self.mouse_delta = (0.0, 0.0);
         self.scroll = 0.0;
     }
 
-    fn handle_window_event(&mut self, event: &WindowEvent) {
+    pub fn handle_window_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::MouseWheel { delta, .. } => self.process_scroll(delta),
             WindowEvent::CursorMoved { position, .. } => self.process_cursor(*position),

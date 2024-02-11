@@ -1,5 +1,7 @@
-use egui_winit_platform::{Platform, PlatformDescriptor};
-use winit::event::Event;
+use egui::{ClippedPrimitive, FullOutput};
+use egui_winit::EventResponse;
+
+use winit::{event::WindowEvent, window::Window};
 
 use crate::{
     context::Context,
@@ -28,49 +30,55 @@ pub enum GuiEvent {
 
 pub type GuiEvents = Vec<GuiEvent>;
 
-pub struct GuiOutput(pub egui::FullOutput, pub egui::Context);
+pub struct GuiOutput(pub egui::TexturesDelta, pub Vec<ClippedPrimitive>);
 
 pub struct Gui {
-    components: Vec<Box<dyn GuiComponent>>,
-    // Integration between egui and winit.
-    platform: Platform,
+    state: egui_winit::State,
+    context: egui::Context,
 
+    // TODO: Please refactor this
+    components: Vec<Box<dyn GuiComponent>>,
     async_file: AsyncFileLoader,
 }
 
 impl Gui {
-    pub fn new(context: &Context) -> Self {
-        Self {
-            components: vec![Box::<Menu>::default(), Box::<UserSettings>::default()],
+    pub fn new(window: &Window, _context: &Context) -> Self {
+        let context = egui::Context::default();
+        let state = egui_winit::State::new(window);
 
+        Self {
+            context,
+            state,
+            components: vec![Box::<Menu>::default(), Box::<UserSettings>::default()],
             async_file: AsyncFileLoader::new(),
-            platform: Platform::new(PlatformDescriptor {
-                physical_width: context.config.width,
-                physical_height: context.config.height,
-                scale_factor: context.scale_factor,
-                ..Default::default()
-            }),
         }
     }
 
-    pub fn draw_frame(&mut self) -> (GuiOutput, GuiEvents) {
+    pub fn draw_frame(&mut self, window: &Window) -> (GuiOutput, GuiEvents) {
         let mut events = GuiEvents::new();
 
-        let context = self.platform.context();
-        self.platform.begin_frame();
+        let egui_input = self.state.take_egui_input(window);
+        self.context.begin_frame(egui_input);
 
-        self.draw_components(&context, &mut events);
+        self.draw_components(&mut events);
         self.handle_internal_events(&mut events);
 
-        let output = self.platform.end_frame(None);
+        let FullOutput {
+            shapes,
+            textures_delta,
+            ..
+        } = self.context.end_frame();
+
+        let paint_jobs = self.context.tessellate(shapes);
 
         // Return the shapes and text to be drawn by render pass.
-        (GuiOutput(output, context), events)
+        (GuiOutput(textures_delta, paint_jobs), events)
     }
 
-    pub fn handle_winit_event<T: 'static>(&mut self, winit_event: &Event<T>) -> bool {
-        self.platform.handle_event(winit_event);
-        self.platform.captures_event(winit_event)
+    pub fn handle_winit_event(&mut self, window_event: &WindowEvent) -> bool {
+        let EventResponse { consumed, .. } = self.state.on_event(&self.context, window_event);
+
+        consumed
     }
 
     pub fn handle_internal_events(&mut self, events: &mut GuiEvents) {
@@ -84,9 +92,9 @@ impl Gui {
         self.handle_new_files(events)
     }
 
-    fn draw_components(&mut self, context: &egui::Context, events: &mut GuiEvents) {
+    fn draw_components(&mut self, events: &mut GuiEvents) {
         for component in self.components.iter_mut() {
-            component.draw(context, events);
+            component.draw(&self.context, events);
         }
         // Remove components that should be closed.
         self.components.retain(|c| !c.should_close());

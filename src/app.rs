@@ -24,15 +24,15 @@ impl App {
             compute: ComputeJobs::new(&context, &resources),
             renderer: Renderer::new(&context, &resources),
             input: Input::default(),
-            gui: Gui::new(&context),
+            gui: Gui::new(window, &context),
 
             context,
             resources,
         }
     }
 
-    pub fn redraw(&mut self) {
-        let (gui_output, gui_events) = self.gui.draw_frame();
+    pub fn redraw(&mut self, window: &Window) {
+        let (gui_output, gui_events) = self.gui.draw_frame(window);
 
         self.renderer.handle_events(&gui_events);
         self.resources
@@ -52,10 +52,13 @@ impl App {
         }
     }
 
-    pub fn handle_event<T>(&mut self, event: &Event<T>) {
+    pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
         if !self.gui.handle_winit_event(event) {
-            self.input.handle_winit_event(event);
+            // TODO: change return type to bool?
+            self.input.handle_window_event(event);
+            return false;
         }
+        true
     }
 
     fn render(&mut self, gui_output: GuiOutput) {

@@ -15,8 +15,6 @@ winit = { version = "0.28", features = ["x11"] }
 egui = "0.23"
 egui-wgpu = "0.23"
 egui-winit = "0.23"
-# TODO: try to get rid of this dep
-egui_winit_platform = "0.20"
 
 futures = "0.3"
 lazy_static = "1.4.0"

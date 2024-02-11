@@ -25,10 +25,9 @@ impl GuiRenderPass {
             pixels_per_point: context.scale_factor as f32,
         };
 
-        let GuiOutput(output, gui_context) = gui_output;
-        let paint_jobs = gui_context.tessellate(output.shapes);
+        let GuiOutput(textures_delta, paint_jobs) = gui_output;
 
-        for (texture_id, image_delta) in output.textures_delta.set {
+        for (texture_id, image_delta) in textures_delta.set {
             self.render_pass.update_texture(
                 &context.device,
                 &context.queue,
@@ -63,7 +62,7 @@ impl GuiRenderPass {
                 .render(&mut rpass, &paint_jobs, &screen_descriptor);
         }
 
-        for free_id in output.textures_delta.free {
+        for free_id in textures_delta.free {
             self.render_pass.free_texture(&free_id);
         }
 
