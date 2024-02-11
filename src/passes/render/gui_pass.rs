@@ -51,11 +51,13 @@ impl GuiRenderPass {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Load,
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: None,
                 label: Some("Egui Render Pass"),
+                occlusion_query_set: None,
+                timestamp_writes: None,
             });
 
             self.render_pass

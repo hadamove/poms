@@ -42,12 +42,18 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(window: &Window, _context: &Context) -> Self {
-        let context = egui::Context::default();
-        let state = egui_winit::State::new(window);
+    pub fn new(window: &Window, gpu_context: &Context) -> Self {
+        let egui_context = egui::Context::default();
+
+        let state = egui_winit::State::new(
+            egui::ViewportId::ROOT,
+            window,
+            Some(window.scale_factor() as f32),
+            Some(gpu_context.device.limits().max_texture_dimension_2d as _),
+        );
 
         Self {
-            context,
+            context: egui_context,
             state,
             components: vec![Box::<Menu>::default(), Box::<UserSettings>::default()],
             async_file: AsyncFileLoader::new(),
@@ -69,14 +75,15 @@ impl Gui {
             ..
         } = self.context.end_frame();
 
-        let paint_jobs = self.context.tessellate(shapes);
+        let paint_jobs = self.context.tessellate(shapes, 1.0);
 
         // Return the shapes and text to be drawn by render pass.
         (GuiOutput(textures_delta, paint_jobs), events)
     }
 
     pub fn handle_winit_event(&mut self, window_event: &WindowEvent) -> bool {
-        let EventResponse { consumed, .. } = self.state.on_event(&self.context, window_event);
+        let EventResponse { consumed, .. } =
+            self.state.on_window_event(&self.context, window_event);
 
         consumed
     }

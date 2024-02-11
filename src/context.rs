@@ -19,7 +19,7 @@ impl Context {
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
-            dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
+            ..Default::default()
         });
 
         // TODO: repalce with safe method

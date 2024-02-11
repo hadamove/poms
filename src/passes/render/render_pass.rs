@@ -86,14 +86,14 @@ impl RenderPass {
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(clear_color),
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                 view: depth_view,
                 depth_ops: Some(wgpu::Operations {
                     load: wgpu::LoadOp::Clear(1.0),
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 }),
                 // stencil_ops: Some(wgpu::Operations {
                 //     load: wgpu::LoadOp::Clear(0),
@@ -101,6 +101,8 @@ impl RenderPass {
                 // }),
                 stencil_ops: None,
             }),
+            occlusion_query_set: None,
+            timestamp_writes: None,
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
