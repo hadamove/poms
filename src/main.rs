@@ -5,8 +5,11 @@ mod parser;
 mod passes;
 mod utils;
 
+use std::sync::Arc;
+
 use app::App;
 
+use context::Context;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
@@ -18,8 +21,6 @@ fn main() {
         .with_title("POMS")
         .build(&event_loop)
         .expect("Failed to create window");
-
-    window.set_title("POMS");
 
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -34,7 +35,8 @@ fn main() {
 }
 
 async fn run_loop(event_loop: EventLoop<()>, window: Window) {
-    let mut app = App::new(&window).await;
+    let context = Context::initialize(Arc::new(window)).await;
+    let mut app = App::new(context);
 
     event_loop
         .run(|event, elwt| {
@@ -42,23 +44,16 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
             utils::wasm::resize_app_if_canvas_changed(&window, &mut app);
 
             match event {
-                Event::WindowEvent { event, .. } if !app.handle_event(&window, &event) => {
+                Event::WindowEvent { event, .. } if !app.handle_event(&event) => {
                     match event {
                         WindowEvent::CloseRequested => elwt.exit(),
                         WindowEvent::Resized(physical_size) => app.resize(physical_size),
-                        // TODO: Fix Scale Factor
-                        // WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                        //     app.resize(*new_inner_size)
-                        // }
+                        // TODO: WindowEvent::ScaleFactorChanged
                         WindowEvent::RedrawRequested => {
-                            app.redraw(&window);
+                            app.redraw();
                         }
                         _ => {}
                     }
-                }
-                // TODO: Is this the right event?
-                Event::AboutToWait => {
-                    window.request_redraw();
                 }
                 _ => {}
             }

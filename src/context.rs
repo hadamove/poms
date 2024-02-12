@@ -1,16 +1,18 @@
+use std::sync::Arc;
+
 use winit::window::Window;
 
-pub struct Context<'a> {
-    pub surface: wgpu::Surface<'a>,
+pub struct Context {
+    pub window: Arc<Window>,
+
+    pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
-
-    pub scale_factor: f64,
 }
 
-impl<'a> Context<'a> {
-    pub async fn new(window: &'a Window) -> Self {
+impl Context {
+    pub async fn initialize(window: Arc<Window>) -> Self {
         #[cfg(feature = "vulkan")]
         let backends = wgpu::Backends::all();
 
@@ -23,7 +25,7 @@ impl<'a> Context<'a> {
         });
 
         let surface = instance
-            .create_surface(window)
+            .create_surface(window.clone())
             .expect("Failed to create surface");
 
         let adapter = instance
@@ -62,15 +64,13 @@ impl<'a> Context<'a> {
         };
         surface.configure(&device, &config);
 
-        let scale_factor = window.scale_factor();
-
         Self {
+            window,
+
             surface,
             device,
             queue,
             config,
-
-            scale_factor,
         }
     }
 

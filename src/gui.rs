@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use egui::{ClippedPrimitive, FullOutput};
 use egui_winit::EventResponse;
 
@@ -32,6 +34,7 @@ pub type GuiEvents = Vec<GuiEvent>;
 pub struct GuiOutput(pub egui::TexturesDelta, pub Vec<ClippedPrimitive>);
 
 pub struct Gui {
+    window: Arc<Window>,
     state: egui_winit::State,
     context: egui::Context,
 
@@ -41,18 +44,19 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(window: &Window) -> Self {
+    pub fn new(window: Arc<Window>) -> Self {
         let context = egui::Context::default();
 
         let state = egui_winit::State::new(
             context.clone(),
             egui::ViewportId::ROOT,
-            window,
+            window.as_ref(),
             Some(window.scale_factor() as f32),
             None,
         );
 
         Self {
+            window,
             context,
             state,
             components: vec![Box::<Menu>::default(), Box::<UserSettings>::default()],
@@ -60,10 +64,10 @@ impl Gui {
         }
     }
 
-    pub fn draw_frame(&mut self, window: &Window) -> (GuiOutput, GuiEvents) {
+    pub fn draw_frame(&mut self) -> (GuiOutput, GuiEvents) {
         let mut events = GuiEvents::new();
 
-        let egui_input = self.state.take_egui_input(window);
+        let egui_input = self.state.take_egui_input(&self.window);
         self.context.begin_frame(egui_input);
 
         self.draw_components(&mut events);
@@ -81,8 +85,8 @@ impl Gui {
         (GuiOutput(textures_delta, paint_jobs), events)
     }
 
-    pub fn handle_winit_event(&mut self, window: &Window, window_event: &WindowEvent) -> bool {
-        let EventResponse { consumed, .. } = self.state.on_window_event(window, window_event);
+    pub fn handle_winit_event(&mut self, window_event: &WindowEvent) -> bool {
+        let EventResponse { consumed, .. } = self.state.on_window_event(&self.window, window_event);
 
         consumed
     }

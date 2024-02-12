@@ -1,12 +1,12 @@
-use winit::{event::*, window::Window};
+use winit::event::*;
 
 use crate::context::Context;
 use crate::gui::{Gui, GuiOutput};
 use crate::passes::{compute::ComputeJobs, render::Renderer, resources::ResourceRepo};
 use crate::utils::input::Input;
 
-pub struct App<'a> {
-    context: Context<'a>,
+pub struct App {
+    context: Context,
     resources: ResourceRepo,
 
     compute: ComputeJobs,
@@ -15,24 +15,23 @@ pub struct App<'a> {
     gui: Gui,
 }
 
-impl<'a> App<'a> {
-    pub async fn new(window: &'a Window) -> Self {
-        let context = Context::new(window).await;
+impl App {
+    pub fn new(context: Context) -> Self {
         let resources = ResourceRepo::new(&context);
 
         App {
             compute: ComputeJobs::new(&context, &resources),
             renderer: Renderer::new(&context, &resources),
             input: Input::default(),
-            gui: Gui::new(window),
+            gui: Gui::new(context.window.clone()),
 
             context,
             resources,
         }
     }
 
-    pub fn redraw(&mut self, window: &Window) {
-        let (gui_output, gui_events) = self.gui.draw_frame(window);
+    pub fn redraw(&mut self) {
+        let (gui_output, gui_events) = self.gui.draw_frame();
 
         self.renderer.handle_events(&gui_events);
         self.resources
@@ -40,6 +39,9 @@ impl<'a> App<'a> {
 
         self.render(gui_output);
         self.input.reset();
+
+        // TODO: is this where we should request a redraw?
+        self.context.window.request_redraw();
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -53,8 +55,8 @@ impl<'a> App<'a> {
     }
 
     // TODO: Refactor this
-    pub fn handle_event(&mut self, window: &Window, event: &WindowEvent) -> bool {
-        if !self.gui.handle_winit_event(window, event) {
+    pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
+        if !self.gui.handle_winit_event(event) {
             self.input.handle_window_event(event);
         }
         false

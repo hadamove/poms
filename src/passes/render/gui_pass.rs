@@ -22,7 +22,7 @@ impl GuiRenderPass {
     ) -> anyhow::Result<()> {
         let screen_descriptor = ScreenDescriptor {
             size_in_pixels: [context.config.width, context.config.height],
-            pixels_per_point: context.scale_factor as f32,
+            pixels_per_point: context.window.scale_factor() as f32,
         };
 
         let GuiOutput(textures_delta, paint_jobs) = gui_output;
