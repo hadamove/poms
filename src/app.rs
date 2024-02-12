@@ -6,7 +6,7 @@ use crate::passes::{compute::ComputeJobs, render::Renderer, resources::ResourceR
 use crate::utils::input::Input;
 
 pub struct App<'a> {
-    pub context: Context<'a>,
+    context: Context<'a>,
     resources: ResourceRepo,
 
     compute: ComputeJobs,
@@ -24,7 +24,7 @@ impl<'a> App<'a> {
             compute: ComputeJobs::new(&context, &resources),
             renderer: Renderer::new(&context, &resources),
             input: Input::default(),
-            gui: Gui::new(window, &context),
+            gui: Gui::new(window),
 
             context,
             resources,

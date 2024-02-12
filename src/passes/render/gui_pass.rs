@@ -3,13 +3,13 @@ use egui_wgpu::ScreenDescriptor;
 use crate::{context::Context, gui::GuiOutput};
 
 pub struct GuiRenderPass {
-    render_pass: egui_wgpu::Renderer,
+    renderer: egui_wgpu::Renderer,
 }
 
 impl GuiRenderPass {
     pub fn new(context: &Context) -> Self {
         Self {
-            render_pass: egui_wgpu::Renderer::new(&context.device, context.config.format, None, 1),
+            renderer: egui_wgpu::Renderer::new(&context.device, context.config.format, None, 1),
         }
     }
 
@@ -28,15 +28,11 @@ impl GuiRenderPass {
         let GuiOutput(textures_delta, paint_jobs) = gui_output;
 
         for (texture_id, image_delta) in textures_delta.set {
-            self.render_pass.update_texture(
-                &context.device,
-                &context.queue,
-                texture_id,
-                &image_delta,
-            );
+            self.renderer
+                .update_texture(&context.device, &context.queue, texture_id, &image_delta);
         }
 
-        self.render_pass.update_buffers(
+        self.renderer.update_buffers(
             &context.device,
             &context.queue,
             encoder,
@@ -45,7 +41,8 @@ impl GuiRenderPass {
         );
 
         {
-            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Egui Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view,
                     resolve_target: None,
@@ -55,17 +52,16 @@ impl GuiRenderPass {
                     },
                 })],
                 depth_stencil_attachment: None,
-                label: Some("Egui Render Pass"),
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
 
-            self.render_pass
-                .render(&mut rpass, &paint_jobs, &screen_descriptor);
+            self.renderer
+                .render(&mut render_pass, &paint_jobs, &screen_descriptor);
         }
 
         for free_id in textures_delta.free {
-            self.render_pass.free_texture(&free_id);
+            self.renderer.free_texture(&free_id);
         }
 
         Ok(())

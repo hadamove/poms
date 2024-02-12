@@ -95,10 +95,6 @@ impl RenderPass {
                     load: wgpu::LoadOp::Clear(1.0),
                     store: wgpu::StoreOp::Store,
                 }),
-                // stencil_ops: Some(wgpu::Operations {
-                //     load: wgpu::LoadOp::Clear(0),
-                //     store: true,
-                // }),
                 stencil_ops: None,
             }),
             occlusion_query_set: None,

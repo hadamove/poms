@@ -4,7 +4,6 @@ use egui_winit::EventResponse;
 use winit::{event::WindowEvent, window::Window};
 
 use crate::{
-    context::Context,
     parser::parse::ParsedFile,
     utils::{constants::ColorTheme, dtos::LightData},
 };
@@ -42,19 +41,19 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(window: &Window, gpu_context: &Context) -> Self {
-        let egui_context = egui::Context::default();
+    pub fn new(window: &Window) -> Self {
+        let context = egui::Context::default();
 
         let state = egui_winit::State::new(
-            egui_context.clone(),
+            context.clone(),
             egui::ViewportId::ROOT,
             window,
             Some(window.scale_factor() as f32),
-            Some(gpu_context.device.limits().max_texture_dimension_2d as _),
+            None,
         );
 
         Self {
-            context: egui_context,
+            context,
             state,
             components: vec![Box::<Menu>::default(), Box::<UserSettings>::default()],
             async_file: AsyncFileLoader::new(),
