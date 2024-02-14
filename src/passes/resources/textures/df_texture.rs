@@ -1,5 +1,8 @@
-use super::super::Resource;
+use std::sync::Arc;
 
+use super::super::GpuResource;
+
+#[derive(Clone)]
 pub struct DistanceFieldTexture {
     // Binding groups are different for comptue (write) and render (read).
     pub compute: DistanceFieldTextureCompute,
@@ -31,11 +34,22 @@ impl DistanceFieldTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct DistanceFieldTextureCompute {
+    inner: Arc<DistanceFieldTextureComputeInner>,
+}
+
+struct DistanceFieldTextureComputeInner {
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
 }
+
+#[derive(Clone)]
 pub struct DistanceFieldTextureRender {
+    inner: Arc<DistanceFieldTextureRenderInner>,
+}
+
+struct DistanceFieldTextureRenderInner {
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
 }
@@ -54,8 +68,10 @@ impl DistanceFieldTextureCompute {
         });
 
         Self {
-            bind_group_layout,
-            bind_group,
+            inner: Arc::new(DistanceFieldTextureComputeInner {
+                bind_group_layout,
+                bind_group,
+            }),
         }
     }
 
@@ -75,13 +91,13 @@ impl DistanceFieldTextureCompute {
         };
 }
 
-impl Resource for DistanceFieldTextureCompute {
-    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
+impl GpuResource for DistanceFieldTextureCompute {
+    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.inner.bind_group_layout
     }
 
-    fn get_bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
+    fn bind_group(&self) -> &wgpu::BindGroup {
+        &self.inner.bind_group
     }
 }
 
@@ -113,8 +129,10 @@ impl DistanceFieldTextureRender {
         });
 
         Self {
-            bind_group_layout,
-            bind_group,
+            inner: Arc::new(DistanceFieldTextureRenderInner {
+                bind_group_layout,
+                bind_group,
+            }),
         }
     }
 
@@ -142,12 +160,12 @@ impl DistanceFieldTextureRender {
         };
 }
 
-impl Resource for DistanceFieldTextureRender {
-    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
+impl GpuResource for DistanceFieldTextureRender {
+    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.inner.bind_group_layout
     }
 
-    fn get_bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
+    fn bind_group(&self) -> &wgpu::BindGroup {
+        &self.inner.bind_group
     }
 }

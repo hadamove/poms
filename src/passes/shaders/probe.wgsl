@@ -24,12 +24,12 @@ struct GridCell {
 @group(0) @binding(2) var<uniform> grid_point_index_offset: u32;
 
 // Input buffers
-@group(1) @binding(0) var<storage, read> atoms_sorted: array<Atom>;
-@group(1) @binding(1) var<uniform> neighbor_grid: GridUniform;
-@group(1) @binding(2) var<storage, read> grid_cells: array<GridCell>;
+@group(1) @binding(0) var<storage, read> atoms_sorted: array<Atom>; // 1. resource group
+@group(1) @binding(1) var<uniform> neighbor_grid: GridUniform; // 2. resource group
+@group(1) @binding(2) var<storage, read> grid_cells: array<GridCell>; // 2. resource group
 
 // Output buffer
-@group(1) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
+@group(1) @binding(3) var<storage, read_write> grid_point_class: array<u32>; // 3. resource group
 
 
 

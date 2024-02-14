@@ -1,10 +1,10 @@
-mod camera;
-mod grid;
-mod light;
-mod molecule;
-mod molecule_repo;
+pub mod camera;
+pub mod grid;
+pub mod light;
+pub mod molecule;
+pub mod molecule_repo;
 pub mod ses_state;
-mod textures;
+pub mod textures;
 
 use crate::context::Context;
 use crate::gui::{GuiEvent, GuiEvents};
@@ -25,32 +25,33 @@ use self::ses_state::SesStage;
 pub enum PassId {
     ComputeProbe,
     ComputeRefinement,
-    RenderSpacefill,
-    RenderSesRaymarching,
 }
 
-pub trait Resource {
-    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout;
-    fn get_bind_group(&self) -> &wgpu::BindGroup;
+// TODO: : Clone
+pub trait GpuResource {
+    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout;
+    fn bind_group(&self) -> &wgpu::BindGroup;
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct GroupIndex(pub u32);
 
 pub struct ResourceRepo {
-    molecule_repo: MoleculeRepo,
-    ses_state: SesState,
+    pub just_switched: bool,
 
-    ses_resource: SesGridResource,
-    molecule_resource: MoleculeGridResource,
-    camera_resource: CameraResource,
-    camera: ArcballCamera,
+    pub molecule_repo: MoleculeRepo,
+    pub ses_state: SesState,
 
-    df_texture_front: DistanceFieldTexture,
-    df_texture_back: DistanceFieldTexture,
+    pub ses_resource: SesGridResource,
+    pub molecule_resource: MoleculeGridResource,
+    pub camera_resource: CameraResource,
+    pub camera: ArcballCamera,
 
-    light_resource: LightResource,
-    depth_texture: DepthTexture,
+    pub df_texture_front: DistanceFieldTexture,
+    pub df_texture_back: DistanceFieldTexture,
+
+    pub light_resource: LightResource,
+    pub depth_texture: DepthTexture,
 }
 
 impl ResourceRepo {
@@ -58,19 +59,21 @@ impl ResourceRepo {
         let ses_state = SesState::default();
 
         Self {
-            molecule_repo: MoleculeRepo::default(),
-            ses_resource: SesGridResource::new(&context.device),
+            just_switched: false, // TODO: Just temp solution
 
+            molecule_repo: MoleculeRepo::default(), // TODO: This has nothing to do here
+            camera: ArcballCamera::from_config(&context.config), // TODO: This has nothing to do here
+            ses_state, // TODO: This has nothing to do here
+
+            ses_resource: SesGridResource::new(&context.device),
             molecule_resource: MoleculeGridResource::new(&context.device),
             camera_resource: CameraResource::new(&context.device),
-            camera: ArcballCamera::from_config(&context.config),
 
             df_texture_front: DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION),
             df_texture_back: DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION),
 
             depth_texture: DepthTexture::new(&context.device, &context.config),
             light_resource: LightResource::new(&context.device),
-            ses_state,
         }
     }
 
@@ -113,6 +116,7 @@ impl ResourceRepo {
                 );
                 self.ses_state.increase_frame(ses_grid.offset);
                 self.molecule_repo.increase_frame();
+                self.just_switched = true;
             }
         }
     }
@@ -121,6 +125,7 @@ impl ResourceRepo {
         &self.ses_state.stage
     }
 
+    // TODO: `app` should handle the interaction between UI and resources
     fn handle_gui_events(&mut self, context: &Context, gui_events: GuiEvents) {
         for event in gui_events {
             #[allow(clippy::single_match)]
@@ -167,12 +172,12 @@ impl ResourceRepo {
         self.ses_state.get_grid_points_count()
     }
 
-    pub fn get_num_atoms(&self) -> usize {
-        match self.molecule_repo.get_current() {
-            Some(molecule) => molecule.molecule.get_atoms().len(),
-            None => 0,
-        }
-    }
+    // pub fn get_num_atoms(&self) -> usize {
+    //     match self.molecule_repo.get_current() {
+    //         Some(molecule) => molecule.molecule.get_atoms().len(),
+    //         None => 0,
+    //     }
+    // }
 
     pub fn get_depth_texture(&self) -> &DepthTexture {
         &self.depth_texture
@@ -182,23 +187,13 @@ impl ResourceRepo {
     pub fn get_resources(&self, pass_id: &PassId) -> ResourceGroup {
         match pass_id {
             PassId::ComputeProbe => ResourceGroup(vec![
-                (GroupIndex(0), &self.ses_resource as &dyn Resource),
-                (GroupIndex(1), &self.molecule_resource as &dyn Resource),
+                (GroupIndex(0), &self.ses_resource as &dyn GpuResource),
+                (GroupIndex(1), &self.molecule_resource as &dyn GpuResource),
             ]),
             PassId::ComputeRefinement => ResourceGroup(vec![
-                (GroupIndex(0), &self.ses_resource as &dyn Resource),
-                (GroupIndex(1), &self.molecule_resource as &dyn Resource),
-                (GroupIndex(2), &self.df_texture_back.compute as &dyn Resource),
-            ]),
-            PassId::RenderSpacefill => ResourceGroup(vec![
-                (GroupIndex(0), &self.molecule_resource as &dyn Resource),
-                (GroupIndex(1), &self.camera_resource as &dyn Resource),
-            ]),
-            PassId::RenderSesRaymarching => ResourceGroup(vec![
-                (GroupIndex(0), &self.ses_resource as &dyn Resource),
-                (GroupIndex(1), &self.df_texture_front.render as &dyn Resource),
-                (GroupIndex(2), &self.camera_resource as &dyn Resource),
-                (GroupIndex(3), &self.light_resource as &dyn Resource),
+                (GroupIndex(0), &self.ses_resource as &dyn GpuResource),
+                (GroupIndex(1), &self.molecule_resource as &dyn GpuResource),
+                (GroupIndex(2), &self.df_texture_back.compute as &dyn GpuResource),
             ]),
         }
     }
@@ -207,26 +202,24 @@ impl ResourceRepo {
         match pass_id {
             PassId::ComputeProbe => wgpu::include_wgsl!("./shaders/probe.wgsl"),
             PassId::ComputeRefinement => wgpu::include_wgsl!("./shaders/df_refinement.wgsl"),
-            PassId::RenderSpacefill => wgpu::include_wgsl!("./shaders/spacefill.wgsl"),
-            PassId::RenderSesRaymarching => wgpu::include_wgsl!("./shaders/ses_raymarching.wgsl"),
         }
     }
 }
 
-pub struct ResourceGroup<'a>(Vec<(GroupIndex, &'a dyn Resource)>);
+pub struct ResourceGroup<'a>(Vec<(GroupIndex, &'a dyn GpuResource)>);
 
 impl<'a> ResourceGroup<'a> {
     pub fn get_bind_groups(&self) -> Vec<(GroupIndex, &wgpu::BindGroup)> {
         self.0
             .iter()
-            .map(|(index, resource)| (*index, resource.get_bind_group()))
+            .map(|(index, resource)| (*index, resource.bind_group()))
             .collect()
     }
 
     pub fn get_bind_group_layouts(&self) -> Vec<&wgpu::BindGroupLayout> {
         self.0
             .iter()
-            .map(|(_, resource)| resource.get_bind_group_layout())
+            .map(|(_, resource)| resource.bind_group_layout())
             .collect()
     }
 }

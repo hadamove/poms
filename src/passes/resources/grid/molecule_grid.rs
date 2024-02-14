@@ -1,12 +1,19 @@
+use std::sync::Arc;
+
 use wgpu::util::DeviceExt;
 
 use crate::passes::resources::molecule::Molecule;
 use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 
-use super::super::Resource;
+use super::super::GpuResource;
 use super::{GridUniform, NeighborGrid};
 
+#[derive(Clone)]
 pub struct MoleculeGridResource {
+    inner: Arc<MoleculeGridResourceInner>,
+}
+
+struct MoleculeGridResourceInner {
     buffers: MoleculeGridBuffers,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
@@ -18,39 +25,43 @@ impl MoleculeGridResource {
         let bind_group_layout =
             device.create_bind_group_layout(&MoleculeGridBindGroup::LAYOUT_DESCRIPTOR);
 
+        let bind_group = MoleculeGridBindGroup::new(device, &buffers, &bind_group_layout).0;
+
         Self {
-            bind_group: MoleculeGridBindGroup::new(device, &buffers, &bind_group_layout).0,
-            bind_group_layout,
-            buffers,
+            inner: Arc::new(MoleculeGridResourceInner {
+                buffers,
+                bind_group_layout,
+                bind_group,
+            }),
         }
     }
 
     pub fn update(&self, queue: &wgpu::Queue, molecule: &Molecule, grid: &NeighborGrid) {
         queue.write_buffer(
-            &self.buffers.atoms_sorted_buffer,
+            &self.inner.buffers.atoms_sorted_buffer,
             0,
             bytemuck::cast_slice(molecule.get_atoms()),
         );
         queue.write_buffer(
-            &self.buffers.neighbor_grid_buffer,
+            &self.inner.buffers.neighbor_grid_buffer,
             0,
             bytemuck::cast_slice(&[grid.uniform]),
         );
         queue.write_buffer(
-            &self.buffers.grid_cells_buffer,
+            &self.inner.buffers.grid_cells_buffer,
             0,
             bytemuck::cast_slice(&grid.grid_cells),
         );
     }
 }
 
-impl Resource for MoleculeGridResource {
-    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
+impl GpuResource for MoleculeGridResource {
+    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.inner.bind_group_layout
     }
 
-    fn get_bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
+    fn bind_group(&self) -> &wgpu::BindGroup {
+        &self.inner.bind_group
     }
 }
 

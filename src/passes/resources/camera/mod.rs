@@ -1,2 +1,2 @@
-pub(super) mod arcball;
-pub(super) mod resource;
+pub mod arcball;
+pub mod resource;

@@ -64,7 +64,7 @@ impl Gui {
         }
     }
 
-    pub fn draw_frame(&mut self) -> (GuiOutput, GuiEvents) {
+    pub fn process_frame(&mut self) -> (GuiOutput, GuiEvents) {
         let mut events = GuiEvents::new();
 
         let egui_input = self.state.take_egui_input(&self.window);

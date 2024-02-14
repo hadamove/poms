@@ -1,9 +1,16 @@
+use std::sync::Arc;
+
 use wgpu::util::DeviceExt;
 
-use super::super::{molecule::Molecule, Resource, SesState};
+use super::super::{molecule::Molecule, GpuResource, SesState};
 use super::{GridSpacing, GridUniform};
 
+#[derive(Clone)]
 pub struct SesGridResource {
+    inner: Arc<SesGridResourceInner>,
+}
+
+struct SesGridResourceInner {
     buffers: SesGridBuffers,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
@@ -15,10 +22,14 @@ impl SesGridResource {
         let bind_group_layout =
             device.create_bind_group_layout(&SesGridBindGroup::LAYOUT_DESCRIPTOR);
 
+        let bind_group = SesGridBindGroup::new(device, &buffers, &bind_group_layout).0;
+
         Self {
-            bind_group: SesGridBindGroup::new(device, &buffers, &bind_group_layout).0,
-            bind_group_layout,
-            buffers,
+            inner: Arc::new(SesGridResourceInner {
+                buffers,
+                bind_group_layout,
+                bind_group,
+            }),
         }
     }
 
@@ -30,7 +41,7 @@ impl SesGridResource {
                 ses_state.probe_radius,
             );
             queue.write_buffer(
-                &self.buffers.ses_grid_render_buffer,
+                &self.inner.buffers.ses_grid_render_buffer,
                 0,
                 bytemuck::cast_slice(&[ses_grid_render]),
             );
@@ -43,30 +54,30 @@ impl SesGridResource {
         );
 
         queue.write_buffer(
-            &self.buffers.ses_grid_compute_buffer,
+            &self.inner.buffers.ses_grid_compute_buffer,
             0,
             bytemuck::cast_slice(&[ses_grid_compute]),
         );
         queue.write_buffer(
-            &self.buffers.probe_radius_buffer,
+            &self.inner.buffers.probe_radius_buffer,
             0,
             bytemuck::cast_slice(&[ses_state.probe_radius]),
         );
         queue.write_buffer(
-            &self.buffers.grid_point_index_offset_buffer,
+            &self.inner.buffers.grid_point_index_offset_buffer,
             0,
             bytemuck::cast_slice(&[ses_state.get_grid_point_index_offset()]),
         );
     }
 }
 
-impl Resource for SesGridResource {
-    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
+impl GpuResource for SesGridResource {
+    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.inner.bind_group_layout
     }
 
-    fn get_bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
+    fn bind_group(&self) -> &wgpu::BindGroup {
+        &self.inner.bind_group
     }
 }
 

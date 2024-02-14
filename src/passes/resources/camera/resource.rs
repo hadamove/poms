@@ -1,22 +1,26 @@
+use std::sync::Arc;
+
 use cgmath::SquareMatrix;
 use wgpu::util::DeviceExt;
 
-use super::{super::Resource, arcball::ArcballCamera};
+use super::{super::GpuResource, arcball::ArcballCamera};
 
+#[derive(Clone)]
 pub struct CameraResource {
+    inner: Arc<CameraResourceInner>,
+}
+
+struct CameraResourceInner {
     buffer: wgpu::Buffer,
-    uniform: CameraUniform,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
 }
 
 impl CameraResource {
     pub fn new(device: &wgpu::Device) -> Self {
-        let camera_uniform = CameraUniform::default();
-
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Uniform Buffer"),
-            contents: bytemuck::cast_slice(&[camera_uniform]),
+            contents: bytemuck::cast_slice(&[CameraUniform::default()]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -45,26 +49,27 @@ impl CameraResource {
         });
 
         Self {
-            buffer: camera_buffer,
-            uniform: camera_uniform,
-            bind_group_layout: camera_bind_group_layout,
-            bind_group: camera_bind_group,
+            inner: Arc::new(CameraResourceInner {
+                buffer: camera_buffer,
+                bind_group_layout: camera_bind_group_layout,
+                bind_group: camera_bind_group,
+            }),
         }
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue, camera: &ArcballCamera) {
-        self.uniform.update_uniform(camera);
-        queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
+    pub fn update(&self, queue: &wgpu::Queue, camera: &ArcballCamera) {
+        let uniform = CameraUniform::from_camera(camera);
+        queue.write_buffer(&self.inner.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }
 }
 
-impl Resource for CameraResource {
-    fn get_bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
+impl GpuResource for CameraResource {
+    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.inner.bind_group_layout
     }
 
-    fn get_bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
+    fn bind_group(&self) -> &wgpu::BindGroup {
+        &self.inner.bind_group
     }
 }
 
@@ -89,16 +94,18 @@ impl CameraUniform {
         }
     }
 
-    fn update_uniform(&mut self, camera: &ArcballCamera) {
-        self.position = camera.get_position().to_homogeneous().into();
+    fn from_camera(camera: &ArcballCamera) -> Self {
         let view_matrix = camera.get_view_matrix();
         let proj_matrix = camera.get_projection_matrix();
 
-        self.view_matrix = view_matrix.into();
-        self.proj_matrix = proj_matrix.into();
+        Self {
+            position: camera.get_position().to_homogeneous().into(),
+            view_matrix: view_matrix.into(),
+            proj_matrix: proj_matrix.into(),
 
-        // We can unwrap here because the matrices are invertible.
-        self.view_inverse_matrix = view_matrix.invert().unwrap().into();
-        self.proj_inverse_matrix = proj_matrix.invert().unwrap().into();
+            // We can unwrap here because the matrices are invertible.
+            view_inverse_matrix: view_matrix.invert().unwrap().into(),
+            proj_inverse_matrix: proj_matrix.invert().unwrap().into(),
+        }
     }
 }

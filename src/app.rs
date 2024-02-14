@@ -31,13 +31,19 @@ impl App {
     }
 
     pub fn redraw(&mut self) {
-        let (gui_output, gui_events) = self.gui.draw_frame();
+        let (gui_output, gui_events) = self.gui.process_frame();
 
         self.renderer.handle_events(&gui_events);
         self.resources
             .update(&self.context, &self.input, gui_events);
 
-        self.render(gui_output);
+        let mut encoder = self.context.get_command_encoder();
+
+        self.compute.execute_passes(&self.resources, &mut encoder);
+        self.renderer
+            .render(&self.context, &mut self.resources, encoder, gui_output)
+            .expect("Failed to render");
+
         self.input.reset();
 
         // TODO: is this where we should request a redraw?
@@ -60,14 +66,5 @@ impl App {
             self.input.handle_window_event(event);
         }
         false
-    }
-
-    fn render(&mut self, gui_output: GuiOutput) {
-        let mut encoder = self.context.get_command_encoder();
-
-        self.compute.execute_passes(&self.resources, &mut encoder);
-        self.renderer
-            .render(&self.context, &self.resources, encoder, gui_output)
-            .expect("Failed to render");
     }
 }
