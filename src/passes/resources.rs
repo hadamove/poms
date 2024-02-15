@@ -7,7 +7,7 @@ pub mod ses_state;
 pub mod textures;
 
 use crate::context::Context;
-use crate::gui::{GuiEvent, GuiEvents};
+use crate::ui::event::UserEvent;
 use crate::utils::constants::MIN_SES_RESOLUTION;
 use crate::utils::input::Input;
 
@@ -77,7 +77,7 @@ impl ResourceRepo {
         }
     }
 
-    pub fn update(&mut self, context: &Context, input: &Input, gui_events: GuiEvents) {
+    pub fn update(&mut self, context: &Context, input: &Input, gui_events: Vec<UserEvent>) {
         self.camera.update(input);
         self.camera_resource.update(&context.queue, &self.camera);
         self.light_resource
@@ -126,31 +126,31 @@ impl ResourceRepo {
     }
 
     // TODO: `app` should handle the interaction between UI and resources
-    fn handle_gui_events(&mut self, context: &Context, gui_events: GuiEvents) {
+    fn handle_gui_events(&mut self, context: &Context, gui_events: Vec<UserEvent>) {
         for event in gui_events {
             #[allow(clippy::single_match)]
             match event {
-                GuiEvent::LoadedMolecules(molecules) => {
+                UserEvent::LoadedMolecules(molecules) => {
                     self.molecule_repo
                         .load_from_parsed(molecules, self.ses_state.probe_radius);
                 }
-                GuiEvent::SesResolutionChanged(resolution) => {
+                UserEvent::SesResolutionChanged(resolution) => {
                     self.ses_state.max_resolution = resolution;
                     self.reset_ses_stage(context);
                 }
-                GuiEvent::ProbeRadiusChanged(probe_radius) => {
+                UserEvent::ProbeRadiusChanged(probe_radius) => {
                     self.ses_state.probe_radius = probe_radius;
                     self.molecule_repo.recompute_neighbor_grids(probe_radius);
                     self.reset_ses_stage(context);
                 }
-                GuiEvent::ToggleAnimation => {
+                UserEvent::ToggleAnimation => {
                     self.molecule_repo.toggle_animation();
                     self.reset_ses_stage(context);
                 }
-                GuiEvent::AnimationSpeedChanged(speed) => {
+                UserEvent::AnimationSpeedChanged(speed) => {
                     self.molecule_repo.set_animation_speed(speed);
                 }
-                GuiEvent::UpdateLight(light_data) => {
+                UserEvent::UpdateLight(light_data) => {
                     self.light_resource.update(&context.queue, light_data);
                 }
                 _ => {}

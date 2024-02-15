@@ -31,6 +31,7 @@ impl AsyncFileLoader {
 
             if let Some(files) = file_dialog.pick_files().await {
                 let mut contents = Vec::new();
+                // TODO: Replace this with stream
                 for file in files {
                     contents.push(file.read().await);
                 }

@@ -3,6 +3,7 @@ use std::sync::Arc;
 use winit::window::Window;
 
 pub struct Context {
+    // TODO: Does it make sense to have it here if we rename it to WgpuWrapper?
     pub window: Arc<Window>,
 
     pub surface: wgpu::Surface<'static>,
@@ -11,6 +12,7 @@ pub struct Context {
     pub config: wgpu::SurfaceConfiguration,
 }
 
+// TODO: Rename to WgpuWrapper, also rename file and variable names
 impl Context {
     pub async fn initialize(window: Arc<Window>) -> Self {
         #[cfg(feature = "vulkan")]

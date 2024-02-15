@@ -1,18 +1,16 @@
 use winit::event::*;
 
 use crate::context::Context;
-use crate::gui::{Gui, GuiOutput};
-use crate::passes::{compute::ComputeJobs, render::Renderer, resources::ResourceRepo};
-use crate::utils::input::Input;
+use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::ResourceRepo};
+use crate::ui::UserInterface;
 
 pub struct App {
     context: Context,
     resources: ResourceRepo,
 
     compute: ComputeJobs,
-    renderer: Renderer,
-    input: Input,
-    gui: Gui,
+    render: RenderJobs,
+    gui: UserInterface,
 }
 
 impl App {
@@ -21,9 +19,8 @@ impl App {
 
         App {
             compute: ComputeJobs::new(&context, &resources),
-            renderer: Renderer::new(&context, &resources),
-            input: Input::default(),
-            gui: Gui::new(context.window.clone()),
+            render: RenderJobs::new(&context, &resources),
+            gui: UserInterface::new(&context),
 
             context,
             resources,
@@ -31,23 +28,38 @@ impl App {
     }
 
     pub fn redraw(&mut self) {
-        let (gui_output, gui_events) = self.gui.process_frame();
+        let gui_events = self.gui.process_frame();
 
-        self.renderer.handle_events(&gui_events);
+        self.render.handle_events(&gui_events);
         self.resources
-            .update(&self.context, &self.input, gui_events);
+            .update(&self.context, &self.gui.input, gui_events);
 
+        // Initialize rendering stuff.
         let mut encoder = self.context.get_command_encoder();
+        let output_texture = self.context.surface.get_current_texture().unwrap();
+        let view = output_texture.texture.create_view(&Default::default());
+        let depth_view = self.resources.get_depth_texture().get_view();
 
-        self.compute.execute_passes(&self.resources, &mut encoder);
-        self.renderer
-            .render(&self.context, &mut self.resources, encoder, gui_output)
-            .expect("Failed to render");
+        // Compute and render stuff.
+        self.compute.execute(&self.resources, &mut encoder);
+        self.render
+            .execute(&self.context, &view, depth_view, &mut encoder);
+        self.gui.render(&self.context, &view, &mut encoder);
 
-        self.input.reset();
+        // Submit commands to the GPU.
+        self.context.queue.submit(Some(encoder.finish()));
 
-        // TODO: is this where we should request a redraw?
-        self.context.window.request_redraw();
+        // Draw a frame.
+        output_texture.present();
+
+        //
+        //
+        //
+
+        // TODO: Remove this hotfix for texture switching
+        if self.resources.just_switched {
+            self.render = RenderJobs::new(&self.context, &self.resources);
+        }
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -63,7 +75,7 @@ impl App {
     // TODO: Refactor this
     pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
         if !self.gui.handle_winit_event(event) {
-            self.input.handle_window_event(event);
+            self.gui.input.handle_window_event(event);
         }
         false
     }

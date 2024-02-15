@@ -1,8 +1,8 @@
 mod app;
 mod context;
-mod gui;
 mod parser;
 mod passes;
+mod ui;
 mod utils;
 
 use std::sync::Arc;
@@ -35,7 +35,8 @@ fn main() {
 }
 
 async fn run_loop(event_loop: EventLoop<()>, window: Window) {
-    let context = Context::initialize(Arc::new(window)).await;
+    let window = Arc::new(window);
+    let context = Context::initialize(window.clone()).await;
     let mut app = App::new(context);
 
     event_loop
@@ -55,6 +56,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
                         _ => {}
                     }
                 }
+                Event::AboutToWait => window.request_redraw(),
                 _ => {}
             }
         })

@@ -18,7 +18,7 @@ impl ComputeJobs {
         }
     }
 
-    pub fn execute_passes(&mut self, resources: &ResourceRepo, encoder: &mut wgpu::CommandEncoder) {
+    pub fn execute(&mut self, resources: &ResourceRepo, encoder: &mut wgpu::CommandEncoder) {
         if let SesStage::Compute(stage) = resources.get_ses_stage() {
             match stage.phase {
                 ComputePhase::Probe => self.probe_pass.execute(encoder, resources),
