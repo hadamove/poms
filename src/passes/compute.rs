@@ -1,20 +1,37 @@
-use super::resources::ses_state::{ComputePhase, SesStage};
-use super::resources::{PassId, ResourceRepo};
-use crate::context::Context;
-use compute_pass::ComputePass;
+use self::probe::{ComputeProbePass, ComputeProbeResources};
+use self::refinement::{ComputeRefinementPass, ComputeRefinementResources};
 
-mod compute_pass;
+use super::resources::ses_state::{ComputePhase, SesStage};
+use super::resources::ResourceRepo;
+use crate::context::Context;
+
+mod probe;
+mod refinement;
+mod util;
 
 pub struct ComputeJobs {
-    probe_pass: ComputePass,
-    refinement_pass: ComputePass,
+    probe_pass: ComputeProbePass,
+    refinement_pass: ComputeRefinementPass,
 }
 
 impl ComputeJobs {
     pub fn new(context: &Context, resources: &ResourceRepo) -> Self {
         Self {
-            probe_pass: ComputePass::new(context, resources, PassId::ComputeProbe),
-            refinement_pass: ComputePass::new(context, resources, PassId::ComputeRefinement),
+            probe_pass: ComputeProbePass::new(
+                &context.device,
+                ComputeProbeResources {
+                    ses_grid: resources.ses_resource.clone(),
+                    molecule: resources.molecule_resource.clone(),
+                },
+            ),
+            refinement_pass: ComputeRefinementPass::new(
+                &context.device,
+                ComputeRefinementResources {
+                    ses_grid: resources.ses_resource.clone(),
+                    molecule: resources.molecule_resource.clone(),
+                    df_texture: resources.df_texture_back.compute.clone(),
+                },
+            ),
         }
     }
 

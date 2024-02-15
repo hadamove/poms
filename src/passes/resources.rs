@@ -21,31 +21,24 @@ use self::grid::{GridSpacing, GridUniform};
 use self::light::LightResource;
 use self::ses_state::SesStage;
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum PassId {
-    ComputeProbe,
-    ComputeRefinement,
-}
-
 // TODO: : Clone
 pub trait GpuResource {
     fn bind_group_layout(&self) -> &wgpu::BindGroupLayout;
     fn bind_group(&self) -> &wgpu::BindGroup;
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct GroupIndex(pub u32);
-
 pub struct ResourceRepo {
     pub just_switched: bool,
 
+    // TODO: This doesn't make sense here
     pub molecule_repo: MoleculeRepo,
     pub ses_state: SesState,
+    pub camera: ArcballCamera,
 
+    // This makes sense here
     pub ses_resource: SesGridResource,
     pub molecule_resource: MoleculeGridResource,
     pub camera_resource: CameraResource,
-    pub camera: ArcballCamera,
 
     pub df_texture_front: DistanceFieldTexture,
     pub df_texture_back: DistanceFieldTexture,
@@ -181,45 +174,5 @@ impl ResourceRepo {
 
     pub fn get_depth_texture(&self) -> &DepthTexture {
         &self.depth_texture
-    }
-
-    #[rustfmt::skip]
-    pub fn get_resources(&self, pass_id: &PassId) -> ResourceGroup {
-        match pass_id {
-            PassId::ComputeProbe => ResourceGroup(vec![
-                (GroupIndex(0), &self.ses_resource as &dyn GpuResource),
-                (GroupIndex(1), &self.molecule_resource as &dyn GpuResource),
-            ]),
-            PassId::ComputeRefinement => ResourceGroup(vec![
-                (GroupIndex(0), &self.ses_resource as &dyn GpuResource),
-                (GroupIndex(1), &self.molecule_resource as &dyn GpuResource),
-                (GroupIndex(2), &self.df_texture_back.compute as &dyn GpuResource),
-            ]),
-        }
-    }
-
-    pub fn get_shader(pass_id: &PassId) -> wgpu::ShaderModuleDescriptor {
-        match pass_id {
-            PassId::ComputeProbe => wgpu::include_wgsl!("./shaders/probe.wgsl"),
-            PassId::ComputeRefinement => wgpu::include_wgsl!("./shaders/df_refinement.wgsl"),
-        }
-    }
-}
-
-pub struct ResourceGroup<'a>(Vec<(GroupIndex, &'a dyn GpuResource)>);
-
-impl<'a> ResourceGroup<'a> {
-    pub fn get_bind_groups(&self) -> Vec<(GroupIndex, &wgpu::BindGroup)> {
-        self.0
-            .iter()
-            .map(|(index, resource)| (*index, resource.bind_group()))
-            .collect()
-    }
-
-    pub fn get_bind_group_layouts(&self) -> Vec<&wgpu::BindGroupLayout> {
-        self.0
-            .iter()
-            .map(|(_, resource)| resource.bind_group_layout())
-            .collect()
     }
 }

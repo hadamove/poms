@@ -1,4 +1,4 @@
-use crate::passes::render::util;
+use super::util;
 use crate::passes::resources::{
     camera::resource::CameraResource, grid::ses_grid::SesGridResource, light::LightResource,
     textures::df_texture::DistanceFieldTextureRender, GpuResource,

@@ -59,6 +59,7 @@ impl App {
         // TODO: Remove this hotfix for texture switching
         if self.resources.just_switched {
             self.render = RenderJobs::new(&self.context, &self.resources);
+            self.compute = ComputeJobs::new(&self.context, &self.resources);
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::passes::render::util;
+use super::util;
 use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
 use crate::passes::resources::{camera::resource::CameraResource, GpuResource};
 
