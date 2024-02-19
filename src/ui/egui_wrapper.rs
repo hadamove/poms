@@ -62,11 +62,15 @@ impl EguiWrapper {
             return;
         };
 
-        let primitives = self.egui_handle.tessellate(render_recipe.shapes, 1.0);
+        let pixels_per_point = self.window.scale_factor() as f32;
+
+        let primitives = self
+            .egui_handle
+            .tessellate(render_recipe.shapes, pixels_per_point);
 
         let screen_descriptor = egui_wgpu::ScreenDescriptor {
             size_in_pixels: [context.config.width, context.config.height],
-            pixels_per_point: context.window.scale_factor() as f32,
+            pixels_per_point,
         };
 
         for (texture_id, image_delta) in render_recipe.textures_delta.set {
