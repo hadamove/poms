@@ -18,7 +18,7 @@ pub struct ComputeProbePass {
 
 impl ComputeProbePass {
     pub fn new(device: &wgpu::Device, resources: ComputeProbeResources) -> Self {
-        let shader = wgpu::include_wgsl!("../shaders/probe.wgsl");
+        let shader = wgpu::include_wgsl!("./shaders/probe.wgsl");
 
         let bind_group_layouts = &[
             resources.ses_grid.bind_group_layout(),

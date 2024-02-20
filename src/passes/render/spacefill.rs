@@ -20,7 +20,7 @@ impl RenderSpacefillPass {
         config: &wgpu::SurfaceConfiguration,
         resources: RenderSpacefillResources,
     ) -> Self {
-        let shader = wgpu::include_wgsl!("../shaders/spacefill.wgsl");
+        let shader = wgpu::include_wgsl!("./shaders/spacefill.wgsl");
 
         let bind_group_layouts = &[
             resources.molecule.bind_group_layout(),

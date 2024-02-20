@@ -20,7 +20,7 @@ pub struct ComputeRefinementPass {
 
 impl ComputeRefinementPass {
     pub fn new(device: &wgpu::Device, resources: ComputeRefinementResources) -> Self {
-        let shader = wgpu::include_wgsl!("../shaders/df_refinement.wgsl");
+        let shader = wgpu::include_wgsl!("./shaders/df_refinement.wgsl");
 
         let bind_group_layouts = &[
             resources.ses_grid.bind_group_layout(),

@@ -24,7 +24,7 @@ impl RenderMolecularSurfacePass {
         config: &wgpu::SurfaceConfiguration,
         resources: RenderMolecularSurfaceResources,
     ) -> Self {
-        let shader = wgpu::include_wgsl!("../shaders/ses_raymarching.wgsl");
+        let shader = wgpu::include_wgsl!("./shaders/ses_raymarching.wgsl");
 
         let bind_group_layouts = &[
             resources.ses_grid.bind_group_layout(),
