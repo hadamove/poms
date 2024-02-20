@@ -18,12 +18,17 @@ pub struct AsyncFileLoader {
 
 impl AsyncFileLoader {
     pub fn new() -> Self {
-        let (sender, receiver) = mpsc::channel();
         Self {
-            channel: (sender, receiver),
+            channel: mpsc::channel(),
         }
     }
 
+    /// How this could be rewritten to be more performant with multiple files:
+    /// - a constant `MAX_BUFFERED_FILES: usize = 10` is defined
+    /// - a `Vec<Vec<u8>>` is used to store the files
+    /// - the for loop reading files halts when the `Vec` reaches `MAX_BUFFERED_FILES`
+    /// - a message is sent to the main thread with each file read
+    /// - two directional buffering - some files are buffered before "current" frame and some after
     pub fn load_pdb_files(&self) {
         let dispatch = self.channel.0.clone();
         execute(async move {
