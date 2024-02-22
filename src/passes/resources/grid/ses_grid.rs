@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use wgpu::util::DeviceExt;
 
-use super::super::{molecule::Molecule, GpuResource, SesState};
+use crate::passes::compute::ComputeProgress;
+
+use super::super::{molecule::Molecule, GpuResource};
 use super::{GridSpacing, GridUniform};
 
 #[derive(Clone)]
@@ -33,12 +35,12 @@ impl SesGridResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, molecule: &Molecule, ses_state: &SesState) {
-        if ses_state.switch_ready() {
+    pub fn update(&self, queue: &wgpu::Queue, molecule: &Molecule, progress: ComputeProgress) {
+        if let Some(render_resolution) = progress.last_computed_resolution {
             let ses_grid_render = GridUniform::from_molecule(
                 molecule,
-                GridSpacing::Resolution(ses_state.get_render_resolution()),
-                ses_state.probe_radius,
+                GridSpacing::Resolution(render_resolution),
+                1.4, // TODO: This should be a parameter
             );
             queue.write_buffer(
                 &self.inner.buffers.ses_grid_render_buffer,
@@ -49,8 +51,8 @@ impl SesGridResource {
 
         let ses_grid_compute = GridUniform::from_molecule(
             molecule,
-            GridSpacing::Resolution(ses_state.get_compute_resolution()),
-            ses_state.probe_radius,
+            GridSpacing::Resolution(progress.current_resolution),
+            1.4, // TODO: This should be a parameter
         );
 
         queue.write_buffer(
@@ -61,12 +63,13 @@ impl SesGridResource {
         queue.write_buffer(
             &self.inner.buffers.probe_radius_buffer,
             0,
-            bytemuck::cast_slice(&[ses_state.probe_radius]),
+            bytemuck::cast_slice(&[1.4_f32]), // TODO: This should be a parameter
         );
+
         queue.write_buffer(
             &self.inner.buffers.grid_point_index_offset_buffer,
             0,
-            bytemuck::cast_slice(&[ses_state.get_grid_point_index_offset()]),
+            bytemuck::cast_slice(&[progress.grid_points_index_offset()]),
         );
     }
 }

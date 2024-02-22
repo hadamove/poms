@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use super::super::GpuResource;
 
-#[derive(Clone)]
 pub struct DistanceFieldTexture {
     // Binding groups are different for comptue (write) and render (read).
     pub compute: DistanceFieldTextureCompute,
     pub render: DistanceFieldTextureRender,
+    texture: wgpu::Texture,
 }
 
 impl DistanceFieldTexture {
@@ -28,9 +28,14 @@ impl DistanceFieldTexture {
         let view = texture.create_view(&Default::default());
 
         Self {
+            texture,
             compute: DistanceFieldTextureCompute::new(device, &view),
             render: DistanceFieldTextureRender::new(device, &view),
         }
+    }
+
+    pub fn resolution(&self) -> u32 {
+        self.texture.depth_or_array_layers()
     }
 }
 

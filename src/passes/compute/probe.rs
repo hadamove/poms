@@ -1,4 +1,3 @@
-use super::super::resources::ResourceRepo;
 use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
 use crate::passes::resources::{grid::ses_grid::SesGridResource, GpuResource};
 
@@ -34,15 +33,14 @@ impl ComputeProbePass {
         }
     }
 
-    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder, resources: &ResourceRepo) {
+    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder, grid_points_count: u32) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
         compute_pass.set_bind_group(0, self.resources.ses_grid.bind_group(), &[]);
         compute_pass.set_bind_group(1, self.resources.molecule.bind_group(), &[]);
 
-        let num_grid_points = resources.get_num_grid_points();
-        let num_work_groups = f32::ceil(num_grid_points as f32 / 64.0) as u32;
+        let work_groups_count = f32::ceil(grid_points_count as f32 / 64.0) as u32;
 
-        compute_pass.dispatch_workgroups(num_work_groups, 1, 1);
+        compute_pass.dispatch_workgroups(work_groups_count, 1, 1);
     }
 }

@@ -38,10 +38,16 @@ impl App {
         let mut encoder = self.context.get_command_encoder();
         let output_texture = self.context.surface.get_current_texture().unwrap();
         let view = output_texture.texture.create_view(&Default::default());
-        let depth_view = self.resources.get_depth_texture().get_view();
 
-        // Compute and render stuff.
-        self.compute.execute(&self.resources, &mut encoder);
+        // TODO: Bad workaround
+        if let Some(molecule) = self.resources.molecule_repo.get_current() {
+            let progress = self.compute.progress.clone();
+            self.resources
+                .update_compute_progress(progress, &self.context, molecule);
+            self.compute.execute(&mut encoder);
+        }
+
+        let depth_view = self.resources.get_depth_texture().get_view();
         self.render
             .execute(&self.context, &view, depth_view, &mut encoder);
         self.gui.render(&self.context, &view, &mut encoder);
@@ -59,7 +65,8 @@ impl App {
         // TODO: Remove this hotfix for texture switching
         if self.resources.just_switched {
             self.render = RenderJobs::new(&self.context, &self.resources);
-            self.compute = ComputeJobs::new(&self.context, &self.resources);
+            self.compute.recreate_passes(&self.context, &self.resources);
+            self.resources.just_switched = false;
         }
     }
 

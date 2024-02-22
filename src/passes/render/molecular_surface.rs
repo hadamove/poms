@@ -7,6 +7,7 @@ use crate::passes::resources::{
 const WGPU_LABEL: &str = "Render Molecular Surface";
 
 pub struct RenderMolecularSurfaceResources {
+    // TODO: ses_grid shouldn't be a dependency here
     pub ses_grid: SesGridResource,              // @group(0)
     pub df_texture: DistanceFieldTextureRender, // @group(1)
     pub camera: CameraResource,                 // @group(2)
