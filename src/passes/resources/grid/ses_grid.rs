@@ -5,7 +5,7 @@ use wgpu::util::DeviceExt;
 use crate::passes::compute::ComputeProgress;
 
 use super::super::{molecule::Molecule, GpuResource};
-use super::{GridSpacing, GridUniform};
+use super::{create_compute_grid_around_molecule, GridUniform};
 
 #[derive(Clone)]
 pub struct SesGridResource {
@@ -37,11 +37,7 @@ impl SesGridResource {
 
     pub fn update(&self, queue: &wgpu::Queue, molecule: &Molecule, progress: ComputeProgress) {
         if let Some(render_resolution) = progress.last_computed_resolution {
-            let ses_grid_render = GridUniform::from_molecule(
-                molecule,
-                GridSpacing::Resolution(render_resolution),
-                1.4, // TODO: This should be a parameter
-            );
+            let ses_grid_render = create_compute_grid_around_molecule(molecule, render_resolution);
             queue.write_buffer(
                 &self.inner.buffers.ses_grid_render_buffer,
                 0,
@@ -49,11 +45,8 @@ impl SesGridResource {
             );
         }
 
-        let ses_grid_compute = GridUniform::from_molecule(
-            molecule,
-            GridSpacing::Resolution(progress.current_resolution),
-            1.4, // TODO: This should be a parameter
-        );
+        let ses_grid_compute =
+            create_compute_grid_around_molecule(molecule, progress.current_resolution);
 
         queue.write_buffer(
             &self.inner.buffers.ses_grid_compute_buffer,

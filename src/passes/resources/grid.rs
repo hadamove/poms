@@ -1,55 +1,28 @@
+use crate::utils::constants::MAX_PROBE_RADIUS;
+
 use super::molecule::Molecule;
 use cgmath::{Point3, Vector3, Vector4};
 
 pub mod molecule_grid;
 pub mod ses_grid;
 
+// TODO: create an intermediate struct between app logic and uniforms, same for light data
+/// TODO: better docs
 #[repr(C)]
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct GridUniform {
+    /// The point in space where the grid starts (the minimum x, y, z coordinates).
     origin: [f32; 4],
-    // Number of grid points in each direction.
+    /// Number of grid points in each direction.
     resolution: u32,
-    // The offset between each grid point.
-    pub offset: f32,
-    // Size of the grid.
-    size: f32,
+    /// Step size and stuff TODO: rename to `spacing`
+    offset: f32,
+    size: f32, // TODO: Remove size it's unused
     // Add 4 bytes padding to avoid alignment issues.
     _padding: [u8; 4],
 }
 
-pub enum GridSpacing {
-    Offset(f32),
-    Resolution(u32),
-}
-
-impl GridUniform {
-    pub fn from_molecule(molecule: &Molecule, spacing: GridSpacing, probe_radius: f32) -> Self {
-        let max_atom_radius = molecule.get_max_atom_radius();
-        let margin = 2.0 * probe_radius + max_atom_radius;
-
-        let origin = molecule.get_min_position() - margin * Vector3::from((1.0, 1.0, 1.0));
-        let size = molecule.get_max_distance() + 2.0 * margin;
-
-        let (resolution, offset) = Self::compute_resolution_and_offset(spacing, size);
-
-        Self {
-            origin: origin.to_homogeneous().into(),
-            resolution,
-            offset,
-            size,
-            _padding: Default::default(),
-        }
-    }
-
-    fn compute_resolution_and_offset(spacing: GridSpacing, size: f32) -> (u32, f32) {
-        match spacing {
-            GridSpacing::Offset(offset) => ((size / offset).ceil() as u32, offset),
-            GridSpacing::Resolution(resolution) => (resolution, size / resolution as f32),
-        }
-    }
-}
-
+// TODO: Come up with better semantics and name for this
 #[repr(C)]
 #[derive(Default, Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct GridCell {
@@ -64,20 +37,19 @@ pub struct NeighborGrid {
     pub grid_cells: Vec<GridCell>,
 }
 
+// TODO: Move this elsewhere
 pub struct MoleculeWithNeighborGrid {
     pub molecule: Molecule,
+    // This is updated when the molecule changes or probe radius is changed. In which case it's sent to the GPU
     pub neighbor_grid: NeighborGrid,
 }
 
 impl MoleculeWithNeighborGrid {
     pub fn from_molecule(molecule: &Molecule, probe_radius: f32) -> Self {
-        let max_atom_radius = molecule.get_max_atom_radius();
-        let grid_offset = probe_radius + max_atom_radius;
-        let atoms = molecule.get_atoms();
-
         let neighbor_grid_uniform =
-            GridUniform::from_molecule(molecule, GridSpacing::Offset(grid_offset), probe_radius);
+            create_neighbor_lookup_grid_around_molecule(molecule, probe_radius);
 
+        let atoms = molecule.get_atoms();
         // Divide atoms into grid cells for constant look up.
         let grid_cell_indices = atoms
             .iter()
@@ -107,6 +79,47 @@ impl MoleculeWithNeighborGrid {
                 grid_cells,
             },
         }
+    }
+}
+
+pub fn create_compute_grid_around_molecule(molecule: &Molecule, resolution: u32) -> GridUniform {
+    let max_atom_radius = molecule.get_max_atom_radius();
+    let margin = 2.0 * MAX_PROBE_RADIUS + max_atom_radius;
+
+    let origin = molecule.get_min_position() - margin * Vector3::from((1.0, 1.0, 1.0));
+    let size = molecule.get_max_distance() + 2.0 * margin;
+    let offset = size / resolution as f32;
+
+    GridUniform {
+        origin: origin.to_homogeneous().into(),
+        resolution,
+        offset,
+        size,
+        _padding: Default::default(),
+    }
+}
+
+pub fn create_neighbor_lookup_grid_around_molecule(
+    molecule: &Molecule,
+    probe_radius: f32,
+) -> GridUniform {
+    let max_atom_radius = molecule.get_max_atom_radius();
+    let margin = 2.0 * MAX_PROBE_RADIUS + max_atom_radius;
+
+    let origin = molecule.get_min_position() - margin * Vector3::from((1.0, 1.0, 1.0));
+    let size = molecule.get_max_distance() + 2.0 * margin;
+
+    let offset = probe_radius + max_atom_radius;
+
+    let size = molecule.get_max_distance() + 2.0 * margin;
+    let resolution = (size / offset).ceil() as u32;
+
+    GridUniform {
+        origin: origin.to_homogeneous().into(),
+        offset,
+        resolution,
+        size,
+        _padding: Default::default(),
     }
 }
 
