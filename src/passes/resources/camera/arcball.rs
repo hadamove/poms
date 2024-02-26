@@ -6,11 +6,11 @@ use crate::utils::input::Input;
 
 #[derive(Debug)]
 pub struct ArcballCamera {
-    offset: f32,
-    target: Point3<f32>,
-    position: Point3<f32>,
-    screen_size: (u32, u32),
-    view: Matrix4<f32>,
+    pub offset: f32,
+    pub target: Point3<f32>,
+    pub position: Point3<f32>,
+    pub screen_size: (u32, u32),
+    pub view: Matrix4<f32>,
 }
 
 impl ArcballCamera {
@@ -39,19 +39,11 @@ impl ArcballCamera {
         }
     }
 
-    pub fn get_position(&self) -> Point3<f32> {
-        self.position
-    }
-
-    pub fn get_look_direction(&self) -> Vector3<f32> {
+    pub fn look_direction(&self) -> Vector3<f32> {
         (self.position - self.target).normalize()
     }
 
-    pub fn get_view_matrix(&self) -> Matrix4<f32> {
-        self.view
-    }
-
-    pub fn get_projection_matrix(&self) -> Matrix4<f32> {
+    pub fn projection_matrix(&self) -> Matrix4<f32> {
         Self::OPENGL_TO_WGPU_MATRIX
             * cgmath::perspective(Rad(Self::FOVY), self.get_aspect(), Self::ZNEAR, Self::ZFAR)
     }
@@ -108,13 +100,11 @@ impl ArcballCamera {
     }
 
     fn get_forward_vector(&self) -> Vector3<f32> {
-        let view = self.get_view_matrix();
-        Vector3::new(view.x.z, view.y.z, view.z.z)
+        Vector3::new(self.view.x.z, self.view.y.z, self.view.z.z)
     }
 
     fn get_right_vector(&self) -> Vector3<f32> {
-        let view = self.get_view_matrix();
-        Vector3::new(view.x.x, view.y.x, view.z.x)
+        Vector3::new(self.view.x.x, self.view.y.x, self.view.z.x)
     }
 
     fn set_position(&mut self, position: Point3<f32>) {

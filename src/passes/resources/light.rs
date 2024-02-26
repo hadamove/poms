@@ -95,7 +95,7 @@ impl LightResource {
         self.update(
             queue,
             LightData {
-                direction: Some(camera.get_look_direction().into()),
+                direction: Some(camera.look_direction().into()),
                 ..Default::default()
             },
         );

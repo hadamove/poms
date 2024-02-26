@@ -95,11 +95,11 @@ impl CameraUniform {
     }
 
     fn from_camera(camera: &ArcballCamera) -> Self {
-        let view_matrix = camera.get_view_matrix();
-        let proj_matrix = camera.get_projection_matrix();
+        let view_matrix = camera.view;
+        let proj_matrix = camera.projection_matrix();
 
         Self {
-            position: camera.get_position().to_homogeneous().into(),
+            position: camera.position.to_homogeneous().into(),
             view_matrix: view_matrix.into(),
             proj_matrix: proj_matrix.into(),
 
