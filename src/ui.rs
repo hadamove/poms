@@ -87,11 +87,12 @@ impl UserInterface {
 
     fn handle_new_files(&mut self, events: &mut Vec<UserEvent>) {
         match self.file_loader.get_parsed_files() {
-            FileResponse::ParsedFiles(files) => events.push(UserEvent::LoadedMolecules(files)),
-            // TODO: FIX
-            // FileResponse::ParsingFailed(err) => self.spawn_error(err.to_string())
+            FileResponse::FileParsed(file) => events.push(UserEvent::LoadedMolecule(file)),
+            FileResponse::ParsingFailed(err) => {
+                eprintln!("Parsing failed: {}", err);
+                // TODO: Show error message in UI
+            }
             FileResponse::NoContent => {}
-            _ => {}
         }
     }
 

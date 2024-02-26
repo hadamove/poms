@@ -109,9 +109,9 @@ impl App {
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {
         for event in ui_events {
             match event {
-                UserEvent::LoadedMolecules(molecules) => {
+                UserEvent::LoadedMolecule(molecule) => {
                     // TODO: Recreate ComputeJobs
-                    self.storage.add_from_parsed_many(molecules, 1.4); // TODO: Remove hardcoded probe radius
+                    self.storage.add_from_parsed(molecule, 1.4); // TODO: Remove hardcoded probe radius
 
                     if let Some(current) = self.storage.get_current() {
                         self.resources

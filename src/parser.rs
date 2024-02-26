@@ -43,14 +43,6 @@ pub fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedMolecule, ParseErr
     })
 }
 
-// TODO: Remove this
-pub fn parse_files(files: Vec<Vec<u8>>) -> Result<Vec<ParsedMolecule>, ParseError> {
-    files
-        .iter()
-        .map(|file| parse_atoms_from_pdb_file(file))
-        .collect::<Result<Vec<_>, ParseError>>()
-}
-
 fn get_vdw_radius(atom: &pdbtbx::Atom) -> f32 {
     atom.element()
         .and_then(|e| e.atomic_radius().van_der_waals)

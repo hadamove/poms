@@ -39,18 +39,6 @@ impl MoleculeStorage {
         self.current.and_then(|id| self.get_by_id(id))
     }
 
-    // TODO: this is just temp, remove it once you rewrite the events to only go with single molecule
-    pub fn add_from_parsed_many(
-        &mut self,
-        parsed_molecules: Vec<ParsedMolecule>,
-        probe_radius: f32,
-    ) {
-        for molecule in parsed_molecules {
-            self.add_from_parsed(molecule, probe_radius);
-        }
-        self.current = self.loadded_molecules.keys().next().cloned();
-    }
-
     /// Adds a new molecule to the storage. The molecule is preprocessed for fast neighbor look up.
     pub fn add_from_parsed(&mut self, parsed_molecule: ParsedMolecule, probe_radius: f32) {
         let ParsedMolecule { atoms, header } = parsed_molecule;
@@ -64,6 +52,7 @@ impl MoleculeStorage {
         let id = Uuid::new_v4();
         let molecule_data = MoleculeData { id, header, atoms };
         self.loadded_molecules.insert(id, molecule_data);
+        self.current = Some(id);
     }
 
     pub fn on_probe_radius_changed(&mut self, probe_radius: f32) {

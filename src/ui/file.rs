@@ -1,20 +1,21 @@
-use crate::parser::{parse_files, ParseError, ParsedMolecule};
+use crate::parser::{parse_atoms_from_pdb_file, ParseError, ParsedMolecule};
 use std::sync::mpsc::{self, Receiver, Sender};
 
 pub enum FileResponse {
-    ParsedFiles(Vec<ParsedMolecule>),
+    FileParsed(ParsedMolecule),
     ParsingFailed(ParseError),
     NoContent,
 }
 
 enum AsyncFileMessage {
-    FilesLoaded(Vec<Vec<u8>>),
+    FileLoaded(Vec<u8>),
 }
 
 pub struct AsyncFileLoader {
     channel: (Sender<AsyncFileMessage>, Receiver<AsyncFileMessage>),
 }
 
+/// TODO: docs, explain why it's async
 impl AsyncFileLoader {
     pub fn new() -> Self {
         Self {
@@ -22,36 +23,28 @@ impl AsyncFileLoader {
         }
     }
 
-    /// How this could be rewritten to be more performant with multiple files:
-    /// - a constant `MAX_BUFFERED_FILES: usize = 10` is defined
-    /// - a `Vec<Vec<u8>>` is used to store the files
-    /// - the for loop reading files halts when the `Vec` reaches `MAX_BUFFERED_FILES`
-    /// - a message is sent to the main thread with each file read
-    /// - two directional buffering - some files are buffered before "current" frame and some after
     pub fn load_pdb_files(&self) {
         let dispatch = self.channel.0.clone();
         execute(async move {
             let file_dialog = rfd::AsyncFileDialog::new().add_filter("PDB", &["pdb", "cif"]);
 
             if let Some(files) = file_dialog.pick_files().await {
-                let mut contents = Vec::new();
-                // TODO: Replace this with stream
                 for file in files {
-                    contents.push(file.read().await);
+                    let content = file.read().await;
+                    dispatch.send(AsyncFileMessage::FileLoaded(content)).ok();
                 }
-                dispatch.send(AsyncFileMessage::FilesLoaded(contents)).ok();
             }
         })
     }
 
     pub fn get_parsed_files(&mut self) -> FileResponse {
-        if let Ok(AsyncFileMessage::FilesLoaded(contents)) = self.channel.1.try_recv() {
-            match parse_files(contents) {
-                Ok(parsed) => FileResponse::ParsedFiles(parsed),
-                Err(err) => FileResponse::ParsingFailed(err),
-            }
-        } else {
-            FileResponse::NoContent
+        let Ok(AsyncFileMessage::FileLoaded(content)) = self.channel.1.try_recv() else {
+            return FileResponse::NoContent;
+        };
+
+        match parse_atoms_from_pdb_file(&content) {
+            Ok(parsed) => FileResponse::FileParsed(parsed),
+            Err(err) => FileResponse::ParsingFailed(err),
         }
     }
 }
