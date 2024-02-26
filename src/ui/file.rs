@@ -1,10 +1,9 @@
-use crate::parser::parse::{parse_files, ParsedMolecule};
-use anyhow::Error;
+use crate::parser::{parse_files, ParseError, ParsedMolecule};
 use std::sync::mpsc::{self, Receiver, Sender};
 
 pub enum FileResponse {
     ParsedFiles(Vec<ParsedMolecule>),
-    ParsingFailed(Error),
+    ParsingFailed(ParseError),
     NoContent,
 }
 

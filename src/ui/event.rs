@@ -1,7 +1,5 @@
-use crate::{
-    parser::parse::ParsedMolecule,
-    utils::{constants::ColorTheme, dtos::LightData},
-};
+use crate::parser::ParsedMolecule;
+use crate::utils::{constants::ColorTheme, dtos::LightData};
 
 pub enum UserEvent {
     OpenFileDialog,

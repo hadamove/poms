@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 use super::atom::Atom;
 use super::grid::AtomsWithLookup;
-use crate::parser::parse::ParsedMolecule;
+use crate::parser::ParsedMolecule;
 
 use std::collections::HashMap;
 
@@ -36,10 +36,7 @@ impl MoleculeStorage {
 
     /// Returns data associated with currently opened molecule.
     pub fn get_current(&self) -> Option<&MoleculeData> {
-        match self.current {
-            None => None,
-            Some(id) => self.get_by_id(id),
-        }
+        self.current.and_then(|id| self.get_by_id(id))
     }
 
     // TODO: this is just temp, remove it once you rewrite the events to only go with single molecule
