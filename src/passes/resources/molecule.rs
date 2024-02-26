@@ -1,84 +1,80 @@
-use crate::parser::parse::ParsedAtom;
-use cgmath::{Bounded, Point3, Vector3};
+use uuid::Uuid;
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Atom {
-    position: [f32; 3],
-    radius: f32,
-    color: [f32; 4],
+use super::atom::Atom;
+use super::grid::AtomsWithLookup;
+use crate::parser::parse::ParsedMolecule;
+
+use std::collections::HashMap;
+
+pub struct MoleculeData {
+    /// The unique identifier of the molecule within the application. Generated after parsing the molecule from a file.
+    pub id: Uuid,
+    /// The identifier as posed in the PDB Header or mmCIF entry.id
+    pub header: Option<String>,
+    /// Atoms in the molecule, for fast lookup ... TODO
+    pub atoms: AtomsWithLookup,
 }
 
-impl Atom {
-    pub fn get_position(&self) -> Point3<f32> {
-        Point3::from(self.position)
+#[derive(Default)]
+pub struct MoleculeStorage {
+    /// Id of the molecule currently opened for viewing.
+    current: Option<Uuid>,
+    /// Molecules that are preloaded and ready to be displayed.
+    loadded_molecules: HashMap<Uuid, MoleculeData>,
+}
+
+impl MoleculeStorage {
+    /// Creates a new molecule storage.
+    pub fn new() -> Self {
+        Self::default()
     }
-}
 
-impl From<ParsedAtom> for Atom {
-    fn from(atom: ParsedAtom) -> Self {
-        let color = atom.element_data.jmol_color;
-        Self {
-            position: [
-                atom.position.0 as f32,
-                atom.position.1 as f32,
-                atom.position.2 as f32,
-            ],
-            radius: atom.element_data.vdw_radius,
-            color: [color[0], color[1], color[2], 1.0],
+    /// Returns a molecule by its unique identifier.
+    pub fn get_by_id(&self, id: Uuid) -> Option<&MoleculeData> {
+        self.loadded_molecules.get(&id)
+    }
+
+    /// Returns data associated with currently opened molecule.
+    pub fn get_current(&self) -> Option<&MoleculeData> {
+        match self.current {
+            None => None,
+            Some(id) => self.get_by_id(id),
         }
     }
-}
 
-#[derive(Clone)]
-pub struct Molecule(Vec<Atom>);
-
-impl Molecule {
-    pub fn new(atoms: Vec<Atom>) -> Self {
-        Self(atoms)
-    }
-
-    pub fn get_atoms(&self) -> &Vec<Atom> {
-        &self.0
-    }
-
-    pub fn calculate_center(&self) -> Point3<f32> {
-        let mut center = Point3::new(0.0, 0.0, 0.0);
-        for atom in self.0.iter() {
-            center += Vector3::from(atom.position);
+    // TODO: this is just temp, remove it once you rewrite the events to only go with single molecule
+    pub fn add_from_parsed_many(
+        &mut self,
+        parsed_molecules: Vec<ParsedMolecule>,
+        probe_radius: f32,
+    ) {
+        for molecule in parsed_molecules {
+            self.add_from_parsed(molecule, probe_radius);
         }
-        center / self.0.len() as f32
+        self.current = self.loadded_molecules.keys().next().cloned();
     }
 
-    pub fn get_max_distance(&self) -> f32 {
-        let min = self.get_min_position();
-        let max = self.get_max_position();
-        f32::max(max.x - min.x, f32::max(max.y - min.y, max.z - min.z))
+    /// Adds a new molecule to the storage. The molecule is preprocessed for fast neighbor look up.
+    pub fn add_from_parsed(&mut self, parsed_molecule: ParsedMolecule, probe_radius: f32) {
+        let ParsedMolecule { atoms, header } = parsed_molecule;
+
+        // Convert atoms to our internal representation.
+        let atoms = atoms.into_iter().map(Atom::from).collect::<Vec<_>>();
+
+        // Create data structure for efficient neighbor lookup necessary for molecular surface algorithm
+        let atoms = AtomsWithLookup::new(atoms, probe_radius);
+
+        let id = Uuid::new_v4();
+        let molecule_data = MoleculeData { id, header, atoms };
+        self.loadded_molecules.insert(id, molecule_data);
     }
 
-    pub fn get_max_atom_radius(&self) -> f32 {
-        self.0.iter().map(|a| a.radius).fold(0.0, f32::max)
-    }
-
-    pub fn get_max_position(&self) -> Point3<f32> {
-        self.0.iter().fold(Point3::min_value(), |res, atom| {
-            let position = Point3::from(atom.position);
-            Point3::new(
-                f32::max(position.x, res.x),
-                f32::max(position.y, res.y),
-                f32::max(position.z, res.z),
-            )
-        })
-    }
-
-    pub fn get_min_position(&self) -> Point3<f32> {
-        self.0.iter().fold(Point3::max_value(), |res, atom| {
-            let position = Point3::from(atom.position);
-            Point3::new(
-                f32::min(position.x, res.x),
-                f32::min(position.y, res.y),
-                f32::min(position.z, res.z),
-            )
-        })
+    pub fn on_probe_radius_changed(&mut self, probe_radius: f32) {
+        // In case probe radius changes, neighbor lookup has to be recomputed, as the spacing of the grid depends on it.
+        for molecule_data in &mut self.loadded_molecules.values_mut() {
+            // Avoid reallocation of atoms data
+            let atoms_data = std::mem::take(&mut molecule_data.atoms.data);
+            molecule_data.atoms = AtomsWithLookup::new(atoms_data, probe_radius);
+        }
     }
 }

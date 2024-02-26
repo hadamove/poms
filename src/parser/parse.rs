@@ -9,8 +9,14 @@ pub struct ParsedAtom {
     pub element_data: ElementData,
 }
 
-pub type ParsedFile = Vec<ParsedAtom>;
+pub struct ParsedMolecule {
+    /// The identifier as posed in the PDB Header or mmCIF entry.id
+    pub header: Option<String>,
+    /// The atoms parsed from the file
+    pub atoms: Vec<ParsedAtom>,
+}
 
+// TODO: please refactor this
 fn format_errors(errors: Vec<pdbtbx::PDBError>) -> String {
     errors
         .into_iter()
@@ -19,7 +25,8 @@ fn format_errors(errors: Vec<pdbtbx::PDBError>) -> String {
         .join("\n")
 }
 
-fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedFile> {
+// TODO: please refactor this
+fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedMolecule> {
     let buff = BufReader::new(Cursor::new(file));
     let result = pdbtbx::open_raw(buff, pdbtbx::StrictnessLevel::Loose);
 
@@ -41,10 +48,13 @@ fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedFile> {
         })
         .collect::<Vec<_>>();
 
-    Ok(atoms)
+    Ok(ParsedMolecule {
+        header: pdb.identifier,
+        atoms,
+    })
 }
 
-pub fn parse_files(files: Vec<Vec<u8>>) -> Result<Vec<ParsedFile>> {
+pub fn parse_files(files: Vec<Vec<u8>>) -> Result<Vec<ParsedMolecule>> {
     files
         .iter()
         .map(|file| parse_atoms_from_pdb_file(file))

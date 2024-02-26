@@ -1,15 +1,22 @@
 use winit::event::*;
 
 use crate::context::Context;
+
+use crate::passes::resources::atom::calculate_center;
+use crate::passes::resources::molecule::MoleculeStorage;
+use crate::passes::resources::textures::df_texture::DistanceFieldTexture;
 use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::ResourceRepo};
+use crate::ui::event::UserEvent;
 use crate::ui::UserInterface;
 
 pub struct App {
     context: Context,
+    storage: MoleculeStorage,
     resources: ResourceRepo,
 
     compute: ComputeJobs,
     render: RenderJobs,
+    // TODO: Rename to `ui`
     gui: UserInterface,
 }
 
@@ -18,6 +25,7 @@ impl App {
         let resources = ResourceRepo::new(&context);
 
         App {
+            storage: MoleculeStorage::new(),
             compute: ComputeJobs::new(&context, &resources),
             render: RenderJobs::new(&context, &resources),
             gui: UserInterface::new(&context),
@@ -31,8 +39,8 @@ impl App {
         let gui_events = self.gui.process_frame();
 
         self.render.handle_events(&gui_events);
-        self.resources
-            .update(&self.context, &self.gui.input, gui_events);
+        self.resources.update(&self.context, &self.gui.input);
+        self.handle_gui_events(gui_events);
 
         // Initialize rendering stuff.
         let mut encoder = self.context.get_command_encoder();
@@ -40,10 +48,8 @@ impl App {
         let view = output_texture.texture.create_view(&Default::default());
 
         // TODO: Bad workaround
-        if let Some(molecule) = self.resources.molecule_repo.get_current() {
-            let progress = self.compute.progress.clone();
-            self.resources
-                .update_compute_progress(progress, &self.context, molecule);
+        if self.storage.get_current().is_some() {
+            self.update_compute_progress();
             self.compute.execute(&mut encoder);
         }
 
@@ -57,17 +63,6 @@ impl App {
 
         // Draw a frame.
         output_texture.present();
-
-        //
-        //
-        //
-
-        // TODO: Remove this hotfix for texture switching
-        if self.resources.just_switched {
-            self.render = RenderJobs::new(&self.context, &self.resources);
-            self.compute.recreate_passes(&self.context, &self.resources);
-            self.resources.just_switched = false;
-        }
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -86,5 +81,71 @@ impl App {
             self.gui.input.handle_window_event(event);
         }
         false
+    }
+
+    // TODO: Refactor
+    fn update_compute_progress(&mut self) {
+        let Some(molecule) = self.storage.get_current() else {
+            return;
+        };
+
+        let progress = self.compute.progress.clone();
+        if let Some(render_resolution) = progress.last_computed_resolution {
+            if render_resolution != self.resources.df_texture_front.resolution() {
+                // New resolution has been computed, swap the texture
+                self.resources.df_texture_front = std::mem::replace(
+                    &mut self.resources.df_texture_back,
+                    DistanceFieldTexture::new(&self.context.device, progress.current_resolution),
+                );
+                // Recreate passes with new resources
+                self.render = RenderJobs::new(&self.context, &self.resources);
+                self.compute.recreate_passes(&self.context, &self.resources);
+            }
+        }
+        self.resources
+            .ses_resource
+            .update(&self.context.queue, &molecule.atoms.data, progress);
+    }
+
+    fn handle_gui_events(&mut self, gui_events: Vec<UserEvent>) {
+        for event in gui_events {
+            match event {
+                UserEvent::LoadedMolecules(molecules) => {
+                    // TODO: Recreate ComputeJobs
+                    self.storage.add_from_parsed_many(molecules, 1.4); // TODO: Remove hardcoded probe radius
+
+                    if let Some(current) = self.storage.get_current() {
+                        self.resources
+                            .camera
+                            .set_target(calculate_center(&current.atoms.data));
+
+                        self.resources
+                            .molecule_resource
+                            .update(&self.context.queue, &current.atoms);
+                    }
+                }
+                UserEvent::SesResolutionChanged(_resolution) => {
+                    // TODO: Recreate ComputeJobs?
+                }
+                UserEvent::ProbeRadiusChanged(probe_radius) => {
+                    self.storage.on_probe_radius_changed(probe_radius);
+                    // TODO: Recreate ComputeJobs?
+                }
+                UserEvent::ToggleAnimation => {
+                    // TODO: Fix animations (custom module)
+                    // TODO: Recreate ComputeJobs?
+                }
+                UserEvent::AnimationSpeedChanged(_) => {
+                    // TODO: Fix animations
+                }
+                UserEvent::UpdateLight(light_data) => {
+                    // TODO: Make this nicer
+                    self.resources
+                        .light_resource
+                        .update(&self.context.queue, light_data);
+                }
+                _ => {}
+            }
+        }
     }
 }

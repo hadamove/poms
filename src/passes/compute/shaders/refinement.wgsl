@@ -39,6 +39,7 @@ fn compute_distance(grid_point_index: u32) -> f32 {
     for (var x: i32 = -1; x <= 1; x = x + 1) {
         for (var y: i32 = -1; y <= 1; y = y + 1) {
             for (var z: i32 = -search_range; z <= search_range; z = z + 1) {
+                // TODO: Remove this type casting
                 var neighbor_index: u32 = u32(i32(grid_point_index) + x + y * res + z * res * res);
 
                 if neighbor_index >= arrayLength(&grid_point_class) {

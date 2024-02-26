@@ -2,11 +2,10 @@ use std::sync::Arc;
 
 use wgpu::util::DeviceExt;
 
-use crate::passes::resources::molecule::Molecule;
 use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 
 use super::super::GpuResource;
-use super::{GridUniform, NeighborGrid};
+use super::{AtomsWithLookup, GridUniform};
 
 #[derive(Clone)]
 pub struct MoleculeGridResource {
@@ -36,21 +35,21 @@ impl MoleculeGridResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, molecule: &Molecule, grid: &NeighborGrid) {
+    pub fn update(&self, queue: &wgpu::Queue, atoms: &AtomsWithLookup) {
         queue.write_buffer(
             &self.inner.buffers.atoms_sorted_buffer,
             0,
-            bytemuck::cast_slice(molecule.get_atoms()),
+            bytemuck::cast_slice(atoms.data.as_slice()),
         );
         queue.write_buffer(
             &self.inner.buffers.neighbor_grid_buffer,
             0,
-            bytemuck::cast_slice(&[grid.uniform]),
+            bytemuck::cast_slice(&[atoms.lookup_grid]),
         );
         queue.write_buffer(
             &self.inner.buffers.grid_cells_buffer,
             0,
-            bytemuck::cast_slice(&grid.grid_cells),
+            bytemuck::cast_slice(&atoms.segment_by_voxel),
         );
     }
 }

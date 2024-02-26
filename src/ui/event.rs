@@ -1,11 +1,11 @@
 use crate::{
-    parser::parse::ParsedFile,
+    parser::parse::ParsedMolecule,
     utils::{constants::ColorTheme, dtos::LightData},
 };
 
 pub enum UserEvent {
     OpenFileDialog,
-    LoadedMolecules(Vec<ParsedFile>),
+    LoadedMolecules(Vec<ParsedMolecule>),
     SesResolutionChanged(u32),
     ProbeRadiusChanged(f32),
     RenderSpacefillChanged(bool),
