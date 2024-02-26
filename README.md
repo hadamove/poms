@@ -42,7 +42,7 @@ The project is currently built with Rust version `1.65.0` (as of writing, the la
 - `data` - sample molecular data in PDB format, which can be used for testing
 - `scripts` - scripts for building the application into WASM
 - `src` - application source code in Rust
-  - `src/gui` - graphical user interface code
+  - `src/ui` - graphical user interface code
   - `src/parser` - PDB file parser
   - `src/passes` - the majority of compute and rendering code
   - `src/utils` - common utility functions

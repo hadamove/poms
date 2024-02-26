@@ -16,8 +16,7 @@ pub struct App {
 
     compute: ComputeJobs,
     render: RenderJobs,
-    // TODO: Rename to `ui`
-    gui: UserInterface,
+    ui: UserInterface,
 }
 
 impl App {
@@ -28,7 +27,7 @@ impl App {
             storage: MoleculeStorage::new(),
             compute: ComputeJobs::new(&context, &resources),
             render: RenderJobs::new(&context, &resources),
-            gui: UserInterface::new(&context),
+            ui: UserInterface::new(&context),
 
             context,
             resources,
@@ -36,11 +35,11 @@ impl App {
     }
 
     pub fn redraw(&mut self) {
-        let gui_events = self.gui.process_frame();
+        let ui_events = self.ui.process_frame();
 
-        self.render.handle_events(&gui_events);
-        self.resources.update(&self.context, &self.gui.input);
-        self.handle_gui_events(gui_events);
+        self.render.handle_events(&ui_events);
+        self.resources.update(&self.context, &self.ui.input);
+        self.handle_ui_events(ui_events);
 
         // Initialize rendering stuff.
         let mut encoder = self.context.get_command_encoder();
@@ -56,7 +55,7 @@ impl App {
         let depth_view = self.resources.get_depth_texture().get_view();
         self.render
             .execute(&self.context, &view, depth_view, &mut encoder);
-        self.gui.render(&self.context, &view, &mut encoder);
+        self.ui.render(&self.context, &view, &mut encoder);
 
         // Submit commands to the GPU.
         self.context.queue.submit(Some(encoder.finish()));
@@ -71,14 +70,14 @@ impl App {
             self.resources.resize(&self.context);
 
             #[cfg(target_arch = "wasm32")]
-            self.gui.force_resize(new_size, &self.context);
+            self.ui.force_resize(new_size, &self.context);
         }
     }
 
     // TODO: Refactor this
     pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
-        if !self.gui.handle_winit_event(event) {
-            self.gui.input.handle_window_event(event);
+        if !self.ui.handle_winit_event(event) {
+            self.ui.input.handle_window_event(event);
         }
         false
     }
@@ -107,8 +106,8 @@ impl App {
             .update(&self.context.queue, &molecule.atoms.data, progress);
     }
 
-    fn handle_gui_events(&mut self, gui_events: Vec<UserEvent>) {
-        for event in gui_events {
+    fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {
+        for event in ui_events {
             match event {
                 UserEvent::LoadedMolecules(molecules) => {
                     // TODO: Recreate ComputeJobs
