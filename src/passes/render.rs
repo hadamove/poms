@@ -5,12 +5,17 @@ use spacefill::RenderSpacefillPass;
 use self::molecular_surface::RenderMolecularSurfaceResources;
 use self::spacefill::RenderSpacefillResources;
 
-use super::resources::ResourceRepo;
+use super::resources::CommonResources;
 
 mod molecular_surface;
 mod spacefill;
 
 mod util;
+
+// TODO
+// pub struct RenderResources {
+
+// }
 
 /// Configuration for the renderer.
 pub struct RendererConfig {
@@ -34,18 +39,23 @@ impl Default for RendererConfig {
 
 /// A collection of render passes that are executed in order to render the molecule.
 pub struct RenderJobs {
-    spacefill_pass: RenderSpacefillPass,
-    molecular_surface_pass: RenderMolecularSurfacePass,
-
     /// Configuration for the renderer. This is used to control what is rendered.
     pub config: RendererConfig,
+
+    // resources: RenderResources,
+    spacefill_pass: RenderSpacefillPass,
+    molecular_surface_pass: RenderMolecularSurfacePass,
 }
 
 impl RenderJobs {
-    pub fn new(context: &Context, resources: &ResourceRepo) -> RenderJobs {
+    pub fn new(
+        device: &wgpu::Device,
+        config: &wgpu::SurfaceConfiguration,
+        resources: &CommonResources,
+    ) -> RenderJobs {
         let spacefill_pass = RenderSpacefillPass::new(
-            &context.device,
-            &context.config,
+            &device,
+            &config,
             RenderSpacefillResources {
                 camera: resources.camera_resource.clone(),
                 molecule: resources.molecule_resource.clone(),
@@ -53,8 +63,8 @@ impl RenderJobs {
         );
 
         let molecular_surface_pass = RenderMolecularSurfacePass::new(
-            &context.device,
-            &context.config,
+            &device,
+            &config,
             RenderMolecularSurfaceResources {
                 ses_grid: resources.ses_resource.clone(),
                 df_texture: resources.df_texture_front.render.clone(),
@@ -72,7 +82,6 @@ impl RenderJobs {
 
     pub fn execute(
         &mut self,
-        _context: &Context,
         view: &wgpu::TextureView,
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,

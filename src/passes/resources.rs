@@ -21,7 +21,7 @@ pub trait GpuResource {
     fn bind_group(&self) -> &wgpu::BindGroup;
 }
 
-pub struct ResourceRepo {
+pub struct CommonResources {
     // TODO: move camera to input
     pub camera: ArcballCamera,
 
@@ -37,26 +37,26 @@ pub struct ResourceRepo {
     pub depth_texture: DepthTexture,
 }
 
-impl ResourceRepo {
+impl CommonResources {
     // TODO: replace with config and device
-    pub fn new(context: &Context) -> Self {
+    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self {
         Self {
-            camera: ArcballCamera::from_config(&context.config), // TODO: This has nothing to do here
-            ses_resource: SesGridResource::new(&context.device),
-            molecule_resource: MoleculeGridResource::new(&context.device),
-            camera_resource: CameraResource::new(&context.device),
+            camera: ArcballCamera::from_config(&config), // TODO: This has nothing to do here
+            ses_resource: SesGridResource::new(&device),
+            molecule_resource: MoleculeGridResource::new(&device),
+            camera_resource: CameraResource::new(&device),
 
-            df_texture_front: DistanceFieldTexture::new(&context.device, 1),
-            df_texture_back: DistanceFieldTexture::new(&context.device, MIN_SES_RESOLUTION),
+            df_texture_front: DistanceFieldTexture::new(&device, 1),
+            df_texture_back: DistanceFieldTexture::new(&device, MIN_SES_RESOLUTION),
 
-            depth_texture: DepthTexture::new(&context.device, &context.config),
-            light_resource: LightResource::new(&context.device),
+            depth_texture: DepthTexture::new(&device, &config),
+            light_resource: LightResource::new(&device),
         }
     }
 
-    pub fn resize(&mut self, context: &Context) {
-        self.depth_texture = DepthTexture::new(&context.device, &context.config);
-        self.camera.resize(&context.config);
+    pub fn resize(&mut self, device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
+        self.depth_texture = DepthTexture::new(&device, &config);
+        self.camera.resize(&config);
     }
 
     pub fn get_depth_texture(&self) -> &DepthTexture {

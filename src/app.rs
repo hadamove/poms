@@ -5,7 +5,7 @@ use crate::context::Context;
 use crate::passes::resources::atom::calculate_center;
 use crate::passes::resources::molecule::MoleculeStorage;
 use crate::passes::resources::textures::df_texture::DistanceFieldTexture;
-use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::ResourceRepo};
+use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::CommonResources};
 use crate::ui::event::UserEvent;
 use crate::ui::UserInterface;
 use crate::utils::constants::ColorTheme;
@@ -13,7 +13,7 @@ use crate::utils::constants::ColorTheme;
 pub struct App {
     context: Context,
     storage: MoleculeStorage,
-    resources: ResourceRepo,
+    resources: CommonResources,
 
     compute: ComputeJobs,
     render: RenderJobs,
@@ -22,12 +22,12 @@ pub struct App {
 
 impl App {
     pub fn new(context: Context) -> Self {
-        let resources = ResourceRepo::new(&context);
+        let resources = CommonResources::new(&context.device, &context.config);
 
         App {
             storage: MoleculeStorage::new(),
-            compute: ComputeJobs::new(&context, &resources),
-            render: RenderJobs::new(&context, &resources),
+            compute: ComputeJobs::new(&context.device, &resources),
+            render: RenderJobs::new(&context.device, &context.config, &resources),
             ui: UserInterface::new(&context),
 
             context,
@@ -53,8 +53,7 @@ impl App {
         }
 
         let depth_view = self.resources.get_depth_texture().get_view();
-        self.render
-            .execute(&self.context, &view, depth_view, &mut encoder);
+        self.render.execute(&view, depth_view, &mut encoder);
         self.ui.render(&self.context, &view, &mut encoder);
 
         // Submit commands to the GPU.
@@ -67,7 +66,8 @@ impl App {
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.context.resize(new_size);
-            self.resources.resize(&self.context);
+            self.resources
+                .resize(&self.context.device, &self.context.config);
 
             #[cfg(target_arch = "wasm32")]
             self.ui.force_resize(new_size, &self.context);
@@ -108,7 +108,8 @@ impl App {
                     DistanceFieldTexture::new(&self.context.device, progress.current_resolution),
                 );
                 // Recreate passes with new resources
-                self.render = RenderJobs::new(&self.context, &self.resources);
+                self.render =
+                    RenderJobs::new(&self.context.device, &self.context.config, &self.resources);
                 self.compute.recreate_passes(&self.context, &self.resources);
             }
         }
