@@ -38,7 +38,7 @@ impl App {
     pub fn redraw(&mut self) {
         let ui_events = self.ui.process_frame();
 
-        self.resources.update(&self.context, &self.ui.input);
+        self.update_resources();
         self.handle_ui_events(ui_events);
 
         // Initialize rendering stuff.
@@ -80,6 +80,17 @@ impl App {
             self.ui.input.handle_window_event(event);
         }
         false
+    }
+
+    // TODO: Refactor this
+    fn update_resources(&mut self) {
+        self.resources.camera.update(&self.ui.input);
+        self.resources
+            .camera_resource
+            .update(&self.context.queue, &self.resources.camera);
+        self.resources
+            .light_resource
+            .update_camera(&self.context.queue, &self.resources.camera);
     }
 
     // TODO: Refactor

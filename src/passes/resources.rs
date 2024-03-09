@@ -8,7 +8,6 @@ pub mod textures;
 use crate::context::Context;
 
 use crate::utils::constants::MIN_SES_RESOLUTION;
-use crate::utils::input::Input;
 
 use camera::{arcball::ArcballCamera, resource::CameraResource};
 use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource};
@@ -23,9 +22,6 @@ pub trait GpuResource {
 }
 
 pub struct ResourceRepo {
-    // TODO: remove this
-    pub just_switched: bool,
-
     // TODO: move camera to input
     pub camera: ArcballCamera,
 
@@ -42,10 +38,9 @@ pub struct ResourceRepo {
 }
 
 impl ResourceRepo {
+    // TODO: replace with config and device
     pub fn new(context: &Context) -> Self {
         Self {
-            just_switched: false, // TODO: Just temp solution
-
             camera: ArcballCamera::from_config(&context.config), // TODO: This has nothing to do here
             ses_resource: SesGridResource::new(&context.device),
             molecule_resource: MoleculeGridResource::new(&context.device),
@@ -57,13 +52,6 @@ impl ResourceRepo {
             depth_texture: DepthTexture::new(&context.device, &context.config),
             light_resource: LightResource::new(&context.device),
         }
-    }
-
-    pub fn update(&mut self, context: &Context, input: &Input) {
-        self.camera.update(input);
-        self.camera_resource.update(&context.queue, &self.camera);
-        self.light_resource
-            .update_camera(&context.queue, &self.camera);
     }
 
     pub fn resize(&mut self, context: &Context) {
