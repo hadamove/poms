@@ -8,6 +8,7 @@ use crate::passes::resources::textures::df_texture::DistanceFieldTexture;
 use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::ResourceRepo};
 use crate::ui::event::UserEvent;
 use crate::ui::UserInterface;
+use crate::utils::constants::ColorTheme;
 
 pub struct App {
     context: Context,
@@ -37,7 +38,6 @@ impl App {
     pub fn redraw(&mut self) {
         let ui_events = self.ui.process_frame();
 
-        self.render.handle_events(&ui_events);
         self.resources.update(&self.context, &self.ui.input);
         self.handle_ui_events(ui_events);
 
@@ -109,6 +109,18 @@ impl App {
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {
         for event in ui_events {
             match event {
+                UserEvent::RenderSesChanged(enabled) => {
+                    self.render.config.render_molecular_surface = enabled;
+                }
+                UserEvent::RenderSpacefillChanged(enabled) => {
+                    self.render.config.render_spacefill = enabled;
+                }
+                UserEvent::ToggleTheme(theme) => {
+                    self.render.config.clear_color = match theme {
+                        ColorTheme::Dark => wgpu::Color::BLACK,
+                        ColorTheme::Light => wgpu::Color::WHITE,
+                    };
+                }
                 UserEvent::LoadedMolecule(molecule) => {
                     // TODO: Recreate ComputeJobs
                     self.storage.add_from_parsed(molecule, 1.4); // TODO: Remove hardcoded probe radius

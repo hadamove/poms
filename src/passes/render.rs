@@ -1,7 +1,4 @@
 use crate::context::Context;
-use crate::ui::event::UserEvent;
-use crate::utils::constants::ColorTheme;
-
 use molecular_surface::RenderMolecularSurfacePass;
 use spacefill::RenderSpacefillPass;
 
@@ -15,10 +12,13 @@ mod spacefill;
 
 mod util;
 
+/// Configuration for the renderer.
 pub struct RendererConfig {
+    /// Whether to render the spacefill representation.
     pub render_spacefill: bool,
+    /// Whether to render the molecular surface representation.
     pub render_molecular_surface: bool,
-
+    /// The clear color of the renderer.
     pub clear_color: wgpu::Color,
 }
 
@@ -27,17 +27,18 @@ impl Default for RendererConfig {
         Self {
             render_spacefill: false,
             render_molecular_surface: true,
-
             clear_color: wgpu::Color::BLACK,
         }
     }
 }
 
+/// A collection of render passes that are executed in order to render the molecule.
 pub struct RenderJobs {
     spacefill_pass: RenderSpacefillPass,
     molecular_surface_pass: RenderMolecularSurfacePass,
 
-    config: RendererConfig,
+    /// Configuration for the renderer. This is used to control what is rendered.
+    pub config: RendererConfig,
 }
 
 impl RenderJobs {
@@ -84,27 +85,6 @@ impl RenderJobs {
         if self.config.render_molecular_surface {
             self.molecular_surface_pass
                 .render(view, depth_view, encoder, self.config.clear_color);
-        }
-    }
-
-    // TODO: App should handle this
-    pub fn handle_events(&mut self, events: &Vec<UserEvent>) {
-        for event in events {
-            match event {
-                UserEvent::RenderSesChanged(enabled) => {
-                    self.config.render_molecular_surface = *enabled;
-                }
-                UserEvent::RenderSpacefillChanged(enabled) => {
-                    self.config.render_spacefill = *enabled;
-                }
-                UserEvent::ToggleTheme(theme) => {
-                    self.config.clear_color = match theme {
-                        ColorTheme::Dark => wgpu::Color::BLACK,
-                        ColorTheme::Light => wgpu::Color::WHITE,
-                    };
-                }
-                _ => {}
-            }
         }
     }
 }
