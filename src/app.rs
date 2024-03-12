@@ -85,15 +85,15 @@ impl App {
 
     // TODO: Refactor this
     fn update_resources(&mut self) {
-        self.resources.camera.update(&self.ui.input);
+        self.resources.camera_controller.update(&self.ui.input);
         self.render
             .resources
             .camera_resource
-            .update(&self.context.queue, &self.resources.camera);
+            .update(&self.context.queue, &self.resources.camera_controller);
         self.render
             .resources
             .light_resource
-            .update_camera(&self.context.queue, &self.resources.camera);
+            .update_camera(&self.context.queue, &self.resources.camera_controller);
     }
 
     // TODO: Refactor
@@ -143,7 +143,7 @@ impl App {
 
                     if let Some(current) = self.storage.get_current() {
                         self.resources
-                            .camera
+                            .camera_controller
                             .set_target(calculate_center(&current.atoms.data));
 
                         self.resources

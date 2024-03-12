@@ -7,6 +7,7 @@ use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 use super::super::GpuResource;
 use super::{AtomsWithLookup, GridUniform};
 
+// TODO: Rename this similarly to AtomsWithLookup
 #[derive(Clone)]
 pub struct MoleculeGridResource {
     inner: Arc<MoleculeGridResourceInner>,

@@ -7,7 +7,7 @@ pub mod textures;
 
 use crate::utils::constants::MIN_SES_RESOLUTION;
 
-use camera::arcball::ArcballCamera;
+use camera::arcball::ArcballCameraController;
 use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource};
 use textures::df_texture::DistanceFieldTexture;
 
@@ -18,8 +18,8 @@ pub trait GpuResource {
 }
 
 pub struct CommonResources {
-    // TODO: move camera to input
-    pub camera: ArcballCamera,
+    // TODO: move camera to render?
+    pub camera_controller: ArcballCameraController,
 
     // This makes sense here
     pub ses_resource: SesGridResource,
@@ -33,7 +33,7 @@ pub struct CommonResources {
 impl CommonResources {
     pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self {
         Self {
-            camera: ArcballCamera::from_config(config),
+            camera_controller: ArcballCameraController::from_config(config),
             ses_resource: SesGridResource::new(device),
             molecule_resource: MoleculeGridResource::new(device),
             df_texture_back: DistanceFieldTexture::new(device, MIN_SES_RESOLUTION),
@@ -42,6 +42,6 @@ impl CommonResources {
     }
 
     pub fn resize(&mut self, _device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
-        self.camera.resize(config);
+        self.camera_controller.resize(config);
     }
 }

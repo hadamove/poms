@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use cgmath::SquareMatrix;
+use cgmath::{SquareMatrix, Zero};
 use wgpu::util::DeviceExt;
 
-use super::{super::GpuResource, arcball::ArcballCamera};
+use super::{super::GpuResource, arcball::ArcballCameraController};
 
 #[derive(Clone)]
 pub struct CameraResource {
@@ -57,7 +57,7 @@ impl CameraResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, camera: &ArcballCamera) {
+    pub fn update(&self, queue: &wgpu::Queue, camera: &ArcballCameraController) {
         let uniform = CameraUniform::from_camera(camera);
         queue.write_buffer(&self.inner.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }
@@ -85,16 +85,18 @@ struct CameraUniform {
 
 impl CameraUniform {
     fn default() -> Self {
+        let identity = cgmath::Matrix4::identity();
         Self {
-            position: [0.0, 0.0, 0.0, 0.0],
-            view_matrix: cgmath::Matrix4::identity().into(),
-            proj_matrix: cgmath::Matrix4::identity().into(),
-            view_inverse_matrix: cgmath::Matrix4::identity().into(),
-            proj_inverse_matrix: cgmath::Matrix4::identity().into(),
+            position: cgmath::Vector4::zero().into(),
+            view_matrix: identity.into(),
+            proj_matrix: identity.into(),
+            view_inverse_matrix: identity.into(),
+            proj_inverse_matrix: identity.into(),
         }
     }
 
-    fn from_camera(camera: &ArcballCamera) -> Self {
+    // TODO: Move this construction to ArcballCameraController instead to remove the dependency
+    fn from_camera(camera: &ArcballCameraController) -> Self {
         let view_matrix = camera.view;
         let proj_matrix = camera.projection_matrix();
 

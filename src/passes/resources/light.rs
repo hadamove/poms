@@ -7,7 +7,7 @@ use crate::utils::{
     dtos::LightData,
 };
 
-use super::{camera::arcball::ArcballCamera, GpuResource};
+use super::{camera::arcball::ArcballCameraController, GpuResource};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -90,7 +90,7 @@ impl LightResource {
         }
     }
 
-    pub fn update_camera(&self, queue: &wgpu::Queue, camera: &ArcballCamera) {
+    pub fn update_camera(&self, queue: &wgpu::Queue, camera: &ArcballCameraController) {
         // TODO: Only update if we follow the camera (Add if statement)
         self.update(
             queue,

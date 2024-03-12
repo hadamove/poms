@@ -5,7 +5,7 @@ use cgmath::{InnerSpace, Matrix4, MetricSpace, Point3, Rad, SquareMatrix, Vector
 use crate::utils::input::Input;
 
 #[derive(Debug)]
-pub struct ArcballCamera {
+pub struct ArcballCameraController {
     pub offset: f32,
     pub target: Point3<f32>,
     pub position: Point3<f32>,
@@ -13,7 +13,7 @@ pub struct ArcballCamera {
     pub view: Matrix4<f32>,
 }
 
-impl ArcballCamera {
+impl ArcballCameraController {
     const ZFAR: f32 = 1000.;
     const ZNEAR: f32 = 0.1;
     const FOVY: f32 = PI / 4.0;
