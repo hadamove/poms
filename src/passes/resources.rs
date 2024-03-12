@@ -5,15 +5,11 @@ pub mod light;
 pub mod molecule;
 pub mod textures;
 
-use crate::context::Context;
-
 use crate::utils::constants::MIN_SES_RESOLUTION;
 
-use camera::{arcball::ArcballCamera, resource::CameraResource};
+use camera::arcball::ArcballCamera;
 use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource};
-use textures::{depth_texture::DepthTexture, df_texture::DistanceFieldTexture};
-
-use self::light::LightResource;
+use textures::df_texture::DistanceFieldTexture;
 
 // TODO: : Clone (supertrait)
 pub trait GpuResource {
@@ -28,38 +24,24 @@ pub struct CommonResources {
     // This makes sense here
     pub ses_resource: SesGridResource,
     pub molecule_resource: MoleculeGridResource,
-    pub camera_resource: CameraResource,
 
-    pub df_texture_front: DistanceFieldTexture,
+    // TODO: move these to compute & render respectively, figure out the swapping (maybe Arc<RwLock>)
     pub df_texture_back: DistanceFieldTexture,
-
-    pub light_resource: LightResource,
-    pub depth_texture: DepthTexture,
+    pub df_texture_front: DistanceFieldTexture,
 }
 
 impl CommonResources {
-    // TODO: replace with config and device
     pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self {
         Self {
-            camera: ArcballCamera::from_config(&config), // TODO: This has nothing to do here
-            ses_resource: SesGridResource::new(&device),
-            molecule_resource: MoleculeGridResource::new(&device),
-            camera_resource: CameraResource::new(&device),
-
-            df_texture_front: DistanceFieldTexture::new(&device, 1),
-            df_texture_back: DistanceFieldTexture::new(&device, MIN_SES_RESOLUTION),
-
-            depth_texture: DepthTexture::new(&device, &config),
-            light_resource: LightResource::new(&device),
+            camera: ArcballCamera::from_config(config),
+            ses_resource: SesGridResource::new(device),
+            molecule_resource: MoleculeGridResource::new(device),
+            df_texture_back: DistanceFieldTexture::new(device, MIN_SES_RESOLUTION),
+            df_texture_front: DistanceFieldTexture::new(device, 1),
         }
     }
 
-    pub fn resize(&mut self, device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
-        self.depth_texture = DepthTexture::new(&device, &config);
-        self.camera.resize(&config);
-    }
-
-    pub fn get_depth_texture(&self) -> &DepthTexture {
-        &self.depth_texture
+    pub fn resize(&mut self, _device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
+        self.camera.resize(config);
     }
 }

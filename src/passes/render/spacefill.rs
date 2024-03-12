@@ -69,7 +69,7 @@ impl RenderSpacefillPass {
         render_pass.set_bind_group(0, self.resources.molecule.bind_group(), &[]);
         render_pass.set_bind_group(1, self.resources.camera.bind_group(), &[]);
 
-        let num_atoms = 10; // TODO: FIX THIS
+        let num_atoms = 100; // TODO: FIX THIS
         let vertices_per_atom: u32 = 6; // Draw a quad (sphere impostor) for each atom
         let number_of_vertices: u32 = num_atoms * vertices_per_atom;
 

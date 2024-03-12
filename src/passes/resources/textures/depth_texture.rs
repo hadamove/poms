@@ -1,5 +1,5 @@
 pub struct DepthTexture {
-    view: wgpu::TextureView,
+    pub view: wgpu::TextureView,
 }
 
 impl DepthTexture {
@@ -25,9 +25,5 @@ impl DepthTexture {
         Self {
             view: texture.create_view(&wgpu::TextureViewDescriptor::default()),
         }
-    }
-
-    pub fn get_view(&self) -> &wgpu::TextureView {
-        &self.view
     }
 }

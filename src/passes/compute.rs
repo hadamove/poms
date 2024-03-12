@@ -2,7 +2,6 @@ use self::probe::{ComputeProbePass, ComputeProbeResources};
 use self::refinement::{ComputeRefinementPass, ComputeRefinementResources};
 
 use super::resources::CommonResources;
-use crate::context::Context;
 
 mod probe;
 mod refinement;
@@ -124,14 +123,14 @@ impl ComputeJobs {
     pub fn new(device: &wgpu::Device, resources: &CommonResources) -> Self {
         Self {
             probe_pass: ComputeProbePass::new(
-                &device,
+                device,
                 ComputeProbeResources {
                     ses_grid: resources.ses_resource.clone(),
                     molecule: resources.molecule_resource.clone(),
                 },
             ),
             refinement_pass: ComputeRefinementPass::new(
-                &device,
+                device,
                 ComputeRefinementResources {
                     ses_grid: resources.ses_resource.clone(),
                     molecule: resources.molecule_resource.clone(),
@@ -163,9 +162,9 @@ impl ComputeJobs {
 
     /// Keep the compute progress but recreate the passes with updated resources (e.g. after switching distance field textures).
     /// Note: if the molecule or probe radius has changed, we have to recreate the whole struct with [`ComputeJobs::new`] and start from the beginning instead.
-    pub fn recreate_passes(&mut self, context: &Context, resources: &CommonResources) {
+    pub fn recreate_passes(&mut self, device: &wgpu::Device, resources: &CommonResources) {
         let progress = self.progress.clone();
-        *self = Self::new(context, resources);
+        *self = Self::new(device, resources);
         self.progress = progress;
     }
 }

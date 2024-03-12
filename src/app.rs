@@ -52,8 +52,7 @@ impl App {
             self.compute.execute(&mut encoder);
         }
 
-        let depth_view = self.resources.get_depth_texture().get_view();
-        self.render.execute(&view, depth_view, &mut encoder);
+        self.render.execute(&view, &mut encoder);
         self.ui.render(&self.context, &view, &mut encoder);
 
         // Submit commands to the GPU.
@@ -66,6 +65,8 @@ impl App {
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.context.resize(new_size);
+            self.render
+                .resize(&self.context.device, &self.context.config);
             self.resources
                 .resize(&self.context.device, &self.context.config);
 
@@ -85,10 +86,12 @@ impl App {
     // TODO: Refactor this
     fn update_resources(&mut self) {
         self.resources.camera.update(&self.ui.input);
-        self.resources
+        self.render
+            .resources
             .camera_resource
             .update(&self.context.queue, &self.resources.camera);
-        self.resources
+        self.render
+            .resources
             .light_resource
             .update_camera(&self.context.queue, &self.resources.camera);
     }
@@ -110,7 +113,8 @@ impl App {
                 // Recreate passes with new resources
                 self.render =
                     RenderJobs::new(&self.context.device, &self.context.config, &self.resources);
-                self.compute.recreate_passes(&self.context, &self.resources);
+                self.compute
+                    .recreate_passes(&self.context.device, &self.resources);
             }
         }
         self.resources
@@ -163,7 +167,8 @@ impl App {
                 }
                 UserEvent::UpdateLight(light_data) => {
                     // TODO: Make this nicer
-                    self.resources
+                    self.render
+                        .resources
                         .light_resource
                         .update(&self.context.queue, light_data);
                 }
