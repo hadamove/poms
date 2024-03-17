@@ -28,7 +28,6 @@ pub struct CommonResources {
 
     // TODO: move these to compute & render respectively, figure out the swapping (maybe Arc<RwLock>)
     pub df_texture_back: DistanceFieldTexture,
-    pub df_texture_front: DistanceFieldTexture,
 }
 
 impl CommonResources {
@@ -38,7 +37,6 @@ impl CommonResources {
             ses_resource: SesGridResource::new(device),
             molecule_resource: MoleculeGridResource::new(device),
             df_texture_back: DistanceFieldTexture::new(device, MIN_SES_RESOLUTION),
-            df_texture_front: DistanceFieldTexture::new(device, 1),
         }
     }
 

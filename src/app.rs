@@ -42,7 +42,6 @@ impl App {
                 RenderDependencies {
                     molecule_resource: &resources.molecule_resource,
                     ses_resource: &resources.ses_resource,
-                    df_texture_front: &resources.df_texture_front.render,
                 },
             ),
             ui: UserInterface::new(&context),
@@ -82,7 +81,6 @@ impl App {
             RenderDependencies {
                 molecule_resource: &self.resources.molecule_resource,
                 ses_resource: &self.resources.ses_resource,
-                df_texture_front: &self.resources.df_texture_front.render,
             },
         );
         self.ui.render(&self.context, &view, &mut encoder);
@@ -136,9 +134,9 @@ impl App {
 
         let progress = self.compute.progress.clone();
         if let Some(render_resolution) = progress.last_computed_resolution {
-            if render_resolution != self.resources.df_texture_front.resolution() {
+            if render_resolution != self.render.resources.df_texture_front.resolution() {
                 // New resolution has been computed, swap the texture
-                self.resources.df_texture_front = std::mem::replace(
+                self.render.resources.df_texture_front = std::mem::replace(
                     &mut self.resources.df_texture_back,
                     DistanceFieldTexture::new(&self.context.device, progress.current_resolution),
                 );
