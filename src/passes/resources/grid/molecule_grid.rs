@@ -4,16 +4,15 @@ use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 
 use super::{AtomsWithLookup, GridUniform};
 
-// TODO: Rename this similarly to AtomsWithLookup
-pub struct MoleculeGridResource {
-    buffers: MoleculeGridBuffers,
+pub struct AtomsWithLookupResource {
+    buffers: AtomsWithLookupBuffers,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }
 
-impl MoleculeGridResource {
+impl AtomsWithLookupResource {
     pub fn new(device: &wgpu::Device) -> Self {
-        let buffers = MoleculeGridBuffers::new(device);
+        let buffers = AtomsWithLookupBuffers::new(device);
         let bind_group_layout =
             device.create_bind_group_layout(&MoleculeGridBindGroup::LAYOUT_DESCRIPTOR);
 
@@ -28,32 +27,32 @@ impl MoleculeGridResource {
 
     pub fn update(&self, queue: &wgpu::Queue, atoms: &AtomsWithLookup) {
         queue.write_buffer(
-            &self.buffers.atoms_sorted_buffer,
+            &self.buffers.atoms_data_buffer,
             0,
             bytemuck::cast_slice(atoms.data.as_slice()),
         );
         queue.write_buffer(
-            &self.buffers.neighbor_grid_buffer,
+            &self.buffers.lookup_grid_buffer,
             0,
             bytemuck::cast_slice(&[atoms.lookup_grid]),
         );
         queue.write_buffer(
-            &self.buffers.grid_cells_buffer,
+            &self.buffers.segment_by_voxel_buffer,
             0,
             bytemuck::cast_slice(&atoms.segment_by_voxel),
         );
     }
 }
 
-struct MoleculeGridBuffers {
-    atoms_sorted_buffer: wgpu::Buffer,
-    neighbor_grid_buffer: wgpu::Buffer,
-    grid_cells_buffer: wgpu::Buffer,
+struct AtomsWithLookupBuffers {
+    atoms_data_buffer: wgpu::Buffer,
+    lookup_grid_buffer: wgpu::Buffer,
+    segment_by_voxel_buffer: wgpu::Buffer,
 
     grid_point_class_buffer: wgpu::Buffer,
 }
 
-impl MoleculeGridBuffers {
+impl AtomsWithLookupBuffers {
     fn new(device: &wgpu::Device) -> Self {
         let atoms_sorted_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Sorted Atoms Buffer"),
@@ -81,9 +80,9 @@ impl MoleculeGridBuffers {
             });
 
         Self {
-            atoms_sorted_buffer,
-            neighbor_grid_buffer,
-            grid_cells_buffer,
+            atoms_data_buffer: atoms_sorted_buffer,
+            lookup_grid_buffer: neighbor_grid_buffer,
+            segment_by_voxel_buffer: grid_cells_buffer,
             grid_point_class_buffer,
         }
     }
@@ -94,7 +93,7 @@ struct MoleculeGridBindGroup(wgpu::BindGroup);
 impl MoleculeGridBindGroup {
     fn new(
         device: &wgpu::Device,
-        buffers: &MoleculeGridBuffers,
+        buffers: &AtomsWithLookupBuffers,
         layout: &wgpu::BindGroupLayout,
     ) -> Self {
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -102,15 +101,15 @@ impl MoleculeGridBindGroup {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: buffers.atoms_sorted_buffer.as_entire_binding(),
+                    resource: buffers.atoms_data_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: buffers.neighbor_grid_buffer.as_entire_binding(),
+                    resource: buffers.lookup_grid_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: buffers.grid_cells_buffer.as_entire_binding(),
+                    resource: buffers.segment_by_voxel_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 3,

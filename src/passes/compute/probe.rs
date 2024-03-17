@@ -1,18 +1,19 @@
-use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
-use crate::passes::resources::grid::ses_grid::SesGridResource;
-use crate::passes::resources::CommonDependencies;
+use crate::passes::resources::{
+    grid::{molecule_grid::AtomsWithLookupResource, ses_grid::SesGridResource},
+    CommonResources,
+};
 
 use super::util;
 
 const WGPU_LABEL: &str = "Compute Probe";
 
 pub struct ProbeResources<'a> {
-    pub ses_grid: &'a SesGridResource,      // @group(0)
-    pub molecule: &'a MoleculeGridResource, // @group(1)
+    pub ses_grid: &'a SesGridResource,         // @group(0)
+    pub molecule: &'a AtomsWithLookupResource, // @group(1)
 }
 
 impl<'a> ProbeResources<'a> {
-    pub fn new(common: &'a CommonDependencies) -> Self {
+    pub fn new(common: &'a CommonResources) -> Self {
         Self {
             ses_grid: &common.ses_resource,
             molecule: &common.molecule_resource,

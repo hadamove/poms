@@ -1,22 +1,22 @@
 use crate::passes::resources::grid::ses_grid::SesGridResource;
 use crate::passes::resources::textures::df_texture::DistanceFieldTextureCompute;
-use crate::passes::resources::{grid::molecule_grid::MoleculeGridResource, CommonDependencies};
+use crate::passes::resources::{grid::molecule_grid::AtomsWithLookupResource, CommonResources};
 
 use super::{util, ComputeOwnedResources};
 
 const WGPU_LABEL: &str = "Compute Refinement";
 
 pub struct RefinementResources<'a> {
-    pub ses_grid: &'a SesGridResource,               // @group(0)
-    pub molecule: &'a MoleculeGridResource,          // @group(1)
-    pub df_texture: &'a DistanceFieldTextureCompute, // @group(2)
+    pub ses_grid: &'a SesGridResource,                  // @group(0)
+    pub atoms_with_lookup: &'a AtomsWithLookupResource, // @group(1)
+    pub df_texture: &'a DistanceFieldTextureCompute,    // @group(2)
 }
 
 impl<'a> RefinementResources<'a> {
-    pub fn new(resources: &'a ComputeOwnedResources, common: &'a CommonDependencies) -> Self {
+    pub fn new(resources: &'a ComputeOwnedResources, common: &'a CommonResources) -> Self {
         Self {
             ses_grid: &common.ses_resource,
-            molecule: &common.molecule_resource,
+            atoms_with_lookup: &common.molecule_resource,
             df_texture: &resources.df_texture,
         }
     }
@@ -32,7 +32,7 @@ impl RefinementPass {
 
         let bind_group_layouts = &[
             &resources.ses_grid.bind_group_layout,
-            &resources.molecule.bind_group_layout,
+            &resources.atoms_with_lookup.bind_group_layout,
             &resources.df_texture.bind_group_layout,
         ];
 
@@ -51,7 +51,7 @@ impl RefinementPass {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
         compute_pass.set_bind_group(0, &resources.ses_grid.bind_group, &[]);
-        compute_pass.set_bind_group(1, &resources.molecule.bind_group, &[]);
+        compute_pass.set_bind_group(1, &resources.atoms_with_lookup.bind_group, &[]);
         compute_pass.set_bind_group(2, &resources.df_texture.bind_group, &[]);
 
         let work_groups_count = f32::ceil(grid_points_count as f32 / 64.0) as u32;

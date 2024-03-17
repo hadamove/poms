@@ -1,7 +1,7 @@
 use super::{util, RenderOwnedResources};
 use crate::passes::resources::{
     camera::resource::CameraResource, grid::ses_grid::SesGridResource, light::LightResource,
-    textures::df_texture::DistanceFieldTextureRender, CommonDependencies,
+    textures::df_texture::DistanceFieldTextureRender, CommonResources,
 };
 
 const WGPU_LABEL: &str = "Render Molecular Surface";
@@ -14,7 +14,7 @@ pub struct MolecularSurfaceResources<'a> {
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
-    pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonDependencies) -> Self {
+    pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
         Self {
             ses_grid: &common.ses_resource,
             df_texture: &resources.df_texture,

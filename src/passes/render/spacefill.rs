@@ -1,13 +1,13 @@
 use super::{util, RenderOwnedResources};
 use crate::passes::resources::camera::resource::CameraResource;
-use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
+use crate::passes::resources::grid::molecule_grid::AtomsWithLookupResource;
 use crate::passes::resources::CommonResources;
 
 const WGPU_LABEL: &str = "Render Spacefill";
 
 pub struct SpacefillResources<'a> {
-    pub molecule: &'a MoleculeGridResource, // @group(0)
-    pub camera: &'a CameraResource,         // @group(1)
+    pub molecule: &'a AtomsWithLookupResource, // @group(0)
+    pub camera: &'a CameraResource,            // @group(1)
 }
 
 impl<'a> SpacefillResources<'a> {
