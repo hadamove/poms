@@ -6,7 +6,7 @@ use super::{AtomsWithLookup, GridUniform};
 
 // TODO: Rename this similarly to AtomsWithLookup
 pub struct MoleculeGridResource {
-    pub buffers: MoleculeGridBuffers,
+    buffers: MoleculeGridBuffers,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }

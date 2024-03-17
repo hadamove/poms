@@ -1,7 +1,7 @@
 use cgmath::{SquareMatrix, Zero};
 use wgpu::util::DeviceExt;
 
-use super::arcball::ArcballCameraController;
+use super::arcball::CameraController;
 
 pub struct CameraResource {
     pub buffer: wgpu::Buffer,
@@ -48,7 +48,7 @@ impl CameraResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, camera: &ArcballCameraController) {
+    pub fn update(&self, queue: &wgpu::Queue, camera: &CameraController) {
         let uniform = CameraUniform::from_camera(camera);
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }
@@ -77,7 +77,7 @@ impl CameraUniform {
     }
 
     // TODO: Move this construction to ArcballCameraController instead to remove the dependency
-    fn from_camera(camera: &ArcballCameraController) -> Self {
+    fn from_camera(camera: &CameraController) -> Self {
         let view_matrix = camera.view;
         let proj_matrix = camera.projection_matrix();
 

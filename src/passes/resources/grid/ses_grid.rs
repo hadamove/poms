@@ -5,7 +5,7 @@ use crate::passes::compute::ComputeProgress;
 use super::{create_compute_grid_around_molecule, Atom, GridUniform};
 
 pub struct SesGridResource {
-    pub buffers: SesGridBuffers,
+    buffers: SesGridBuffers,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }

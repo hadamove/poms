@@ -1,7 +1,7 @@
-use super::{util, RenderDependencies, RenderOwnedResources};
+use super::{util, RenderOwnedResources};
 use crate::passes::resources::{
     camera::resource::CameraResource, grid::ses_grid::SesGridResource, light::LightResource,
-    textures::df_texture::DistanceFieldTextureRender,
+    textures::df_texture::DistanceFieldTextureRender, CommonDependencies,
 };
 
 const WGPU_LABEL: &str = "Render Molecular Surface";
@@ -14,9 +14,9 @@ pub struct MolecularSurfaceResources<'a> {
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
-    pub fn new(resources: &'a RenderOwnedResources, dependencies: &'a RenderDependencies) -> Self {
+    pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonDependencies) -> Self {
         Self {
-            ses_grid: dependencies.ses_resource,
+            ses_grid: &common.ses_resource,
             df_texture: &resources.df_texture,
             camera: &resources.camera_resource,
             light: &resources.light_resource,

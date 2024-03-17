@@ -2,9 +2,8 @@ use winit::event::*;
 
 use crate::context::Context;
 
-use crate::passes::compute::ComputeDependencies;
-use crate::passes::render::RenderDependencies;
 use crate::passes::resources::atom::calculate_center;
+use crate::passes::resources::camera::arcball::CameraController;
 use crate::passes::resources::molecule::MoleculeStorage;
 use crate::passes::resources::textures::df_texture::{
     DistanceFieldTextureCompute, DistanceFieldTextureRender,
@@ -16,37 +15,29 @@ use crate::utils::constants::ColorTheme;
 
 pub struct App {
     context: Context,
-    storage: MoleculeStorage,
-    resources: CommonResources,
 
+    // TODO: These are imported from outside crates
     compute: ComputeJobs,
     render: RenderJobs,
+
+    // TODO: These are within app/ submodules
     ui: UserInterface,
+    storage: MoleculeStorage,
+    resources: CommonResources,
+    camera: CameraController,
 }
 
 impl App {
     pub fn new(context: Context) -> Self {
-        let resources = CommonResources::new(&context.device, &context.config);
+        // Resources that are shared between render and compute passes.
+        let resources = CommonResources::new(&context.device);
 
         App {
             storage: MoleculeStorage::new(),
-            compute: ComputeJobs::new(
-                &context.device,
-                ComputeDependencies {
-                    molecule: &resources.molecule_resource,
-                    ses_grid: &resources.ses_resource,
-                },
-            ),
-            render: RenderJobs::new(
-                &context.device,
-                &context.config,
-                RenderDependencies {
-                    molecule_resource: &resources.molecule_resource,
-                    ses_resource: &resources.ses_resource,
-                },
-            ),
+            compute: ComputeJobs::new(&context.device, &resources),
+            render: RenderJobs::new(&context.device, &context.config, &resources),
             ui: UserInterface::new(&context),
-
+            camera: CameraController::from_config(&context.config),
             context,
             resources,
         }
@@ -58,7 +49,6 @@ impl App {
         self.update_resources();
         self.handle_ui_events(ui_events);
 
-        // Initialize rendering stuff.
         let mut encoder = self.context.get_command_encoder();
         let output_texture = self.context.surface.get_current_texture().unwrap();
         let view = output_texture.texture.create_view(&Default::default());
@@ -66,23 +56,10 @@ impl App {
         // TODO: Bad workaround
         if self.storage.get_current().is_some() {
             self.update_compute_progress();
-            self.compute.execute(
-                &mut encoder,
-                ComputeDependencies {
-                    molecule: &self.resources.molecule_resource,
-                    ses_grid: &self.resources.ses_resource,
-                },
-            );
+            self.compute.execute(&mut encoder, &self.resources);
         }
 
-        self.render.execute(
-            &view,
-            &mut encoder,
-            RenderDependencies {
-                molecule_resource: &self.resources.molecule_resource,
-                ses_resource: &self.resources.ses_resource,
-            },
-        );
+        self.render.execute(&view, &mut encoder, &self.resources);
         self.ui.render(&self.context, &view, &mut encoder);
 
         // Submit commands to the GPU.
@@ -97,8 +74,7 @@ impl App {
             self.context.resize(new_size);
             self.render
                 .resize(&self.context.device, &self.context.config);
-            self.resources
-                .resize(&self.context.device, &self.context.config);
+            self.camera.resize(&self.context.config);
 
             #[cfg(target_arch = "wasm32")]
             self.ui.force_resize(new_size, &self.context);
@@ -115,15 +91,15 @@ impl App {
 
     // TODO: Refactor this
     fn update_resources(&mut self) {
-        self.resources.camera_controller.update(&self.ui.input);
+        self.camera.update(&self.ui.input);
         self.render
             .resources
             .camera_resource
-            .update(&self.context.queue, &self.resources.camera_controller);
+            .update(&self.context.queue, &self.camera);
         self.render
             .resources
             .light_resource
-            .update_camera(&self.context.queue, &self.resources.camera_controller);
+            .update_camera(&self.context.queue, &self.camera);
     }
 
     // TODO: Refactor
@@ -175,8 +151,7 @@ impl App {
                     self.storage.add_from_parsed(molecule, 1.4); // TODO: Remove hardcoded probe radius
 
                     if let Some(current) = self.storage.get_current() {
-                        self.resources
-                            .camera_controller
+                        self.camera
                             .set_target(calculate_center(&current.atoms.data));
 
                         self.resources

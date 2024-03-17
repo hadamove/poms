@@ -1,6 +1,7 @@
-use super::{util, RenderDependencies, RenderOwnedResources};
+use super::{util, RenderOwnedResources};
 use crate::passes::resources::camera::resource::CameraResource;
 use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
+use crate::passes::resources::CommonResources;
 
 const WGPU_LABEL: &str = "Render Spacefill";
 
@@ -10,9 +11,9 @@ pub struct SpacefillResources<'a> {
 }
 
 impl<'a> SpacefillResources<'a> {
-    pub fn new(resources: &'a RenderOwnedResources, dependencies: &'a RenderDependencies) -> Self {
+    pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
         Self {
-            molecule: dependencies.molecule_resource,
+            molecule: &common.molecule_resource,
             camera: &resources.camera_resource,
         }
     }

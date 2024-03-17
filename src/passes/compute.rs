@@ -3,9 +3,8 @@ use crate::utils::constants::MIN_SES_RESOLUTION;
 use self::probe::{ProbePass, ProbeResources};
 use self::refinement::{RefinementPass, RefinementResources};
 
-use super::resources::grid::molecule_grid::MoleculeGridResource;
-use super::resources::grid::ses_grid::SesGridResource;
 use super::resources::textures::df_texture::DistanceFieldTextureCompute;
+use super::resources::CommonResources;
 
 mod probe;
 mod refinement;
@@ -117,11 +116,6 @@ impl ComputeProgress {
     }
 }
 
-pub struct ComputeDependencies<'a> {
-    pub ses_grid: &'a SesGridResource,
-    pub molecule: &'a MoleculeGridResource,
-}
-
 pub struct ComputeOwnedResources {
     pub df_texture: DistanceFieldTextureCompute,
 }
@@ -135,7 +129,7 @@ pub struct ComputeJobs {
 }
 
 impl ComputeJobs {
-    pub fn new(device: &wgpu::Device, dependencies: ComputeDependencies) -> Self {
+    pub fn new(device: &wgpu::Device, common: &CommonResources) -> Self {
         let resources = ComputeOwnedResources {
             df_texture: DistanceFieldTextureCompute::new_with_resolution(
                 device,
@@ -143,8 +137,8 @@ impl ComputeJobs {
             ),
         };
 
-        let probe_resources = ProbeResources::new(&dependencies);
-        let refinement_resources = RefinementResources::new(&resources, &dependencies);
+        let probe_resources = ProbeResources::new(common);
+        let refinement_resources = RefinementResources::new(&resources, common);
 
         Self {
             probe_pass: ProbePass::new(device, probe_resources),
@@ -158,21 +152,17 @@ impl ComputeJobs {
         }
     }
 
-    pub fn execute(
-        &mut self,
-        encoder: &mut wgpu::CommandEncoder,
-        dependencies: ComputeDependencies,
-    ) {
+    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder, common: &CommonResources) {
         let grid_points_count = self.progress.grid_points_this_frame_count();
 
         match self.progress.current_phase {
             ComputePhase::Probe => {
-                let probe_resources = ProbeResources::new(&dependencies);
+                let probe_resources = ProbeResources::new(common);
                 self.probe_pass
                     .execute(encoder, grid_points_count, probe_resources);
             }
             ComputePhase::Refinement => {
-                let refinement_resources = RefinementResources::new(&self.resources, &dependencies);
+                let refinement_resources = RefinementResources::new(&self.resources, common);
                 self.refinement_pass
                     .execute(encoder, grid_points_count, refinement_resources);
             }

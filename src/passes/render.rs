@@ -6,21 +6,15 @@ use self::spacefill::SpacefillResources;
 
 // TODO: Clean up imports
 use super::resources::camera::resource::CameraResource;
-use super::resources::grid::molecule_grid::MoleculeGridResource;
-use super::resources::grid::ses_grid::SesGridResource;
 use super::resources::light::LightResource;
 use super::resources::textures::depth_texture::DepthTexture;
 use super::resources::textures::df_texture::DistanceFieldTextureRender;
+use super::resources::CommonResources;
 
 mod molecular_surface;
 mod spacefill;
 
 mod util;
-
-pub struct RenderDependencies<'a> {
-    pub molecule_resource: &'a MoleculeGridResource,
-    pub ses_resource: &'a SesGridResource,
-}
 
 pub struct RenderOwnedResources {
     pub depth_texture: DepthTexture,
@@ -66,7 +60,7 @@ impl RenderJobs {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        dependencies: RenderDependencies,
+        common: &CommonResources,
     ) -> RenderJobs {
         let resources = RenderOwnedResources {
             light_resource: LightResource::new(device),
@@ -75,10 +69,10 @@ impl RenderJobs {
             df_texture: DistanceFieldTextureRender::new_with_resolution(device, 1), // TODO: Replace with some reasonabel constant
         };
 
-        let spacefill_resources = SpacefillResources::new(&resources, &dependencies);
+        let spacefill_resources = SpacefillResources::new(&resources, common);
         let spacefill_pass = SpacefillPass::new(device, config, spacefill_resources);
 
-        let molecular_surface_resources = MolecularSurfaceResources::new(&resources, &dependencies);
+        let molecular_surface_resources = MolecularSurfaceResources::new(&resources, common);
         let molecular_surface_pass =
             MolecularSurfacePass::new(device, config, molecular_surface_resources);
 
@@ -94,10 +88,10 @@ impl RenderJobs {
         &mut self,
         view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        dependencies: RenderDependencies,
+        common: &CommonResources,
     ) {
         let depth_view = &self.resources.depth_texture.view;
-        let spacefil_resources = SpacefillResources::new(&self.resources, &dependencies);
+        let spacefil_resources = SpacefillResources::new(&self.resources, common);
 
         if self.config.render_spacefill {
             self.spacefill_pass.render(
@@ -111,7 +105,7 @@ impl RenderJobs {
 
         if self.config.render_molecular_surface {
             let molecular_surface_resources =
-                MolecularSurfaceResources::new(&self.resources, &dependencies);
+                MolecularSurfaceResources::new(&self.resources, common);
 
             self.molecular_surface_pass.render(
                 view,

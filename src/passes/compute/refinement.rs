@@ -1,8 +1,8 @@
-use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
 use crate::passes::resources::grid::ses_grid::SesGridResource;
 use crate::passes::resources::textures::df_texture::DistanceFieldTextureCompute;
+use crate::passes::resources::{grid::molecule_grid::MoleculeGridResource, CommonDependencies};
 
-use super::{util, ComputeDependencies, ComputeOwnedResources};
+use super::{util, ComputeOwnedResources};
 
 const WGPU_LABEL: &str = "Compute Refinement";
 
@@ -13,13 +13,10 @@ pub struct RefinementResources<'a> {
 }
 
 impl<'a> RefinementResources<'a> {
-    pub fn new(
-        resources: &'a ComputeOwnedResources,
-        dependencies: &'a ComputeDependencies,
-    ) -> Self {
+    pub fn new(resources: &'a ComputeOwnedResources, common: &'a CommonDependencies) -> Self {
         Self {
-            ses_grid: dependencies.ses_grid,
-            molecule: dependencies.molecule,
+            ses_grid: &common.ses_resource,
+            molecule: &common.molecule_resource,
             df_texture: &resources.df_texture,
         }
     }
