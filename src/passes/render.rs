@@ -1,8 +1,8 @@
-use molecular_surface::RenderMolecularSurfacePass;
-use spacefill::RenderSpacefillPass;
+use molecular_surface::MolecularSurfacePass;
+use spacefill::SpacefillPass;
 
-use self::molecular_surface::RenderMolecularSurfaceResources;
-use self::spacefill::RenderSpacefillResources;
+use self::molecular_surface::MolecularSurfaceResources;
+use self::spacefill::SpacefillResources;
 
 // TODO: Clean up imports
 use super::resources::camera::resource::CameraResource;
@@ -60,8 +60,8 @@ pub struct RenderJobs {
     /// The resources required for rendering. TODO: Better docs.
     pub resources: RenderOwnedResources,
 
-    spacefill_pass: RenderSpacefillPass,
-    molecular_surface_pass: RenderMolecularSurfacePass,
+    spacefill_pass: SpacefillPass,
+    molecular_surface_pass: MolecularSurfacePass,
 }
 
 impl RenderJobs {
@@ -77,25 +77,12 @@ impl RenderJobs {
             df_texture_front: DistanceFieldTexture::new(device, 1),
         };
 
-        let spacefill_pass = RenderSpacefillPass::new(
-            device,
-            config,
-            RenderSpacefillResources {
-                molecule: dependencies.molecule_resource,
-                camera: &resources.camera_resource,
-            },
-        );
+        let spacefill_resources = SpacefillResources::new(&resources, &dependencies);
+        let spacefill_pass = SpacefillPass::new(device, config, spacefill_resources);
 
-        let molecular_surface_pass = RenderMolecularSurfacePass::new(
-            device,
-            config,
-            RenderMolecularSurfaceResources {
-                ses_grid: dependencies.ses_resource,
-                df_texture: &resources.df_texture_front.render,
-                camera: &resources.camera_resource,
-                light: &resources.light_resource,
-            },
-        );
+        let molecular_surface_resources = MolecularSurfaceResources::new(&resources, &dependencies);
+        let molecular_surface_pass =
+            MolecularSurfacePass::new(device, config, molecular_surface_resources);
 
         Self {
             resources,
@@ -112,31 +99,28 @@ impl RenderJobs {
         dependencies: RenderDependencies,
     ) {
         let depth_view = &self.resources.depth_texture.view;
+        let spacefil_resources = SpacefillResources::new(&self.resources, &dependencies);
+
         if self.config.render_spacefill {
             self.spacefill_pass.render(
                 view,
                 depth_view,
                 encoder,
                 self.config.clear_color,
-                RenderSpacefillResources {
-                    molecule: dependencies.molecule_resource,
-                    camera: &self.resources.camera_resource,
-                },
+                spacefil_resources,
             );
         }
 
         if self.config.render_molecular_surface {
+            let molecular_surface_resources =
+                MolecularSurfaceResources::new(&self.resources, &dependencies);
+
             self.molecular_surface_pass.render(
                 view,
                 depth_view,
                 encoder,
                 self.config.clear_color,
-                RenderMolecularSurfaceResources {
-                    ses_grid: dependencies.ses_resource,
-                    df_texture: &self.resources.df_texture_front.render,
-                    camera: &self.resources.camera_resource,
-                    light: &self.resources.light_resource,
-                },
+                molecular_surface_resources,
             );
         }
     }

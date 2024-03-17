@@ -1,21 +1,30 @@
 use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
 use crate::passes::resources::{grid::ses_grid::SesGridResource, GpuResource};
 
-use super::util;
+use super::{util, ComputeDependencies};
 
 const WGPU_LABEL: &str = "Compute Probe";
 
-pub struct ComputeProbeResources<'a> {
+pub struct ProbeResources<'a> {
     pub ses_grid: &'a SesGridResource,      // @group(0)
     pub molecule: &'a MoleculeGridResource, // @group(1)
 }
 
-pub struct ComputeProbePass {
+impl<'a> ProbeResources<'a> {
+    pub fn new(dependencies: &'a ComputeDependencies) -> Self {
+        Self {
+            ses_grid: dependencies.ses_grid,
+            molecule: dependencies.molecule,
+        }
+    }
+}
+
+pub struct ProbePass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
-impl ComputeProbePass {
-    pub fn new(device: &wgpu::Device, resources: ComputeProbeResources) -> Self {
+impl ProbePass {
+    pub fn new(device: &wgpu::Device, resources: ProbeResources) -> Self {
         let shader = wgpu::include_wgsl!("./shaders/probe.wgsl");
 
         let bind_group_layouts = &[
@@ -33,7 +42,7 @@ impl ComputeProbePass {
         &mut self,
         encoder: &mut wgpu::CommandEncoder,
         grid_points_count: u32,
-        resources: ComputeProbeResources,
+        resources: ProbeResources,
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);

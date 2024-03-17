@@ -1,23 +1,32 @@
-use super::util;
+use super::{util, RenderDependencies, RenderOwnedResources};
 use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
 use crate::passes::resources::{camera::resource::CameraResource, GpuResource};
 
 const WGPU_LABEL: &str = "Render Spacefill";
 
-pub struct RenderSpacefillResources<'a> {
+pub struct SpacefillResources<'a> {
     pub molecule: &'a MoleculeGridResource, // @group(0)
     pub camera: &'a CameraResource,         // @group(1)
 }
 
-pub struct RenderSpacefillPass {
+impl<'a> SpacefillResources<'a> {
+    pub fn new(resources: &'a RenderOwnedResources, dependencies: &'a RenderDependencies) -> Self {
+        Self {
+            molecule: dependencies.molecule_resource,
+            camera: &resources.camera_resource,
+        }
+    }
+}
+
+pub struct SpacefillPass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-impl RenderSpacefillPass {
+impl SpacefillPass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        resources: RenderSpacefillResources,
+        resources: SpacefillResources,
     ) -> Self {
         let shader = wgpu::include_wgsl!("./shaders/spacefill.wgsl");
 
@@ -38,7 +47,7 @@ impl RenderSpacefillPass {
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         clear_color: wgpu::Color,
-        resources: RenderSpacefillResources,
+        resources: SpacefillResources,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some(WGPU_LABEL),

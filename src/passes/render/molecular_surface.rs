@@ -1,4 +1,4 @@
-use super::util;
+use super::{util, RenderDependencies, RenderOwnedResources};
 use crate::passes::resources::{
     camera::resource::CameraResource, grid::ses_grid::SesGridResource, light::LightResource,
     textures::df_texture::DistanceFieldTextureRender, GpuResource,
@@ -6,22 +6,33 @@ use crate::passes::resources::{
 
 const WGPU_LABEL: &str = "Render Molecular Surface";
 
-pub struct RenderMolecularSurfaceResources<'a> {
+pub struct MolecularSurfaceResources<'a> {
     pub ses_grid: &'a SesGridResource,              // @group(0)
     pub df_texture: &'a DistanceFieldTextureRender, // @group(1)
     pub camera: &'a CameraResource,                 // @group(2)
     pub light: &'a LightResource,                   // @group(3)
 }
 
-pub struct RenderMolecularSurfacePass {
+impl<'a> MolecularSurfaceResources<'a> {
+    pub fn new(resources: &'a RenderOwnedResources, dependencies: &'a RenderDependencies) -> Self {
+        Self {
+            ses_grid: dependencies.ses_resource,
+            df_texture: &resources.df_texture_front.render,
+            camera: &resources.camera_resource,
+            light: &resources.light_resource,
+        }
+    }
+}
+
+pub struct MolecularSurfacePass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-impl RenderMolecularSurfacePass {
+impl MolecularSurfacePass {
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        resources: RenderMolecularSurfaceResources,
+        resources: MolecularSurfaceResources,
     ) -> Self {
         let shader = wgpu::include_wgsl!("./shaders/molecular_surface.wgsl");
 
@@ -44,7 +55,7 @@ impl RenderMolecularSurfacePass {
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         clear_color: wgpu::Color,
-        resources: RenderMolecularSurfaceResources,
+        resources: MolecularSurfaceResources,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some(WGPU_LABEL),

@@ -2,22 +2,32 @@ use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
 use crate::passes::resources::textures::df_texture::DistanceFieldTextureCompute;
 use crate::passes::resources::{grid::ses_grid::SesGridResource, GpuResource};
 
-use super::util;
+use super::{util, ComputeDependencies};
 
 const WGPU_LABEL: &str = "Compute Refinement";
 
-pub struct ComputeRefinementResources<'a> {
+pub struct RefinementResources<'a> {
     pub ses_grid: &'a SesGridResource,               // @group(0)
     pub molecule: &'a MoleculeGridResource,          // @group(1)
     pub df_texture: &'a DistanceFieldTextureCompute, // @group(2)
 }
 
-pub struct ComputeRefinementPass {
+impl<'a> RefinementResources<'a> {
+    pub fn new(dependencies: &'a ComputeDependencies) -> Self {
+        Self {
+            ses_grid: dependencies.ses_grid,
+            molecule: dependencies.molecule,
+            df_texture: dependencies.df_texture,
+        }
+    }
+}
+
+pub struct RefinementPass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
-impl ComputeRefinementPass {
-    pub fn new(device: &wgpu::Device, resources: ComputeRefinementResources) -> Self {
+impl RefinementPass {
+    pub fn new(device: &wgpu::Device, resources: RefinementResources) -> Self {
         let shader = wgpu::include_wgsl!("./shaders/refinement.wgsl");
 
         let bind_group_layouts = &[
@@ -36,7 +46,7 @@ impl ComputeRefinementPass {
         &mut self,
         encoder: &mut wgpu::CommandEncoder,
         grid_points_count: u32,
-        resources: ComputeRefinementResources,
+        resources: RefinementResources,
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);

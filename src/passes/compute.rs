@@ -1,5 +1,5 @@
-use self::probe::{ComputeProbePass, ComputeProbeResources};
-use self::refinement::{ComputeRefinementPass, ComputeRefinementResources};
+use self::probe::{ProbePass, ProbeResources};
+use self::refinement::{RefinementPass, RefinementResources};
 
 use super::resources::grid::molecule_grid::MoleculeGridResource;
 use super::resources::grid::ses_grid::SesGridResource;
@@ -11,8 +11,8 @@ mod util;
 
 pub struct ComputeJobs {
     pub progress: ComputeProgress,
-    probe_pass: ComputeProbePass,
-    refinement_pass: ComputeRefinementPass,
+    probe_pass: ProbePass,
+    refinement_pass: RefinementPass,
 }
 
 #[derive(Clone, Debug)]
@@ -130,21 +130,8 @@ pub struct ComputeDependencies<'a> {
 impl ComputeJobs {
     pub fn new(device: &wgpu::Device, dependencies: ComputeDependencies) -> Self {
         Self {
-            probe_pass: ComputeProbePass::new(
-                device,
-                ComputeProbeResources {
-                    ses_grid: &dependencies.ses_grid,
-                    molecule: &dependencies.molecule,
-                },
-            ),
-            refinement_pass: ComputeRefinementPass::new(
-                device,
-                ComputeRefinementResources {
-                    ses_grid: &dependencies.ses_grid,
-                    molecule: &dependencies.molecule,
-                    df_texture: &dependencies.df_texture,
-                },
-            ),
+            probe_pass: ProbePass::new(device, ProbeResources::new(&dependencies)),
+            refinement_pass: RefinementPass::new(device, RefinementResources::new(&dependencies)),
             progress: ComputeProgress::new(
                 256,  // TODO: get this from outside
                 70.0, // TODO: get this from outside
@@ -161,23 +148,16 @@ impl ComputeJobs {
         let grid_points_count = self.progress.grid_points_this_frame_count();
 
         match self.progress.current_phase {
-            ComputePhase::Probe => self.probe_pass.execute(
-                encoder,
-                grid_points_count,
-                ComputeProbeResources {
-                    ses_grid: &dependencies.ses_grid,
-                    molecule: &dependencies.molecule,
-                },
-            ),
-            ComputePhase::Refinement => self.refinement_pass.execute(
-                encoder,
-                grid_points_count,
-                ComputeRefinementResources {
-                    ses_grid: &dependencies.ses_grid,
-                    molecule: &dependencies.molecule,
-                    df_texture: &dependencies.df_texture,
-                },
-            ),
+            ComputePhase::Probe => {
+                let resources = ProbeResources::new(&dependencies);
+                self.probe_pass
+                    .execute(encoder, grid_points_count, resources);
+            }
+            ComputePhase::Refinement => {
+                let resources = RefinementResources::new(&dependencies);
+                self.refinement_pass
+                    .execute(encoder, grid_points_count, resources);
+            }
             ComputePhase::Finished => {
                 // Do not advance progress if we are finished.
                 return;
