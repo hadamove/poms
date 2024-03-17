@@ -1,16 +1,9 @@
-use std::sync::Arc;
-
 use cgmath::{SquareMatrix, Zero};
 use wgpu::util::DeviceExt;
 
 use super::{super::GpuResource, arcball::ArcballCameraController};
 
-#[derive(Clone)]
 pub struct CameraResource {
-    inner: Arc<CameraResourceInner>,
-}
-
-struct CameraResourceInner {
     buffer: wgpu::Buffer,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
@@ -49,27 +42,25 @@ impl CameraResource {
         });
 
         Self {
-            inner: Arc::new(CameraResourceInner {
-                buffer: camera_buffer,
-                bind_group_layout: camera_bind_group_layout,
-                bind_group: camera_bind_group,
-            }),
+            buffer: camera_buffer,
+            bind_group_layout: camera_bind_group_layout,
+            bind_group: camera_bind_group,
         }
     }
 
     pub fn update(&self, queue: &wgpu::Queue, camera: &ArcballCameraController) {
         let uniform = CameraUniform::from_camera(camera);
-        queue.write_buffer(&self.inner.buffer, 0, bytemuck::cast_slice(&[uniform]));
+        queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }
 }
 
 impl GpuResource for CameraResource {
     fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.inner.bind_group_layout
+        &self.bind_group_layout
     }
 
     fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.inner.bind_group
+        &self.bind_group
     }
 }
 

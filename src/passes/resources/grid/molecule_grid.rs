@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use wgpu::util::DeviceExt;
 
 use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
@@ -8,12 +6,7 @@ use super::super::GpuResource;
 use super::{AtomsWithLookup, GridUniform};
 
 // TODO: Rename this similarly to AtomsWithLookup
-#[derive(Clone)]
 pub struct MoleculeGridResource {
-    inner: Arc<MoleculeGridResourceInner>,
-}
-
-struct MoleculeGridResourceInner {
     buffers: MoleculeGridBuffers,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
@@ -28,27 +21,25 @@ impl MoleculeGridResource {
         let bind_group = MoleculeGridBindGroup::new(device, &buffers, &bind_group_layout).0;
 
         Self {
-            inner: Arc::new(MoleculeGridResourceInner {
-                buffers,
-                bind_group_layout,
-                bind_group,
-            }),
+            buffers,
+            bind_group_layout,
+            bind_group,
         }
     }
 
     pub fn update(&self, queue: &wgpu::Queue, atoms: &AtomsWithLookup) {
         queue.write_buffer(
-            &self.inner.buffers.atoms_sorted_buffer,
+            &self.buffers.atoms_sorted_buffer,
             0,
             bytemuck::cast_slice(atoms.data.as_slice()),
         );
         queue.write_buffer(
-            &self.inner.buffers.neighbor_grid_buffer,
+            &self.buffers.neighbor_grid_buffer,
             0,
             bytemuck::cast_slice(&[atoms.lookup_grid]),
         );
         queue.write_buffer(
-            &self.inner.buffers.grid_cells_buffer,
+            &self.buffers.grid_cells_buffer,
             0,
             bytemuck::cast_slice(&atoms.segment_by_voxel),
         );
@@ -57,11 +48,11 @@ impl MoleculeGridResource {
 
 impl GpuResource for MoleculeGridResource {
     fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.inner.bind_group_layout
+        &self.bind_group_layout
     }
 
     fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.inner.bind_group
+        &self.bind_group
     }
 }
 

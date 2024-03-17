@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use super::super::GpuResource;
 
 pub struct DistanceFieldTexture {
@@ -39,22 +37,12 @@ impl DistanceFieldTexture {
     }
 }
 
-#[derive(Clone)]
 pub struct DistanceFieldTextureCompute {
-    inner: Arc<DistanceFieldTextureComputeInner>,
-}
-
-struct DistanceFieldTextureComputeInner {
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
 }
 
-#[derive(Clone)]
 pub struct DistanceFieldTextureRender {
-    inner: Arc<DistanceFieldTextureRenderInner>,
-}
-
-struct DistanceFieldTextureRenderInner {
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
 }
@@ -73,10 +61,8 @@ impl DistanceFieldTextureCompute {
         });
 
         Self {
-            inner: Arc::new(DistanceFieldTextureComputeInner {
-                bind_group_layout,
-                bind_group,
-            }),
+            bind_group_layout,
+            bind_group,
         }
     }
 
@@ -98,11 +84,11 @@ impl DistanceFieldTextureCompute {
 
 impl GpuResource for DistanceFieldTextureCompute {
     fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.inner.bind_group_layout
+        &self.bind_group_layout
     }
 
     fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.inner.bind_group
+        &self.bind_group
     }
 }
 
@@ -134,10 +120,8 @@ impl DistanceFieldTextureRender {
         });
 
         Self {
-            inner: Arc::new(DistanceFieldTextureRenderInner {
-                bind_group_layout,
-                bind_group,
-            }),
+            bind_group_layout,
+            bind_group,
         }
     }
 
@@ -167,10 +151,10 @@ impl DistanceFieldTextureRender {
 
 impl GpuResource for DistanceFieldTextureRender {
     fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.inner.bind_group_layout
+        &self.bind_group_layout
     }
 
     fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.inner.bind_group
+        &self.bind_group
     }
 }

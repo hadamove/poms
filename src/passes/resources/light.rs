@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use wgpu::util::DeviceExt;
 
 use crate::utils::{
@@ -29,12 +27,7 @@ impl LightUniform {
     }
 }
 
-#[derive(Clone)]
 pub struct LightResource {
-    inner: Arc<LightResourceInner>,
-}
-
-struct LightResourceInner {
     buffer: wgpu::Buffer,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
@@ -72,21 +65,19 @@ impl LightResource {
         });
 
         Self {
-            inner: Arc::new(LightResourceInner {
-                buffer,
-                bind_group_layout,
-                bind_group,
-            }),
+            buffer,
+            bind_group_layout,
+            bind_group,
         }
     }
 
     pub fn update(&self, queue: &wgpu::Queue, light_data: LightData) {
         if let Some(direction) = light_data.direction {
-            queue.write_buffer(&self.inner.buffer, 0, bytemuck::cast_slice(&[direction]));
+            queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[direction]));
         }
         if let Some(color) = light_data.color {
             let offset = std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress;
-            queue.write_buffer(&self.inner.buffer, offset, bytemuck::cast_slice(&[color]));
+            queue.write_buffer(&self.buffer, offset, bytemuck::cast_slice(&[color]));
         }
     }
 
@@ -104,10 +95,10 @@ impl LightResource {
 
 impl GpuResource for LightResource {
     fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.inner.bind_group_layout
+        &self.bind_group_layout
     }
 
     fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.inner.bind_group
+        &self.bind_group
     }
 }

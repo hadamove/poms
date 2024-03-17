@@ -1,4 +1,4 @@
-use std::sync::Arc;
+
 
 use wgpu::util::DeviceExt;
 
@@ -7,12 +7,7 @@ use crate::passes::compute::ComputeProgress;
 use super::super::GpuResource;
 use super::{create_compute_grid_around_molecule, Atom, GridUniform};
 
-#[derive(Clone)]
 pub struct SesGridResource {
-    inner: Arc<SesGridResourceInner>,
-}
-
-struct SesGridResourceInner {
     buffers: SesGridBuffers,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
@@ -27,11 +22,9 @@ impl SesGridResource {
         let bind_group = SesGridBindGroup::new(device, &buffers, &bind_group_layout).0;
 
         Self {
-            inner: Arc::new(SesGridResourceInner {
-                buffers,
-                bind_group_layout,
-                bind_group,
-            }),
+            buffers,
+            bind_group_layout,
+            bind_group,
         }
     }
 
@@ -39,7 +32,7 @@ impl SesGridResource {
         if let Some(render_resolution) = progress.last_computed_resolution {
             let ses_grid_render = create_compute_grid_around_molecule(atoms, render_resolution);
             queue.write_buffer(
-                &self.inner.buffers.ses_grid_render_buffer,
+                &self.buffers.ses_grid_render_buffer,
                 0,
                 bytemuck::cast_slice(&[ses_grid_render]),
             );
@@ -49,18 +42,18 @@ impl SesGridResource {
             create_compute_grid_around_molecule(atoms, progress.current_resolution);
 
         queue.write_buffer(
-            &self.inner.buffers.ses_grid_compute_buffer,
+            &self.buffers.ses_grid_compute_buffer,
             0,
             bytemuck::cast_slice(&[ses_grid_compute]),
         );
         queue.write_buffer(
-            &self.inner.buffers.probe_radius_buffer,
+            &self.buffers.probe_radius_buffer,
             0,
             bytemuck::cast_slice(&[1.4_f32]), // TODO: This should be a parameter
         );
 
         queue.write_buffer(
-            &self.inner.buffers.grid_point_index_offset_buffer,
+            &self.buffers.grid_point_index_offset_buffer,
             0,
             bytemuck::cast_slice(&[progress.grid_points_index_offset()]),
         );
@@ -69,11 +62,11 @@ impl SesGridResource {
 
 impl GpuResource for SesGridResource {
     fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.inner.bind_group_layout
+        &self.bind_group_layout
     }
 
     fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.inner.bind_group
+        &self.bind_group
     }
 }
 
