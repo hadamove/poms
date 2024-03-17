@@ -1,11 +1,10 @@
 use wgpu::util::DeviceExt;
 
 use crate::utils::{
+    arcball::CameraController,
     constants::{DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION},
     dtos::LightData,
 };
-
-use super::camera::arcball::CameraController;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]

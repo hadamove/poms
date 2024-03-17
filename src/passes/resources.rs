@@ -1,11 +1,13 @@
-pub mod atom;
-pub mod camera;
-pub mod grid;
-pub mod light;
-pub mod molecule;
-pub mod textures;
+use self::common::{molecule_grid::AtomsWithLookupResource, ses_grid::SesGridResource};
 
-use grid::{molecule_grid::AtomsWithLookupResource, ses_grid::SesGridResource};
+pub mod atom;
+pub mod grid;
+
+pub mod common {
+    pub mod df_texture;
+    pub mod molecule_grid;
+    pub mod ses_grid;
+}
 
 /// For efficiency, some resources (e.g. the molecule) are shared between render and compute passes.
 pub struct CommonResources {

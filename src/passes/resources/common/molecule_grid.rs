@@ -1,8 +1,9 @@
 use wgpu::util::DeviceExt;
 
-use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
-
-use super::{AtomsWithLookup, GridUniform};
+use crate::{
+    passes::resources::{atom::AtomsWithLookup, grid::GridUniform},
+    utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS},
+};
 
 pub struct AtomsWithLookupResource {
     buffers: AtomsWithLookupBuffers,
@@ -14,9 +15,9 @@ impl AtomsWithLookupResource {
     pub fn new(device: &wgpu::Device) -> Self {
         let buffers = AtomsWithLookupBuffers::new(device);
         let bind_group_layout =
-            device.create_bind_group_layout(&MoleculeGridBindGroup::LAYOUT_DESCRIPTOR);
+            device.create_bind_group_layout(&AtomsWithLookupBindGroup::LAYOUT_DESCRIPTOR);
 
-        let bind_group = MoleculeGridBindGroup::new(device, &buffers, &bind_group_layout).0;
+        let bind_group = AtomsWithLookupBindGroup::new(device, &buffers, &bind_group_layout).0;
 
         Self {
             buffers,
@@ -88,9 +89,9 @@ impl AtomsWithLookupBuffers {
     }
 }
 
-struct MoleculeGridBindGroup(wgpu::BindGroup);
+struct AtomsWithLookupBindGroup(wgpu::BindGroup);
 
-impl MoleculeGridBindGroup {
+impl AtomsWithLookupBindGroup {
     fn new(
         device: &wgpu::Device,
         buffers: &AtomsWithLookupBuffers,

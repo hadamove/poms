@@ -2,12 +2,13 @@ use crate::utils::constants::MIN_SES_RESOLUTION;
 
 use self::probe::{ProbePass, ProbeResources};
 use self::refinement::{RefinementPass, RefinementResources};
+use self::resources::df_texture::DistanceFieldTextureCompute;
 
-use super::resources::textures::df_texture::DistanceFieldTextureCompute;
 use super::resources::CommonResources;
 
 mod probe;
 mod refinement;
+pub mod resources;
 mod util;
 
 #[derive(Clone, Debug)]

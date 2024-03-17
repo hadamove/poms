@@ -1,8 +1,10 @@
-use super::{util, RenderOwnedResources};
-use crate::passes::resources::{
-    camera::resource::CameraResource, grid::ses_grid::SesGridResource, light::LightResource,
-    textures::df_texture::DistanceFieldTextureRender, CommonResources,
+use super::{
+    resources::{
+        camera::CameraResource, df_texture::DistanceFieldTextureRender, light::LightResource,
+    },
+    util, RenderOwnedResources,
 };
+use crate::passes::resources::{common::ses_grid::SesGridResource, CommonResources};
 
 const WGPU_LABEL: &str = "Render Molecular Surface";
 

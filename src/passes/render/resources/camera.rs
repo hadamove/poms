@@ -1,7 +1,7 @@
 use cgmath::{SquareMatrix, Zero};
 use wgpu::util::DeviceExt;
 
-use super::arcball::CameraController;
+use crate::utils::arcball::CameraController;
 
 pub struct CameraResource {
     pub buffer: wgpu::Buffer,

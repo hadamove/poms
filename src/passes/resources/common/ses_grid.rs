@@ -1,8 +1,12 @@
 use wgpu::util::DeviceExt;
 
-use crate::passes::compute::ComputeProgress;
-
-use super::{create_compute_grid_around_molecule, Atom, GridUniform};
+use crate::passes::{
+    compute::ComputeProgress,
+    resources::{
+        atom::Atom,
+        grid::{create_compute_grid_around_molecule, GridUniform},
+    },
+};
 
 pub struct SesGridResource {
     buffers: SesGridBuffers,

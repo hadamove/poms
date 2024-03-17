@@ -2,16 +2,17 @@ use molecular_surface::MolecularSurfacePass;
 use spacefill::SpacefillPass;
 
 use self::molecular_surface::MolecularSurfaceResources;
+use self::resources::camera::CameraResource;
+use self::resources::depth_texture::DepthTexture;
+use self::resources::df_texture::DistanceFieldTextureRender;
+use self::resources::light::LightResource;
 use self::spacefill::SpacefillResources;
 
 // TODO: Clean up imports
-use super::resources::camera::resource::CameraResource;
-use super::resources::light::LightResource;
-use super::resources::textures::depth_texture::DepthTexture;
-use super::resources::textures::df_texture::DistanceFieldTextureRender;
 use super::resources::CommonResources;
 
 mod molecular_surface;
+pub mod resources;
 mod spacefill;
 
 mod util;

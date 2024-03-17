@@ -2,16 +2,15 @@ use winit::event::*;
 
 use crate::context::Context;
 
+use crate::passes::compute::resources::df_texture::DistanceFieldTextureCompute;
+use crate::passes::render::resources::df_texture::DistanceFieldTextureRender;
 use crate::passes::resources::atom::calculate_center;
-use crate::passes::resources::camera::arcball::CameraController;
-use crate::passes::resources::molecule::MoleculeStorage;
-use crate::passes::resources::textures::df_texture::{
-    DistanceFieldTextureCompute, DistanceFieldTextureRender,
-};
 use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::CommonResources};
 use crate::ui::event::UserEvent;
 use crate::ui::UserInterface;
+use crate::utils::arcball::CameraController;
 use crate::utils::constants::ColorTheme;
+use crate::utils::molecule::MoleculeStorage;
 
 pub struct App {
     context: Context,

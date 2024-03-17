@@ -1,6 +1,6 @@
+use super::resources::camera::CameraResource;
 use super::{util, RenderOwnedResources};
-use crate::passes::resources::camera::resource::CameraResource;
-use crate::passes::resources::grid::molecule_grid::AtomsWithLookupResource;
+use crate::passes::resources::common::molecule_grid::AtomsWithLookupResource;
 use crate::passes::resources::CommonResources;
 
 const WGPU_LABEL: &str = "Render Spacefill";

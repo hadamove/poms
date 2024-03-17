@@ -1,8 +1,9 @@
 use uuid::Uuid;
 
-use super::atom::Atom;
-use super::grid::AtomsWithLookup;
-use crate::parser::ParsedMolecule;
+use crate::{
+    parser::ParsedMolecule,
+    passes::resources::atom::{Atom, AtomsWithLookup},
+};
 
 use std::collections::HashMap;
 

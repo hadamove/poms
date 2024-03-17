@@ -1,8 +1,8 @@
-use crate::passes::resources::grid::ses_grid::SesGridResource;
-use crate::passes::resources::textures::df_texture::DistanceFieldTextureCompute;
-use crate::passes::resources::{grid::molecule_grid::AtomsWithLookupResource, CommonResources};
+use crate::passes::resources::common::molecule_grid::AtomsWithLookupResource;
+use crate::passes::resources::common::ses_grid::SesGridResource;
+use crate::passes::resources::CommonResources;
 
-use super::{util, ComputeOwnedResources};
+use super::{resources::df_texture::DistanceFieldTextureCompute, util, ComputeOwnedResources};
 
 const WGPU_LABEL: &str = "Compute Refinement";
 

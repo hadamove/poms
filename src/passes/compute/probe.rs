@@ -1,5 +1,5 @@
 use crate::passes::resources::{
-    grid::{molecule_grid::AtomsWithLookupResource, ses_grid::SesGridResource},
+    common::{molecule_grid::AtomsWithLookupResource, ses_grid::SesGridResource},
     CommonResources,
 };
 
