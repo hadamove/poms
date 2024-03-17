@@ -33,7 +33,6 @@ impl App {
                 ComputeDependencies {
                     molecule: &resources.molecule_resource,
                     ses_grid: &resources.ses_resource,
-                    df_texture: &resources.df_texture_back.compute,
                 },
             ),
             render: RenderJobs::new(
@@ -70,7 +69,6 @@ impl App {
                 ComputeDependencies {
                     molecule: &self.resources.molecule_resource,
                     ses_grid: &self.resources.ses_resource,
-                    df_texture: &self.resources.df_texture_back.compute,
                 },
             );
         }
@@ -134,10 +132,10 @@ impl App {
 
         let progress = self.compute.progress.clone();
         if let Some(render_resolution) = progress.last_computed_resolution {
-            if render_resolution != self.render.resources.df_texture_front.resolution() {
+            if render_resolution != self.render.resources.df_texture.resolution() {
                 // New resolution has been computed, swap the texture
-                self.render.resources.df_texture_front = std::mem::replace(
-                    &mut self.resources.df_texture_back,
+                self.render.resources.df_texture = std::mem::replace(
+                    &mut self.compute.resources.df_texture,
                     DistanceFieldTexture::new(&self.context.device, progress.current_resolution),
                 );
             }

@@ -17,7 +17,7 @@ impl<'a> MolecularSurfaceResources<'a> {
     pub fn new(resources: &'a RenderOwnedResources, dependencies: &'a RenderDependencies) -> Self {
         Self {
             ses_grid: dependencies.ses_resource,
-            df_texture: &resources.df_texture_front.render,
+            df_texture: &resources.df_texture.render,
             camera: &resources.camera_resource,
             light: &resources.light_resource,
         }

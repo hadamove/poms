@@ -5,11 +5,8 @@ pub mod light;
 pub mod molecule;
 pub mod textures;
 
-use crate::utils::constants::MIN_SES_RESOLUTION;
-
 use camera::arcball::ArcballCameraController;
 use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource};
-use textures::df_texture::DistanceFieldTexture;
 
 // TODO: : Clone (supertrait)
 pub trait GpuResource {
@@ -25,9 +22,6 @@ pub struct CommonResources {
     // This makes sense here
     pub molecule_resource: MoleculeGridResource,
     pub ses_resource: SesGridResource, // TODO: This can probably be separate for render & compute
-
-    // TODO: move these to compute & render respectively, figure out the swapping (maybe Arc<RwLock>)
-    pub df_texture_back: DistanceFieldTexture,
 }
 
 impl CommonResources {
@@ -36,7 +30,6 @@ impl CommonResources {
             camera_controller: ArcballCameraController::from_config(config),
             ses_resource: SesGridResource::new(device),
             molecule_resource: MoleculeGridResource::new(device),
-            df_texture_back: DistanceFieldTexture::new(device, MIN_SES_RESOLUTION),
         }
     }
 

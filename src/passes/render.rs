@@ -28,7 +28,7 @@ pub struct RenderOwnedResources {
     pub light_resource: LightResource,
     pub camera_resource: CameraResource,
     // TODO: Replace with DistanceFieldRender
-    pub df_texture_front: DistanceFieldTexture,
+    pub df_texture: DistanceFieldTexture,
 }
 
 /// Configuration for the renderer.
@@ -74,7 +74,7 @@ impl RenderJobs {
             light_resource: LightResource::new(device),
             camera_resource: CameraResource::new(device),
             depth_texture: DepthTexture::new(device, config),
-            df_texture_front: DistanceFieldTexture::new(device, 1),
+            df_texture: DistanceFieldTexture::new(device, 1),
         };
 
         let spacefill_resources = SpacefillResources::new(&resources, &dependencies);

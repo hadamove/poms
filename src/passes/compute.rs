@@ -1,19 +1,15 @@
+use crate::utils::constants::MIN_SES_RESOLUTION;
+
 use self::probe::{ProbePass, ProbeResources};
 use self::refinement::{RefinementPass, RefinementResources};
 
 use super::resources::grid::molecule_grid::MoleculeGridResource;
 use super::resources::grid::ses_grid::SesGridResource;
-use super::resources::textures::df_texture::DistanceFieldTextureCompute;
+use super::resources::textures::df_texture::DistanceFieldTexture;
 
 mod probe;
 mod refinement;
 mod util;
-
-pub struct ComputeJobs {
-    pub progress: ComputeProgress,
-    probe_pass: ProbePass,
-    refinement_pass: RefinementPass,
-}
 
 #[derive(Clone, Debug)]
 enum ComputePhase {
@@ -124,19 +120,38 @@ impl ComputeProgress {
 pub struct ComputeDependencies<'a> {
     pub ses_grid: &'a SesGridResource,
     pub molecule: &'a MoleculeGridResource,
-    pub df_texture: &'a DistanceFieldTextureCompute,
+}
+
+pub struct ComputeOwnedResources {
+    pub df_texture: DistanceFieldTexture, // TODO: Replace with DistanceFieldTextureCompute
+}
+
+/// TODO: Add docs!!!
+pub struct ComputeJobs {
+    pub progress: ComputeProgress,
+    pub resources: ComputeOwnedResources,
+    probe_pass: ProbePass,
+    refinement_pass: RefinementPass,
 }
 
 impl ComputeJobs {
     pub fn new(device: &wgpu::Device, dependencies: ComputeDependencies) -> Self {
+        let resources = ComputeOwnedResources {
+            df_texture: DistanceFieldTexture::new(device, MIN_SES_RESOLUTION),
+        };
+
+        let probe_resources = ProbeResources::new(&dependencies);
+        let refinement_resources = RefinementResources::new(&resources, &dependencies);
+
         Self {
-            probe_pass: ProbePass::new(device, ProbeResources::new(&dependencies)),
-            refinement_pass: RefinementPass::new(device, RefinementResources::new(&dependencies)),
+            probe_pass: ProbePass::new(device, probe_resources),
+            refinement_pass: RefinementPass::new(device, refinement_resources),
             progress: ComputeProgress::new(
                 256,  // TODO: get this from outside
                 70.0, // TODO: get this from outside
                 1.4,  // TODO: get this from outside
             ),
+            resources,
         }
     }
 
@@ -149,14 +164,14 @@ impl ComputeJobs {
 
         match self.progress.current_phase {
             ComputePhase::Probe => {
-                let resources = ProbeResources::new(&dependencies);
+                let probe_resources = ProbeResources::new(&dependencies);
                 self.probe_pass
-                    .execute(encoder, grid_points_count, resources);
+                    .execute(encoder, grid_points_count, probe_resources);
             }
             ComputePhase::Refinement => {
-                let resources = RefinementResources::new(&dependencies);
+                let refinement_resources = RefinementResources::new(&self.resources, &dependencies);
                 self.refinement_pass
-                    .execute(encoder, grid_points_count, resources);
+                    .execute(encoder, grid_points_count, refinement_resources);
             }
             ComputePhase::Finished => {
                 // Do not advance progress if we are finished.
