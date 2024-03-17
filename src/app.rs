@@ -2,6 +2,7 @@ use winit::event::*;
 
 use crate::context::Context;
 
+use crate::passes::render::RenderDependencies;
 use crate::passes::resources::atom::calculate_center;
 use crate::passes::resources::molecule::MoleculeStorage;
 use crate::passes::resources::textures::df_texture::DistanceFieldTexture;
@@ -27,7 +28,15 @@ impl App {
         App {
             storage: MoleculeStorage::new(),
             compute: ComputeJobs::new(&context.device, &resources),
-            render: RenderJobs::new(&context.device, &context.config, &resources),
+            render: RenderJobs::new(
+                &context.device,
+                &context.config,
+                RenderDependencies {
+                    molecule_resource: &resources.molecule_resource,
+                    ses_resource: &resources.ses_resource,
+                    df_texture_front: &resources.df_texture_front,
+                },
+            ),
             ui: UserInterface::new(&context),
 
             context,
@@ -52,7 +61,15 @@ impl App {
             self.compute.execute(&mut encoder);
         }
 
-        self.render.execute(&view, &mut encoder);
+        self.render.execute(
+            &view,
+            &mut encoder,
+            RenderDependencies {
+                molecule_resource: &self.resources.molecule_resource,
+                ses_resource: &self.resources.ses_resource,
+                df_texture_front: &self.resources.df_texture_front,
+            },
+        );
         self.ui.render(&self.context, &view, &mut encoder);
 
         // Submit commands to the GPU.
@@ -110,9 +127,6 @@ impl App {
                     &mut self.resources.df_texture_back,
                     DistanceFieldTexture::new(&self.context.device, progress.current_resolution),
                 );
-                // Recreate passes with new resources
-                self.render =
-                    RenderJobs::new(&self.context.device, &self.context.config, &self.resources);
                 self.compute
                     .recreate_passes(&self.context.device, &self.resources);
             }

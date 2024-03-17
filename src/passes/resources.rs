@@ -17,13 +17,14 @@ pub trait GpuResource {
     fn bind_group(&self) -> &wgpu::BindGroup;
 }
 
+/// For efficiency, some resources (e.g. the molecule) are shared between render and compute passes.
 pub struct CommonResources {
     // TODO: move camera to render?
     pub camera_controller: ArcballCameraController,
 
     // This makes sense here
-    pub ses_resource: SesGridResource,
     pub molecule_resource: MoleculeGridResource,
+    pub ses_resource: SesGridResource, // TODO: This can probably be separate for render & compute
 
     // TODO: move these to compute & render respectively, figure out the swapping (maybe Arc<RwLock>)
     pub df_texture_back: DistanceFieldTexture,

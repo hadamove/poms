@@ -4,13 +4,12 @@ use crate::passes::resources::{camera::resource::CameraResource, GpuResource};
 
 const WGPU_LABEL: &str = "Render Spacefill";
 
-pub struct RenderSpacefillResources {
-    pub molecule: MoleculeGridResource, // @group(0)
-    pub camera: CameraResource,         // @group(1)
+pub struct RenderSpacefillResources<'a> {
+    pub molecule: &'a MoleculeGridResource, // @group(0)
+    pub camera: &'a CameraResource,         // @group(1)
 }
 
 pub struct RenderSpacefillPass {
-    resources: RenderSpacefillResources,
     render_pipeline: wgpu::RenderPipeline,
 }
 
@@ -30,10 +29,7 @@ impl RenderSpacefillPass {
         let render_pipeline: wgpu::RenderPipeline =
             util::create_render_pipeline(WGPU_LABEL, device, config, shader, bind_group_layouts);
 
-        Self {
-            resources,
-            render_pipeline,
-        }
+        Self { render_pipeline }
     }
 
     pub fn render(
@@ -42,6 +38,7 @@ impl RenderSpacefillPass {
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         clear_color: wgpu::Color,
+        resources: RenderSpacefillResources,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some(WGPU_LABEL),
@@ -66,8 +63,8 @@ impl RenderSpacefillPass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, self.resources.molecule.bind_group(), &[]);
-        render_pass.set_bind_group(1, self.resources.camera.bind_group(), &[]);
+        render_pass.set_bind_group(0, resources.molecule.bind_group(), &[]);
+        render_pass.set_bind_group(1, resources.camera.bind_group(), &[]);
 
         let num_atoms = 100; // TODO: FIX THIS
         let vertices_per_atom: u32 = 6; // Draw a quad (sphere impostor) for each atom

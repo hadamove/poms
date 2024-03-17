@@ -6,16 +6,14 @@ use crate::passes::resources::{
 
 const WGPU_LABEL: &str = "Render Molecular Surface";
 
-pub struct RenderMolecularSurfaceResources {
-    // TODO: ses_grid shouldn't be a dependency here
-    pub ses_grid: SesGridResource,              // @group(0)
-    pub df_texture: DistanceFieldTextureRender, // @group(1)
-    pub camera: CameraResource,                 // @group(2)
-    pub light: LightResource,                   // @group(3)
+pub struct RenderMolecularSurfaceResources<'a> {
+    pub ses_grid: &'a SesGridResource,              // @group(0)
+    pub df_texture: &'a DistanceFieldTextureRender, // @group(1)
+    pub camera: &'a CameraResource,                 // @group(2)
+    pub light: &'a LightResource,                   // @group(3)
 }
 
 pub struct RenderMolecularSurfacePass {
-    resources: RenderMolecularSurfaceResources,
     render_pipeline: wgpu::RenderPipeline,
 }
 
@@ -37,10 +35,7 @@ impl RenderMolecularSurfacePass {
         let render_pipeline: wgpu::RenderPipeline =
             util::create_render_pipeline(WGPU_LABEL, device, config, shader, bind_group_layouts);
 
-        Self {
-            resources,
-            render_pipeline,
-        }
+        Self { render_pipeline }
     }
 
     pub fn render(
@@ -49,6 +44,7 @@ impl RenderMolecularSurfacePass {
         depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
         clear_color: wgpu::Color,
+        resources: RenderMolecularSurfaceResources,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some(WGPU_LABEL),
@@ -73,10 +69,10 @@ impl RenderMolecularSurfacePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, self.resources.ses_grid.bind_group(), &[]);
-        render_pass.set_bind_group(1, self.resources.df_texture.bind_group(), &[]);
-        render_pass.set_bind_group(2, self.resources.camera.bind_group(), &[]);
-        render_pass.set_bind_group(3, self.resources.light.bind_group(), &[]);
+        render_pass.set_bind_group(0, resources.ses_grid.bind_group(), &[]);
+        render_pass.set_bind_group(1, resources.df_texture.bind_group(), &[]);
+        render_pass.set_bind_group(2, resources.camera.bind_group(), &[]);
+        render_pass.set_bind_group(3, resources.light.bind_group(), &[]);
 
         let number_of_vertices: u32 = 6; // Render a full screen quad
 
