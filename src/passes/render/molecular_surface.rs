@@ -1,7 +1,7 @@
 use super::{util, RenderDependencies, RenderOwnedResources};
 use crate::passes::resources::{
     camera::resource::CameraResource, grid::ses_grid::SesGridResource, light::LightResource,
-    textures::df_texture::DistanceFieldTextureRender, GpuResource,
+    textures::df_texture::DistanceFieldTextureRender,
 };
 
 const WGPU_LABEL: &str = "Render Molecular Surface";
@@ -37,10 +37,10 @@ impl MolecularSurfacePass {
         let shader = wgpu::include_wgsl!("./shaders/molecular_surface.wgsl");
 
         let bind_group_layouts = &[
-            resources.ses_grid.bind_group_layout(),
-            resources.df_texture.bind_group_layout(),
-            resources.camera.bind_group_layout(),
-            resources.light.bind_group_layout(),
+            &resources.ses_grid.bind_group_layout,
+            &resources.df_texture.bind_group_layout,
+            &resources.camera.bind_group_layout,
+            &resources.light.bind_group_layout,
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
@@ -80,10 +80,10 @@ impl MolecularSurfacePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, resources.ses_grid.bind_group(), &[]);
-        render_pass.set_bind_group(1, resources.df_texture.bind_group(), &[]);
-        render_pass.set_bind_group(2, resources.camera.bind_group(), &[]);
-        render_pass.set_bind_group(3, resources.light.bind_group(), &[]);
+        render_pass.set_bind_group(0, &resources.ses_grid.bind_group, &[]);
+        render_pass.set_bind_group(1, &resources.df_texture.bind_group, &[]);
+        render_pass.set_bind_group(2, &resources.camera.bind_group, &[]);
+        render_pass.set_bind_group(3, &resources.light.bind_group, &[]);
 
         let number_of_vertices: u32 = 6; // Render a full screen quad
 

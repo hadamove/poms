@@ -1,12 +1,12 @@
 use cgmath::{SquareMatrix, Zero};
 use wgpu::util::DeviceExt;
 
-use super::{super::GpuResource, arcball::ArcballCameraController};
+use super::arcball::ArcballCameraController;
 
 pub struct CameraResource {
-    buffer: wgpu::Buffer,
-    bind_group_layout: wgpu::BindGroupLayout,
-    bind_group: wgpu::BindGroup,
+    pub buffer: wgpu::Buffer,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
 }
 
 impl CameraResource {
@@ -51,16 +51,6 @@ impl CameraResource {
     pub fn update(&self, queue: &wgpu::Queue, camera: &ArcballCameraController) {
         let uniform = CameraUniform::from_camera(camera);
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
-    }
-}
-
-impl GpuResource for CameraResource {
-    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
-
-    fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
     }
 }
 

@@ -8,12 +8,6 @@ pub mod textures;
 use camera::arcball::ArcballCameraController;
 use grid::{molecule_grid::MoleculeGridResource, ses_grid::SesGridResource};
 
-// TODO: : Clone (supertrait)
-pub trait GpuResource {
-    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout;
-    fn bind_group(&self) -> &wgpu::BindGroup;
-}
-
 /// For efficiency, some resources (e.g. the molecule) are shared between render and compute passes.
 pub struct CommonResources {
     // TODO: move camera to render?

@@ -1,16 +1,13 @@
-
-
 use wgpu::util::DeviceExt;
 
 use crate::passes::compute::ComputeProgress;
 
-use super::super::GpuResource;
 use super::{create_compute_grid_around_molecule, Atom, GridUniform};
 
 pub struct SesGridResource {
-    buffers: SesGridBuffers,
-    bind_group_layout: wgpu::BindGroupLayout,
-    bind_group: wgpu::BindGroup,
+    pub buffers: SesGridBuffers,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
 }
 
 impl SesGridResource {
@@ -57,16 +54,6 @@ impl SesGridResource {
             0,
             bytemuck::cast_slice(&[progress.grid_points_index_offset()]),
         );
-    }
-}
-
-impl GpuResource for SesGridResource {
-    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
-
-    fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
     }
 }
 

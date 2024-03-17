@@ -1,6 +1,6 @@
 use super::{util, RenderDependencies, RenderOwnedResources};
+use crate::passes::resources::camera::resource::CameraResource;
 use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
-use crate::passes::resources::{camera::resource::CameraResource, GpuResource};
 
 const WGPU_LABEL: &str = "Render Spacefill";
 
@@ -31,8 +31,8 @@ impl SpacefillPass {
         let shader = wgpu::include_wgsl!("./shaders/spacefill.wgsl");
 
         let bind_group_layouts = &[
-            resources.molecule.bind_group_layout(),
-            resources.camera.bind_group_layout(),
+            &resources.molecule.bind_group_layout,
+            &resources.camera.bind_group_layout,
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
@@ -72,8 +72,8 @@ impl SpacefillPass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, resources.molecule.bind_group(), &[]);
-        render_pass.set_bind_group(1, resources.camera.bind_group(), &[]);
+        render_pass.set_bind_group(0, &resources.molecule.bind_group, &[]);
+        render_pass.set_bind_group(1, &resources.camera.bind_group, &[]);
 
         let num_atoms = 100; // TODO: FIX THIS
         let vertices_per_atom: u32 = 6; // Draw a quad (sphere impostor) for each atom

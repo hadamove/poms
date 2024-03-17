@@ -1,6 +1,6 @@
 use crate::passes::resources::grid::molecule_grid::MoleculeGridResource;
+use crate::passes::resources::grid::ses_grid::SesGridResource;
 use crate::passes::resources::textures::df_texture::DistanceFieldTextureCompute;
-use crate::passes::resources::{grid::ses_grid::SesGridResource, GpuResource};
 
 use super::{util, ComputeDependencies, ComputeOwnedResources};
 
@@ -34,9 +34,9 @@ impl RefinementPass {
         let shader = wgpu::include_wgsl!("./shaders/refinement.wgsl");
 
         let bind_group_layouts = &[
-            resources.ses_grid.bind_group_layout(),
-            resources.molecule.bind_group_layout(),
-            resources.df_texture.bind_group_layout(),
+            &resources.ses_grid.bind_group_layout,
+            &resources.molecule.bind_group_layout,
+            &resources.df_texture.bind_group_layout,
         ];
 
         let compute_pipeline =
@@ -53,9 +53,9 @@ impl RefinementPass {
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
-        compute_pass.set_bind_group(0, resources.ses_grid.bind_group(), &[]);
-        compute_pass.set_bind_group(1, resources.molecule.bind_group(), &[]);
-        compute_pass.set_bind_group(2, resources.df_texture.bind_group(), &[]);
+        compute_pass.set_bind_group(0, &resources.ses_grid.bind_group, &[]);
+        compute_pass.set_bind_group(1, &resources.molecule.bind_group, &[]);
+        compute_pass.set_bind_group(2, &resources.df_texture.bind_group, &[]);
 
         let work_groups_count = f32::ceil(grid_points_count as f32 / 64.0) as u32;
 

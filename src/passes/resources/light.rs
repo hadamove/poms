@@ -5,7 +5,7 @@ use crate::utils::{
     dtos::LightData,
 };
 
-use super::{camera::arcball::ArcballCameraController, GpuResource};
+use super::camera::arcball::ArcballCameraController;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -28,9 +28,9 @@ impl LightUniform {
 }
 
 pub struct LightResource {
-    buffer: wgpu::Buffer,
-    bind_group_layout: wgpu::BindGroupLayout,
-    bind_group: wgpu::BindGroup,
+    pub buffer: wgpu::Buffer,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
 }
 
 impl LightResource {
@@ -90,15 +90,5 @@ impl LightResource {
                 ..Default::default()
             },
         );
-    }
-}
-
-impl GpuResource for LightResource {
-    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
-
-    fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
     }
 }

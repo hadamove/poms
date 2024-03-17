@@ -1,5 +1,3 @@
-use super::super::GpuResource;
-
 pub fn create_distance_field_texture(device: &wgpu::Device, resolution: u32) -> wgpu::Texture {
     device.create_texture(&wgpu::TextureDescriptor {
         label: Some("Distance field texture"),
@@ -19,14 +17,14 @@ pub fn create_distance_field_texture(device: &wgpu::Device, resolution: u32) -> 
 
 pub struct DistanceFieldTextureCompute {
     pub texture: wgpu::Texture,
-    bind_group_layout: wgpu::BindGroupLayout,
-    bind_group: wgpu::BindGroup,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
 }
 
 pub struct DistanceFieldTextureRender {
     pub texture: wgpu::Texture,
-    bind_group_layout: wgpu::BindGroupLayout,
-    bind_group: wgpu::BindGroup,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
 }
 
 impl DistanceFieldTextureCompute {
@@ -70,16 +68,6 @@ impl DistanceFieldTextureCompute {
             }],
             label: Some("Distance Field Texture Compute Bind Group Layout"),
         };
-}
-
-impl GpuResource for DistanceFieldTextureCompute {
-    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
-
-    fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
-    }
 }
 
 impl DistanceFieldTextureRender {
@@ -149,14 +137,4 @@ impl DistanceFieldTextureRender {
             ],
             label: Some("Distance Field Texture Render Bind Group Layout"),
         };
-}
-
-impl GpuResource for DistanceFieldTextureRender {
-    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
-
-    fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
-    }
 }

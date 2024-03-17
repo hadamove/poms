@@ -2,14 +2,13 @@ use wgpu::util::DeviceExt;
 
 use crate::utils::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 
-use super::super::GpuResource;
 use super::{AtomsWithLookup, GridUniform};
 
 // TODO: Rename this similarly to AtomsWithLookup
 pub struct MoleculeGridResource {
-    buffers: MoleculeGridBuffers,
-    bind_group_layout: wgpu::BindGroupLayout,
-    bind_group: wgpu::BindGroup,
+    pub buffers: MoleculeGridBuffers,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
 }
 
 impl MoleculeGridResource {
@@ -43,16 +42,6 @@ impl MoleculeGridResource {
             0,
             bytemuck::cast_slice(&atoms.segment_by_voxel),
         );
-    }
-}
-
-impl GpuResource for MoleculeGridResource {
-    fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
-        &self.bind_group_layout
-    }
-
-    fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
     }
 }
 
