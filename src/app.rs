@@ -6,7 +6,9 @@ use crate::passes::compute::ComputeDependencies;
 use crate::passes::render::RenderDependencies;
 use crate::passes::resources::atom::calculate_center;
 use crate::passes::resources::molecule::MoleculeStorage;
-use crate::passes::resources::textures::df_texture::DistanceFieldTexture;
+use crate::passes::resources::textures::df_texture::{
+    DistanceFieldTextureCompute, DistanceFieldTextureRender,
+};
 use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::CommonResources};
 use crate::ui::event::UserEvent;
 use crate::ui::UserInterface;
@@ -134,9 +136,17 @@ impl App {
         if let Some(render_resolution) = progress.last_computed_resolution {
             if render_resolution != self.render.resources.df_texture.resolution() {
                 // New resolution has been computed, swap the texture
-                self.render.resources.df_texture = std::mem::replace(
-                    &mut self.compute.resources.df_texture,
-                    DistanceFieldTexture::new(&self.context.device, progress.current_resolution),
+                let new_compute_texture = DistanceFieldTextureCompute::new_with_resolution(
+                    &self.context.device,
+                    progress.current_resolution,
+                );
+
+                let old_compute_texture =
+                    std::mem::replace(&mut self.compute.resources.df_texture, new_compute_texture);
+
+                self.render.resources.df_texture = DistanceFieldTextureRender::from_texture(
+                    &self.context.device,
+                    old_compute_texture.texture,
                 );
             }
         }

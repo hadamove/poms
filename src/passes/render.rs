@@ -10,8 +10,7 @@ use super::resources::grid::molecule_grid::MoleculeGridResource;
 use super::resources::grid::ses_grid::SesGridResource;
 use super::resources::light::LightResource;
 use super::resources::textures::depth_texture::DepthTexture;
-
-use super::resources::textures::df_texture::DistanceFieldTexture;
+use super::resources::textures::df_texture::DistanceFieldTextureRender;
 
 mod molecular_surface;
 mod spacefill;
@@ -27,8 +26,7 @@ pub struct RenderOwnedResources {
     pub depth_texture: DepthTexture,
     pub light_resource: LightResource,
     pub camera_resource: CameraResource,
-    // TODO: Replace with DistanceFieldRender
-    pub df_texture: DistanceFieldTexture,
+    pub df_texture: DistanceFieldTextureRender,
 }
 
 /// Configuration for the renderer.
@@ -74,7 +72,7 @@ impl RenderJobs {
             light_resource: LightResource::new(device),
             camera_resource: CameraResource::new(device),
             depth_texture: DepthTexture::new(device, config),
-            df_texture: DistanceFieldTexture::new(device, 1),
+            df_texture: DistanceFieldTextureRender::new_with_resolution(device, 1), // TODO: Replace with some reasonabel constant
         };
 
         let spacefill_resources = SpacefillResources::new(&resources, &dependencies);

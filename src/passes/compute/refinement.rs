@@ -20,7 +20,7 @@ impl<'a> RefinementResources<'a> {
         Self {
             ses_grid: dependencies.ses_grid,
             molecule: dependencies.molecule,
-            df_texture: &resources.df_texture.compute,
+            df_texture: &resources.df_texture,
         }
     }
 }

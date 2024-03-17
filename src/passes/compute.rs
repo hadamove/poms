@@ -5,7 +5,7 @@ use self::refinement::{RefinementPass, RefinementResources};
 
 use super::resources::grid::molecule_grid::MoleculeGridResource;
 use super::resources::grid::ses_grid::SesGridResource;
-use super::resources::textures::df_texture::DistanceFieldTexture;
+use super::resources::textures::df_texture::DistanceFieldTextureCompute;
 
 mod probe;
 mod refinement;
@@ -123,7 +123,7 @@ pub struct ComputeDependencies<'a> {
 }
 
 pub struct ComputeOwnedResources {
-    pub df_texture: DistanceFieldTexture, // TODO: Replace with DistanceFieldTextureCompute
+    pub df_texture: DistanceFieldTextureCompute,
 }
 
 /// TODO: Add docs!!!
@@ -137,7 +137,10 @@ pub struct ComputeJobs {
 impl ComputeJobs {
     pub fn new(device: &wgpu::Device, dependencies: ComputeDependencies) -> Self {
         let resources = ComputeOwnedResources {
-            df_texture: DistanceFieldTexture::new(device, MIN_SES_RESOLUTION),
+            df_texture: DistanceFieldTextureCompute::new_with_resolution(
+                device,
+                MIN_SES_RESOLUTION,
+            ),
         };
 
         let probe_resources = ProbeResources::new(&dependencies);

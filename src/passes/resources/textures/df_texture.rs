@@ -1,61 +1,50 @@
 use super::super::GpuResource;
 
-pub struct DistanceFieldTexture {
-    // Binding groups are different for comptue (write) and render (read).
-    pub compute: DistanceFieldTextureCompute,
-    pub render: DistanceFieldTextureRender,
-    texture: wgpu::Texture,
-}
-
-impl DistanceFieldTexture {
-    pub fn new(device: &wgpu::Device, resolution: u32) -> Self {
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("Distance field texture"),
-            size: wgpu::Extent3d {
-                width: resolution,
-                height: resolution,
-                depth_or_array_layers: resolution,
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D3,
-            format: wgpu::TextureFormat::Rgba16Float,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
-            view_formats: &[wgpu::TextureFormat::Rgba16Float],
-        });
-        let view = texture.create_view(&Default::default());
-
-        Self {
-            texture,
-            compute: DistanceFieldTextureCompute::new(device, &view),
-            render: DistanceFieldTextureRender::new(device, &view),
-        }
-    }
-
-    pub fn resolution(&self) -> u32 {
-        self.texture.depth_or_array_layers()
-    }
+pub fn create_distance_field_texture(device: &wgpu::Device, resolution: u32) -> wgpu::Texture {
+    device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("Distance field texture"),
+        size: wgpu::Extent3d {
+            width: resolution,
+            height: resolution,
+            depth_or_array_layers: resolution,
+        },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D3,
+        format: wgpu::TextureFormat::Rgba16Float,
+        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
+        view_formats: &[wgpu::TextureFormat::Rgba16Float],
+    })
 }
 
 pub struct DistanceFieldTextureCompute {
+    pub texture: wgpu::Texture,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
 }
 
 pub struct DistanceFieldTextureRender {
+    pub texture: wgpu::Texture,
     bind_group_layout: wgpu::BindGroupLayout,
     bind_group: wgpu::BindGroup,
 }
 
 impl DistanceFieldTextureCompute {
-    pub fn new(device: &wgpu::Device, view: &wgpu::TextureView) -> Self {
+    pub fn new_with_resolution(device: &wgpu::Device, resolution: u32) -> Self {
+        let texture = create_distance_field_texture(device, resolution);
+        Self::from_texture(device, texture)
+    }
+
+    pub fn from_texture(device: &wgpu::Device, texture: wgpu::Texture) -> Self {
+        let view = texture.create_view(&Default::default());
+
         let bind_group_layout = device.create_bind_group_layout(&Self::LAYOUT_DESCRIPTOR);
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::TextureView(view),
+                resource: wgpu::BindingResource::TextureView(&view),
             }],
             label: Some("Distance Field Texture Compute Bind Group"),
         });
@@ -63,6 +52,7 @@ impl DistanceFieldTextureCompute {
         Self {
             bind_group_layout,
             bind_group,
+            texture,
         }
     }
 
@@ -93,7 +83,18 @@ impl GpuResource for DistanceFieldTextureCompute {
 }
 
 impl DistanceFieldTextureRender {
-    pub fn new(device: &wgpu::Device, view: &wgpu::TextureView) -> Self {
+    pub fn resolution(&self) -> u32 {
+        self.texture.depth_or_array_layers()
+    }
+
+    pub fn new_with_resolution(device: &wgpu::Device, resolution: u32) -> Self {
+        let texture = create_distance_field_texture(device, resolution);
+        Self::from_texture(device, texture)
+    }
+
+    pub fn from_texture(device: &wgpu::Device, texture: wgpu::Texture) -> Self {
+        let view = texture.create_view(&Default::default());
+
         let bind_group_layout = device.create_bind_group_layout(&Self::LAYOUT_DESCRIPTOR);
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::ClampToEdge,
@@ -109,7 +110,7 @@ impl DistanceFieldTextureRender {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(view),
+                    resource: wgpu::BindingResource::TextureView(&view),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
@@ -120,6 +121,7 @@ impl DistanceFieldTextureRender {
         });
 
         Self {
+            texture,
             bind_group_layout,
             bind_group,
         }
