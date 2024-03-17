@@ -11,7 +11,7 @@ use super::resources::grid::ses_grid::SesGridResource;
 use super::resources::light::LightResource;
 use super::resources::textures::depth_texture::DepthTexture;
 
-use super::resources::textures::df_texture::DistanceFieldTexture;
+use super::resources::textures::df_texture::{DistanceFieldTexture, DistanceFieldTextureRender};
 
 mod molecular_surface;
 mod spacefill;
@@ -21,7 +21,7 @@ mod util;
 pub struct RenderDependencies<'a> {
     pub molecule_resource: &'a MoleculeGridResource,
     pub ses_resource: &'a SesGridResource,
-    pub df_texture_front: &'a DistanceFieldTexture,
+    pub df_texture_front: &'a DistanceFieldTextureRender,
 }
 
 pub struct RenderOwnedResources {
@@ -90,7 +90,7 @@ impl RenderJobs {
             config,
             RenderMolecularSurfaceResources {
                 ses_grid: dependencies.ses_resource,
-                df_texture: &dependencies.df_texture_front.render,
+                df_texture: &dependencies.df_texture_front,
                 camera: &resources.camera_resource,
                 light: &resources.light_resource,
             },
@@ -132,7 +132,7 @@ impl RenderJobs {
                 self.config.clear_color,
                 RenderMolecularSurfaceResources {
                     ses_grid: dependencies.ses_resource,
-                    df_texture: &dependencies.df_texture_front.render,
+                    df_texture: &dependencies.df_texture_front,
                     camera: &self.resources.camera_resource,
                     light: &self.resources.light_resource,
                 },

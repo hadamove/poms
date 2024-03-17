@@ -1,7 +1,9 @@
 use self::probe::{ComputeProbePass, ComputeProbeResources};
 use self::refinement::{ComputeRefinementPass, ComputeRefinementResources};
 
-use super::resources::CommonResources;
+use super::resources::grid::molecule_grid::MoleculeGridResource;
+use super::resources::grid::ses_grid::SesGridResource;
+use super::resources::textures::df_texture::DistanceFieldTextureCompute;
 
 mod probe;
 mod refinement;
@@ -119,22 +121,28 @@ impl ComputeProgress {
     }
 }
 
+pub struct ComputeDependencies<'a> {
+    pub ses_grid: &'a SesGridResource,
+    pub molecule: &'a MoleculeGridResource,
+    pub df_texture: &'a DistanceFieldTextureCompute,
+}
+
 impl ComputeJobs {
-    pub fn new(device: &wgpu::Device, resources: &CommonResources) -> Self {
+    pub fn new(device: &wgpu::Device, dependencies: ComputeDependencies) -> Self {
         Self {
             probe_pass: ComputeProbePass::new(
                 device,
                 ComputeProbeResources {
-                    ses_grid: resources.ses_resource.clone(),
-                    molecule: resources.molecule_resource.clone(),
+                    ses_grid: &dependencies.ses_grid,
+                    molecule: &dependencies.molecule,
                 },
             ),
             refinement_pass: ComputeRefinementPass::new(
                 device,
                 ComputeRefinementResources {
-                    ses_grid: resources.ses_resource.clone(),
-                    molecule: resources.molecule_resource.clone(),
-                    df_texture: resources.df_texture_back.compute.clone(),
+                    ses_grid: &dependencies.ses_grid,
+                    molecule: &dependencies.molecule,
+                    df_texture: &dependencies.df_texture,
                 },
             ),
             progress: ComputeProgress::new(
@@ -145,12 +153,31 @@ impl ComputeJobs {
         }
     }
 
-    pub fn execute(&mut self, encoder: &mut wgpu::CommandEncoder) {
+    pub fn execute(
+        &mut self,
+        encoder: &mut wgpu::CommandEncoder,
+        dependencies: ComputeDependencies,
+    ) {
         let grid_points_count = self.progress.grid_points_this_frame_count();
 
         match self.progress.current_phase {
-            ComputePhase::Probe => self.probe_pass.execute(encoder, grid_points_count),
-            ComputePhase::Refinement => self.refinement_pass.execute(encoder, grid_points_count),
+            ComputePhase::Probe => self.probe_pass.execute(
+                encoder,
+                grid_points_count,
+                ComputeProbeResources {
+                    ses_grid: &dependencies.ses_grid,
+                    molecule: &dependencies.molecule,
+                },
+            ),
+            ComputePhase::Refinement => self.refinement_pass.execute(
+                encoder,
+                grid_points_count,
+                ComputeRefinementResources {
+                    ses_grid: &dependencies.ses_grid,
+                    molecule: &dependencies.molecule,
+                    df_texture: &dependencies.df_texture,
+                },
+            ),
             ComputePhase::Finished => {
                 // Do not advance progress if we are finished.
                 return;
@@ -158,13 +185,5 @@ impl ComputeJobs {
         };
 
         self.progress.advance();
-    }
-
-    /// Keep the compute progress but recreate the passes with updated resources (e.g. after switching distance field textures).
-    /// Note: if the molecule or probe radius has changed, we have to recreate the whole struct with [`ComputeJobs::new`] and start from the beginning instead.
-    pub fn recreate_passes(&mut self, device: &wgpu::Device, resources: &CommonResources) {
-        let progress = self.progress.clone();
-        *self = Self::new(device, resources);
-        self.progress = progress;
     }
 }

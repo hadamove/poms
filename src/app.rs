@@ -2,6 +2,7 @@ use winit::event::*;
 
 use crate::context::Context;
 
+use crate::passes::compute::ComputeDependencies;
 use crate::passes::render::RenderDependencies;
 use crate::passes::resources::atom::calculate_center;
 use crate::passes::resources::molecule::MoleculeStorage;
@@ -27,14 +28,21 @@ impl App {
 
         App {
             storage: MoleculeStorage::new(),
-            compute: ComputeJobs::new(&context.device, &resources),
+            compute: ComputeJobs::new(
+                &context.device,
+                ComputeDependencies {
+                    molecule: &resources.molecule_resource,
+                    ses_grid: &resources.ses_resource,
+                    df_texture: &resources.df_texture_back.compute,
+                },
+            ),
             render: RenderJobs::new(
                 &context.device,
                 &context.config,
                 RenderDependencies {
                     molecule_resource: &resources.molecule_resource,
                     ses_resource: &resources.ses_resource,
-                    df_texture_front: &resources.df_texture_front,
+                    df_texture_front: &resources.df_texture_front.render,
                 },
             ),
             ui: UserInterface::new(&context),
@@ -58,7 +66,14 @@ impl App {
         // TODO: Bad workaround
         if self.storage.get_current().is_some() {
             self.update_compute_progress();
-            self.compute.execute(&mut encoder);
+            self.compute.execute(
+                &mut encoder,
+                ComputeDependencies {
+                    molecule: &self.resources.molecule_resource,
+                    ses_grid: &self.resources.ses_resource,
+                    df_texture: &self.resources.df_texture_back.compute,
+                },
+            );
         }
 
         self.render.execute(
@@ -67,7 +82,7 @@ impl App {
             RenderDependencies {
                 molecule_resource: &self.resources.molecule_resource,
                 ses_resource: &self.resources.ses_resource,
-                df_texture_front: &self.resources.df_texture_front,
+                df_texture_front: &self.resources.df_texture_front.render,
             },
         );
         self.ui.render(&self.context, &view, &mut encoder);
@@ -127,8 +142,6 @@ impl App {
                     &mut self.resources.df_texture_back,
                     DistanceFieldTexture::new(&self.context.device, progress.current_resolution),
                 );
-                self.compute
-                    .recreate_passes(&self.context.device, &self.resources);
             }
         }
         self.resources
