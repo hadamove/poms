@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::context::Context;
+use crate::app::context::Context;
 
 /// TODO: Add documentation, glue between winit, wgpu and egui
 pub struct EguiWrapper {

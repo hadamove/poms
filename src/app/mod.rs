@@ -3,19 +3,20 @@ use winit::event::*;
 use crate::{
     common::{models::atom::calculate_center, resources::CommonResources},
     compute::{composer::ComputeJobs, resources::df_texture::DistanceFieldTextureCompute},
-    context::Context,
     render::{composer::RenderJobs, resources::df_texture::DistanceFieldTextureRender},
 };
 
 use self::{
     camera::CameraController,
     constants::ColorTheme,
+    context::Context,
     storage::MoleculeStorage,
     ui::{event::UserEvent, UserInterface},
 };
 
 pub mod camera;
 pub mod constants;
+pub mod context;
 pub mod dtos; // TODO: Refactor this into something else please
 pub mod file;
 pub mod input;

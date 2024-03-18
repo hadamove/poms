@@ -1,14 +1,13 @@
 pub mod app;
 pub mod common;
 pub mod compute;
-pub mod context;
 pub mod render;
 
 use std::sync::Arc;
 
+use app::context::Context;
 use app::App;
 
-use context::Context;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};

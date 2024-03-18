@@ -1,9 +1,9 @@
 use winit::event::WindowEvent;
 
 use self::event::UserEvent;
+use super::context::Context;
 use super::file::{AsyncFileLoader, FileResponse};
 use super::input::Input;
-use crate::context::Context;
 
 pub mod egui_wrapper;
 pub mod elements;
