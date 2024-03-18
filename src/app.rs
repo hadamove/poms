@@ -1,16 +1,27 @@
 use winit::event::*;
 
-use crate::context::Context;
+use crate::{
+    common::{models::atom::calculate_center, resources::CommonResources},
+    compute::{composer::ComputeJobs, resources::df_texture::DistanceFieldTextureCompute},
+    context::Context,
+    render::{composer::RenderJobs, resources::df_texture::DistanceFieldTextureRender},
+};
 
-use crate::passes::compute::resources::df_texture::DistanceFieldTextureCompute;
-use crate::passes::render::resources::df_texture::DistanceFieldTextureRender;
-use crate::passes::resources::atom::calculate_center;
-use crate::passes::{compute::ComputeJobs, render::RenderJobs, resources::CommonResources};
-use crate::ui::event::UserEvent;
-use crate::ui::UserInterface;
-use crate::utils::arcball::CameraController;
-use crate::utils::constants::ColorTheme;
-use crate::utils::molecule::MoleculeStorage;
+use self::{
+    camera::CameraController,
+    constants::ColorTheme,
+    storage::MoleculeStorage,
+    ui::{event::UserEvent, UserInterface},
+};
+
+pub mod camera;
+pub mod constants;
+pub mod dtos; // TODO: Refactor this into something else please
+pub mod file;
+pub mod input;
+pub mod storage;
+pub mod ui;
+pub mod utils;
 
 pub struct App {
     context: Context,

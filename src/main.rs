@@ -1,9 +1,8 @@
-mod app;
-mod context;
-mod parser;
-mod passes;
-mod ui;
-mod utils;
+pub mod app;
+pub mod common;
+pub mod compute;
+pub mod context;
+pub mod render;
 
 use std::sync::Arc;
 
