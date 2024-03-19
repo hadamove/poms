@@ -1,5 +1,5 @@
 use crate::{
-    common::resources::{grid::GridResource},
+    common::resources::grid::GridResource,
     render::{
         composer::RenderOwnedResources,
         resources::{

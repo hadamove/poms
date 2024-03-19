@@ -11,9 +11,8 @@ use super::util;
 const WGPU_LABEL: &str = "Compute Probe";
 
 pub struct ProbeResources<'a> {
-    // TODO: Rename
-    pub molecule: &'a AtomsWithLookupResource, // @group(0)
-    pub df_grid: &'a GridResource,             // @group(1)
+    pub atoms: &'a AtomsWithLookupResource,         // @group(0)
+    pub df_grid: &'a GridResource,                  // @group(1)
     pub mixed_stuff: &'a MixedComputeStuffResource, // @group(2)
 }
 
@@ -22,7 +21,7 @@ impl<'a> ProbeResources<'a> {
         Self {
             mixed_stuff: &resources.mixed_stuff,
             df_grid: &resources.df_grid,
-            molecule: &common.molecule_resource,
+            atoms: &common.atoms_resource,
         }
     }
 }
@@ -36,7 +35,7 @@ impl ProbePass {
         let shader = wgpu::include_wgsl!("../shaders/probe.wgsl");
 
         let bind_group_layouts = &[
-            &resources.molecule.bind_group_layout,
+            &resources.atoms.bind_group_layout,
             &resources.df_grid.bind_group_layout,
             &resources.mixed_stuff.bind_group_layout,
         ];
@@ -55,7 +54,7 @@ impl ProbePass {
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
-        compute_pass.set_bind_group(0, &resources.molecule.bind_group, &[]);
+        compute_pass.set_bind_group(0, &resources.atoms.bind_group, &[]);
         compute_pass.set_bind_group(1, &resources.df_grid.bind_group, &[]);
         compute_pass.set_bind_group(2, &resources.mixed_stuff.bind_group, &[]);
 

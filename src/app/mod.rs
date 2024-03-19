@@ -191,7 +191,7 @@ impl App {
                         .set_target(calculate_center(&current.atoms.data));
 
                     self.resources
-                        .molecule_resource
+                        .atoms_resource
                         .update(&self.context.queue, &current.atoms);
                 }
                 UserEvent::DistanceFieldResolutionChanged(_resolution) => {

@@ -60,6 +60,7 @@ fn compute_distance(grid_point_index: u32) -> f32 {
                     min_distance = distance;
 
                     if grid_point_class[neighbor_index] == 0u {
+                        // TODO: Explain `+ 3u`, this whole thing
                         grid_point_class[grid_point_index] = neighbor_index + 3u;
                     } else {
                         grid_point_class[grid_point_index] = grid_point_class[neighbor_index];

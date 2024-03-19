@@ -31,42 +31,44 @@ impl AtomsWithLookupResource {
             bytemuck::cast_slice(atoms.data.as_slice()),
         );
         queue.write_buffer(
-            &self.buffers.lookup_grid_buffer,
+            &self.buffers.atoms_lookup_grid_buffer,
             0,
-            bytemuck::cast_slice(&[atoms.lookup_grid]),
+            bytemuck::cast_slice(&[atoms.atoms_lookup_grid]),
         );
         queue.write_buffer(
-            &self.buffers.segment_by_voxel_buffer,
+            &self.buffers.atoms_by_voxel_buffer,
             0,
-            bytemuck::cast_slice(&atoms.segment_by_voxel),
+            bytemuck::cast_slice(&atoms.atoms_by_voxel),
         );
     }
 }
 
 struct AtomsWithLookupBuffers {
     atoms_data_buffer: wgpu::Buffer,
-    lookup_grid_buffer: wgpu::Buffer,
-    segment_by_voxel_buffer: wgpu::Buffer,
+    atoms_lookup_grid_buffer: wgpu::Buffer,
+    atoms_by_voxel_buffer: wgpu::Buffer,
 
+    // TODO: Move this somewhere else
     grid_point_class_buffer: wgpu::Buffer,
 }
 
 impl AtomsWithLookupBuffers {
     fn new(device: &wgpu::Device) -> Self {
-        let atoms_sorted_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        let atoms_data_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Sorted Atoms Buffer"),
             contents: bytemuck::cast_slice(&[0u32; MAX_NUM_ATOMS]),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
 
-        let neighbor_grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Neighbor Atoms Grid Uniform Buffer"),
-            contents: bytemuck::cast_slice(&[GridUniform::default()]),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
+        let atoms_lookup_grid_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Neighbor Atoms Grid Uniform Buffer"),
+                contents: bytemuck::cast_slice(&[GridUniform::default()]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            });
 
-        let grid_cells_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Grid cells buffer"),
+        let atoms_by_voxel_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Segment by Voxel buffer"),
             contents: bytemuck::cast_slice(&[0u32; MAX_NUM_GRID_POINTS]),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
@@ -79,9 +81,9 @@ impl AtomsWithLookupBuffers {
             });
 
         Self {
-            atoms_data_buffer: atoms_sorted_buffer,
-            lookup_grid_buffer: neighbor_grid_buffer,
-            segment_by_voxel_buffer: grid_cells_buffer,
+            atoms_data_buffer,
+            atoms_lookup_grid_buffer,
+            atoms_by_voxel_buffer,
             grid_point_class_buffer,
         }
     }
@@ -104,11 +106,11 @@ impl AtomsWithLookupBindGroup {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: buffers.lookup_grid_buffer.as_entire_binding(),
+                    resource: buffers.atoms_lookup_grid_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: buffers.segment_by_voxel_buffer.as_entire_binding(),
+                    resource: buffers.atoms_by_voxel_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 3,

@@ -40,10 +40,7 @@ pub fn create_compute_grid_around_molecule(
     }
 }
 
-pub fn create_neighbor_lookup_grid_around_molecule(
-    atoms: &[Atom],
-    probe_radius: f32,
-) -> GridUniform {
+pub fn create_atoms_lookup_grid_around_molecule(atoms: &[Atom], probe_radius: f32) -> GridUniform {
     let max_atom_radius = get_max_atom_radius(atoms);
     let margin = 2.0 * probe_radius + max_atom_radius;
 

@@ -23,7 +23,7 @@ impl<'a> RefinementResources<'a> {
         Self {
             mixed_stuff: &resources.mixed_stuff,
             df_grid: &resources.df_grid,
-            atoms_with_lookup: &common.molecule_resource,
+            atoms_with_lookup: &common.atoms_resource,
             df_texture: &resources.df_texture,
         }
     }

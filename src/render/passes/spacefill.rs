@@ -15,7 +15,7 @@ pub struct SpacefillResources<'a> {
 impl<'a> SpacefillResources<'a> {
     pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
         Self {
-            molecule: &common.molecule_resource,
+            molecule: &common.atoms_resource,
             camera: &resources.camera_resource,
         }
     }
