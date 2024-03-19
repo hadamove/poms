@@ -1,6 +1,6 @@
 // TODO: Clean up imports
 
-use crate::common::resources::CommonResources;
+use crate::common::resources::{grid::GridResource, CommonResources};
 
 use super::{
     passes::{
@@ -14,6 +14,7 @@ use super::{
 };
 
 pub struct RenderOwnedResources {
+    pub df_grid: GridResource,
     pub depth_texture: DepthTexture,
     pub light_resource: LightResource,
     pub camera_resource: CameraResource,
@@ -61,6 +62,7 @@ impl RenderJobs {
         common: &CommonResources,
     ) -> RenderJobs {
         let resources = RenderOwnedResources {
+            df_grid: GridResource::new(device),
             light_resource: LightResource::new(device),
             camera_resource: CameraResource::new(device),
             depth_texture: DepthTexture::new(device, config),
@@ -70,7 +72,7 @@ impl RenderJobs {
         let spacefill_resources = SpacefillResources::new(&resources, common);
         let spacefill_pass = SpacefillPass::new(device, config, spacefill_resources);
 
-        let molecular_surface_resources = MolecularSurfaceResources::new(&resources, common);
+        let molecular_surface_resources = MolecularSurfaceResources::new(&resources);
         let molecular_surface_pass =
             MolecularSurfacePass::new(device, config, molecular_surface_resources);
 
@@ -102,8 +104,7 @@ impl RenderJobs {
         }
 
         if self.config.render_molecular_surface {
-            let molecular_surface_resources =
-                MolecularSurfaceResources::new(&self.resources, common);
+            let molecular_surface_resources = MolecularSurfaceResources::new(&self.resources);
 
             self.molecular_surface_pass.render(
                 view,

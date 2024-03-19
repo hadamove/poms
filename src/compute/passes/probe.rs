@@ -1,5 +1,9 @@
-use crate::common::resources::{
-    atoms_with_lookup::AtomsWithLookupResource, df_grid::DistanceFieldGridResource, CommonResources,
+use crate::{
+    common::resources::{
+        atoms_with_lookup::AtomsWithLookupResource, df_grid::MixedComputeStuffResource,
+        grid::GridResource, CommonResources,
+    },
+    compute::composer::ComputeOwnedResources,
 };
 
 use super::util;
@@ -7,14 +11,17 @@ use super::util;
 const WGPU_LABEL: &str = "Compute Probe";
 
 pub struct ProbeResources<'a> {
-    pub df_grid: &'a DistanceFieldGridResource, // @group(0)
-    pub molecule: &'a AtomsWithLookupResource,  // @group(1)
+    // TODO: Rename
+    pub molecule: &'a AtomsWithLookupResource, // @group(0)
+    pub df_grid: &'a GridResource,             // @group(1)
+    pub mixed_stuff: &'a MixedComputeStuffResource, // @group(2)
 }
 
 impl<'a> ProbeResources<'a> {
-    pub fn new(common: &'a CommonResources) -> Self {
+    pub fn new(resources: &'a ComputeOwnedResources, common: &'a CommonResources) -> Self {
         Self {
-            df_grid: &common.df_grid_resource,
+            mixed_stuff: &resources.mixed_stuff,
+            df_grid: &resources.df_grid,
             molecule: &common.molecule_resource,
         }
     }
@@ -29,8 +36,9 @@ impl ProbePass {
         let shader = wgpu::include_wgsl!("../shaders/probe.wgsl");
 
         let bind_group_layouts = &[
-            &resources.df_grid.bind_group_layout,
             &resources.molecule.bind_group_layout,
+            &resources.df_grid.bind_group_layout,
+            &resources.mixed_stuff.bind_group_layout,
         ];
 
         let compute_pipeline =
@@ -47,8 +55,9 @@ impl ProbePass {
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
-        compute_pass.set_bind_group(0, &resources.df_grid.bind_group, &[]);
-        compute_pass.set_bind_group(1, &resources.molecule.bind_group, &[]);
+        compute_pass.set_bind_group(0, &resources.molecule.bind_group, &[]);
+        compute_pass.set_bind_group(1, &resources.df_grid.bind_group, &[]);
+        compute_pass.set_bind_group(2, &resources.mixed_stuff.bind_group, &[]);
 
         let work_groups_count = f32::ceil(grid_points_count as f32 / 64.0) as u32;
 

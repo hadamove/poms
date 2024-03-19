@@ -7,15 +7,15 @@ struct GridUniform {
     _padding: f32,
 };
 
-
-@group(0) @binding(0) var<uniform> df_grid: GridUniform;
-@group(0) @binding(1) var<uniform> probe_radius: f32;
-@group(0) @binding(2) var<uniform> grid_point_index_offset: u32;
-
 // TODO: give this a better name as it also contains predecessor indices.
-@group(1) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
+@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
 
-@group(2) @binding(0) var distance_texture: texture_storage_3d<rgba16float, write>;
+@group(1) @binding(0) var<uniform> df_grid: GridUniform;
+@group(2) @binding(0) var df_texture: texture_storage_3d<rgba16float, write>;
+
+@group(3) @binding(0) var<uniform> probe_radius: f32;
+@group(3) @binding(1) var<uniform> grid_point_index_offset: u32;
+
 
 fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
     return df_grid.origin.xyz + vec3<f32>(
@@ -95,16 +95,16 @@ fn main(
     // Switch cases with constants are not supported yet.
     switch (grid_point_class[grid_point_index]) {
         case 0u: { // Exterior point
-            textureStore(distance_texture, texture_index, vec4<f32>(probe_radius));
+            textureStore(df_texture, texture_index, vec4<f32>(probe_radius));
             return;
         }
         case 1u: { // Interior point
-            textureStore(distance_texture, texture_index, vec4<f32>(-df_grid.offset));
+            textureStore(df_texture, texture_index, vec4<f32>(-df_grid.offset));
             return;
         }
         default: { // Boundary point
             var distance = compute_distance(grid_point_index);
-            textureStore(distance_texture, texture_index, vec4<f32>(distance));
+            textureStore(df_texture, texture_index, vec4<f32>(distance));
             return;
         }
     }

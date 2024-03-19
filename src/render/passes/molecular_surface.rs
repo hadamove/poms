@@ -1,5 +1,5 @@
 use crate::{
-    common::resources::{df_grid::DistanceFieldGridResource, CommonResources},
+    common::resources::{grid::GridResource},
     render::{
         composer::RenderOwnedResources,
         resources::{
@@ -13,16 +13,16 @@ use super::util;
 const WGPU_LABEL: &str = "Render Molecular Surface";
 
 pub struct MolecularSurfaceResources<'a> {
-    pub df_grid: &'a DistanceFieldGridResource, // @group(0)
+    pub df_grid: &'a GridResource,                  // @group(0)
     pub df_texture: &'a DistanceFieldTextureRender, // @group(1)
-    pub camera: &'a CameraResource,             // @group(2)
-    pub light: &'a LightResource,               // @group(3)
+    pub camera: &'a CameraResource,                 // @group(2)
+    pub light: &'a LightResource,                   // @group(3)
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
-    pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
+    pub fn new(resources: &'a RenderOwnedResources) -> Self {
         Self {
-            df_grid: &common.df_grid_resource,
+            df_grid: &resources.df_grid,
             df_texture: &resources.df_texture,
             camera: &resources.camera_resource,
             light: &resources.light_resource,

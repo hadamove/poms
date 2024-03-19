@@ -1,7 +1,10 @@
 use winit::event::*;
 
 use crate::{
-    common::{models::atom::calculate_center, resources::CommonResources},
+    common::{
+        models::{atom::calculate_center, grid::create_compute_grid_around_molecule},
+        resources::CommonResources,
+    },
     compute::{composer::ComputeJobs, resources::df_texture::DistanceFieldTextureCompute},
     render::{composer::RenderJobs, resources::df_texture::DistanceFieldTextureRender},
 };
@@ -135,11 +138,34 @@ impl App {
                     &self.context.device,
                     old_compute_texture.texture,
                 );
+                let df_grid_render = create_compute_grid_around_molecule(
+                    &molecule.atoms.data,
+                    render_resolution,
+                    progress.probe_radius,
+                );
+                self.context.queue.write_buffer(
+                    &self.render.resources.df_grid.buffer,
+                    0,
+                    bytemuck::cast_slice(&[df_grid_render]),
+                );
             }
         }
-        self.resources
-            .df_grid_resource
-            .update(&self.context.queue, &molecule.atoms.data, progress);
+
+        self.compute
+            .resources
+            .mixed_stuff
+            .update(&self.context.queue, &progress);
+
+        let df_grid_compute = create_compute_grid_around_molecule(
+            &molecule.atoms.data,
+            progress.current_resolution,
+            progress.probe_radius,
+        );
+
+        self.compute
+            .resources
+            .df_grid
+            .update(&self.context.queue, &df_grid_compute);
     }
 
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {

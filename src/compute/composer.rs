@@ -1,6 +1,8 @@
 use super::passes::probe::{ProbePass, ProbeResources};
 use super::passes::refinement::{RefinementPass, RefinementResources};
 use super::resources::df_texture::DistanceFieldTextureCompute;
+use crate::common::resources::df_grid::MixedComputeStuffResource;
+use crate::common::resources::grid::GridResource;
 use crate::{app::constants::MIN_DISTANCE_FIELD_RESOLUTION, common::resources::CommonResources};
 
 #[derive(Clone, Debug)]
@@ -111,7 +113,9 @@ impl ComputeProgress {
 }
 
 pub struct ComputeOwnedResources {
+    pub df_grid: GridResource,
     pub df_texture: DistanceFieldTextureCompute,
+    pub mixed_stuff: MixedComputeStuffResource, // TODO: Rename this
 }
 
 /// TODO: Add docs!!!
@@ -125,13 +129,15 @@ pub struct ComputeJobs {
 impl ComputeJobs {
     pub fn new(device: &wgpu::Device, common: &CommonResources) -> Self {
         let resources = ComputeOwnedResources {
+            df_grid: GridResource::new(device),
             df_texture: DistanceFieldTextureCompute::new_with_resolution(
                 device,
                 MIN_DISTANCE_FIELD_RESOLUTION,
             ),
+            mixed_stuff: MixedComputeStuffResource::new(device),
         };
 
-        let probe_resources = ProbeResources::new(common);
+        let probe_resources = ProbeResources::new(&resources, common);
         let refinement_resources = RefinementResources::new(&resources, common);
 
         Self {
@@ -151,7 +157,7 @@ impl ComputeJobs {
 
         match self.progress.current_phase {
             ComputePhase::Probe => {
-                let probe_resources = ProbeResources::new(common);
+                let probe_resources = ProbeResources::new(&self.resources, common);
                 self.probe_pass
                     .execute(encoder, grid_points_count, probe_resources);
             }

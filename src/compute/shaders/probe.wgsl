@@ -19,17 +19,16 @@ struct GridCell {
     atoms_count: u32,
 }
 
-@group(0) @binding(0) var<uniform> df_grid: GridUniform;
-@group(0) @binding(1) var<uniform> probe_radius: f32;
-@group(0) @binding(2) var<uniform> grid_point_index_offset: u32;
+@group(0) @binding(0) var<storage, read> atoms_sorted: array<Atom>;
+@group(0) @binding(1) var<uniform> neighbor_grid: GridUniform;
+@group(0) @binding(2) var<storage, read> grid_cells: array<GridCell>;
+@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>; // TODO: Rename
 
-// Input buffers
-@group(1) @binding(0) var<storage, read> atoms_sorted: array<Atom>; // 1. resource group
-@group(1) @binding(1) var<uniform> neighbor_grid: GridUniform; // 2. resource group
-@group(1) @binding(2) var<storage, read> grid_cells: array<GridCell>; // 2. resource group
+@group(1) @binding(0) var<uniform> df_grid: GridUniform;
 
-// Output buffer
-@group(1) @binding(3) var<storage, read_write> grid_point_class: array<u32>; // 3. resource group
+@group(2) @binding(0) var<uniform> probe_radius: f32;
+@group(2) @binding(1) var<uniform> grid_point_index_offset: u32;
+
 
 
 
