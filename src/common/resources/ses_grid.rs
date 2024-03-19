@@ -31,7 +31,11 @@ impl SesGridResource {
 
     pub fn update(&self, queue: &wgpu::Queue, atoms: &[Atom], progress: ComputeProgress) {
         if let Some(render_resolution) = progress.last_computed_resolution {
-            let ses_grid_render = create_compute_grid_around_molecule(atoms, render_resolution);
+            let ses_grid_render = create_compute_grid_around_molecule(
+                atoms,
+                render_resolution,
+                progress.probe_radius,
+            );
             queue.write_buffer(
                 &self.buffers.ses_grid_render_buffer,
                 0,
@@ -39,8 +43,11 @@ impl SesGridResource {
             );
         }
 
-        let ses_grid_compute =
-            create_compute_grid_around_molecule(atoms, progress.current_resolution);
+        let ses_grid_compute = create_compute_grid_around_molecule(
+            atoms,
+            progress.current_resolution,
+            progress.probe_radius,
+        );
 
         queue.write_buffer(
             &self.buffers.ses_grid_compute_buffer,
@@ -50,7 +57,7 @@ impl SesGridResource {
         queue.write_buffer(
             &self.buffers.probe_radius_buffer,
             0,
-            bytemuck::cast_slice(&[1.4_f32]), // TODO: This should be a parameter
+            bytemuck::cast_slice(&[progress.probe_radius]),
         );
 
         queue.write_buffer(

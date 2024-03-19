@@ -4,7 +4,7 @@ use super::resources::df_texture::DistanceFieldTextureCompute;
 use crate::{app::constants::MIN_SES_RESOLUTION, common::resources::CommonResources};
 
 #[derive(Clone, Debug)]
-enum ComputePhase {
+pub enum ComputePhase {
     Probe,
     Refinement,
     Finished,
@@ -15,13 +15,13 @@ enum ComputePhase {
 pub struct ComputeProgress {
     pub current_resolution: u32,
     pub last_computed_resolution: Option<u32>,
-    target_resolution: u32,
+    pub target_resolution: u32,
 
-    current_phase: ComputePhase,
-    grid_points_computed_count: u32,
+    pub current_phase: ComputePhase,
+    pub grid_points_computed_count: u32,
 
-    probe_radius: f32,
-    grid_size: f32,
+    pub probe_radius: f32,
+    pub grid_size: f32,
 }
 
 /// TODO: Add docs

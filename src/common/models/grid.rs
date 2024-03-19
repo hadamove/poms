@@ -1,7 +1,6 @@
 use cgmath::{Point3, Vector3, Vector4};
 
 use super::atom::*;
-use crate::app::constants::MAX_PROBE_RADIUS;
 
 // TODO: create an intermediate struct between app logic and uniforms, same for light data
 /// TODO: better docs
@@ -20,9 +19,13 @@ pub struct GridUniform {
     _padding: [u8; 4],
 }
 
-pub fn create_compute_grid_around_molecule(atoms: &[Atom], resolution: u32) -> GridUniform {
+pub fn create_compute_grid_around_molecule(
+    atoms: &[Atom],
+    resolution: u32,
+    probe_radius: f32,
+) -> GridUniform {
     let max_atom_radius = get_max_atom_radius(atoms);
-    let margin = 2.0 * MAX_PROBE_RADIUS + max_atom_radius;
+    let margin = 2.0 * probe_radius + max_atom_radius;
 
     let origin = get_min_position(atoms) - margin * Vector3::from((1.0, 1.0, 1.0));
     let size = get_max_distance(atoms) + 2.0 * margin;
@@ -42,7 +45,7 @@ pub fn create_neighbor_lookup_grid_around_molecule(
     probe_radius: f32,
 ) -> GridUniform {
     let max_atom_radius = get_max_atom_radius(atoms);
-    let margin = 2.0 * MAX_PROBE_RADIUS + max_atom_radius;
+    let margin = 2.0 * probe_radius + max_atom_radius;
 
     let origin = get_min_position(atoms) - margin * Vector3::from((1.0, 1.0, 1.0));
     let size = get_max_distance(atoms) + 2.0 * margin;
