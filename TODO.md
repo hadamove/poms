@@ -1,5 +1,9 @@
 # Improvements
 
+## Random Ideas
+
+- Only store direction not index in predecessor buffer
+
 ## Easy, high priority
 
 - Add types to wgsl shaders & refine them ✅
@@ -12,7 +16,7 @@
 - Fix windows build (check current state first)
 - Improve README
 - Add warning dialog "this browser does not support webgpu"
-- Check if Vulkan bug has been fixed: https://github.com/gfx-rs/wgpu/pull/3627
+- Check if Vulkan bug has been fixed: <https://github.com/gfx-rs/wgpu/pull/3627>
 
 ## Harder, high priority
 
@@ -32,7 +36,7 @@
 - Make repository public on github
 - Use macros to learn them where appropriate? e.g. the parser
 - Learn how to properly use modules (do not use mod.rs everywhere)
-- Go through do's and dont's in the docs (https://github.com/gfx-rs/wgpu/wiki/Do%27s-and-Dont%27s) and apply suggestions
+- Go through do's and dont's in the docs (<https://github.com/gfx-rs/wgpu/wiki/Do%27s-and-Dont%27s>) and apply suggestions
 
 ## Harder, low priority
 
