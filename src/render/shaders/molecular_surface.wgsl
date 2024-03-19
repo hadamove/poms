@@ -22,7 +22,7 @@ struct LightUniform {
 };
 
 
-@group(0) @binding(3) var<uniform> ses_grid: GridUniform;
+@group(0) @binding(3) var<uniform> df_grid: GridUniform;
 
 @group(1) @binding(0) var df_texture: texture_3d<f32>;
 @group(1) @binding(1) var df_sampler: sampler;
@@ -32,14 +32,14 @@ struct LightUniform {
 
 
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {
-    var tex_coord: vec3<f32> = (position - ses_grid.origin.xyz) / (f32(ses_grid.resolution) * ses_grid.offset);
+    var tex_coord: vec3<f32> = (position - df_grid.origin.xyz) / (f32(df_grid.resolution) * df_grid.offset);
     return textureSampleLevel(df_texture, df_sampler, tex_coord, 0.).r;
 }
 
 fn distance_from_df_tricubic(position: vec3<f32>) -> f32 {
-    var resolution = f32(ses_grid.resolution);
+    var resolution = f32(df_grid.resolution);
 
-    var coord: vec3<f32> = (position - ses_grid.origin.xyz) / (resolution * ses_grid.offset);
+    var coord: vec3<f32> = (position - df_grid.origin.xyz) / (resolution * df_grid.offset);
     var coord_grid = resolution * coord - vec3<f32>(0.5);
     var index = floor(coord_grid);
 
@@ -94,8 +94,8 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
     rayhit.hit = false;
 
     // Find closest intersection with the bounding box grid.
-    var tmin = (ses_grid.origin.xyz - origin) / direction;
-    var tmax = (ses_grid.origin.xyz + vec3<f32>(f32(ses_grid.resolution) * ses_grid.offset) - origin) / direction;
+    var tmin = (df_grid.origin.xyz - origin) / direction;
+    var tmax = (df_grid.origin.xyz + vec3<f32>(f32(df_grid.resolution) * df_grid.offset) - origin) / direction;
 
     var t0 = min(tmin, tmax);
     var t1 = max(tmin, tmax);
@@ -124,7 +124,7 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
 
         if (distance < MINIMUM_HIT_DISTANCE) {
             // Calculate normal.
-            var small_step = vec3<f32>(0.03, 0.0, 0.0) * ses_grid.offset;
+            var small_step = vec3<f32>(0.03, 0.0, 0.0) * df_grid.offset;
 
             var p: vec3<f32> = current_position + distance * direction;
             // TODO: what would happen if we used trilinear instead of tricubic here?

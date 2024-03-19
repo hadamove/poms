@@ -1,5 +1,5 @@
 use crate::{
-    common::resources::{ses_grid::SesGridResource, CommonResources},
+    common::resources::{df_grid::DistanceFieldGridResource, CommonResources},
     render::{
         composer::RenderOwnedResources,
         resources::{
@@ -13,16 +13,16 @@ use super::util;
 const WGPU_LABEL: &str = "Render Molecular Surface";
 
 pub struct MolecularSurfaceResources<'a> {
-    pub ses_grid: &'a SesGridResource,              // @group(0)
+    pub df_grid: &'a DistanceFieldGridResource, // @group(0)
     pub df_texture: &'a DistanceFieldTextureRender, // @group(1)
-    pub camera: &'a CameraResource,                 // @group(2)
-    pub light: &'a LightResource,                   // @group(3)
+    pub camera: &'a CameraResource,             // @group(2)
+    pub light: &'a LightResource,               // @group(3)
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
     pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
         Self {
-            ses_grid: &common.ses_resource,
+            df_grid: &common.df_grid_resource,
             df_texture: &resources.df_texture,
             camera: &resources.camera_resource,
             light: &resources.light_resource,
@@ -43,7 +43,7 @@ impl MolecularSurfacePass {
         let shader = wgpu::include_wgsl!("../shaders/molecular_surface.wgsl");
 
         let bind_group_layouts = &[
-            &resources.ses_grid.bind_group_layout,
+            &resources.df_grid.bind_group_layout,
             &resources.df_texture.bind_group_layout,
             &resources.camera.bind_group_layout,
             &resources.light.bind_group_layout,
@@ -86,7 +86,7 @@ impl MolecularSurfacePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, &resources.ses_grid.bind_group, &[]);
+        render_pass.set_bind_group(0, &resources.df_grid.bind_group, &[]);
         render_pass.set_bind_group(1, &resources.df_texture.bind_group, &[]);
         render_pass.set_bind_group(2, &resources.camera.bind_group, &[]);
         render_pass.set_bind_group(3, &resources.light.bind_group, &[]);

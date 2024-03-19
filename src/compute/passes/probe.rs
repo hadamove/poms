@@ -1,5 +1,5 @@
 use crate::common::resources::{
-    atoms_with_lookup::AtomsWithLookupResource, ses_grid::SesGridResource, CommonResources,
+    atoms_with_lookup::AtomsWithLookupResource, df_grid::DistanceFieldGridResource, CommonResources,
 };
 
 use super::util;
@@ -7,14 +7,14 @@ use super::util;
 const WGPU_LABEL: &str = "Compute Probe";
 
 pub struct ProbeResources<'a> {
-    pub ses_grid: &'a SesGridResource,         // @group(0)
-    pub molecule: &'a AtomsWithLookupResource, // @group(1)
+    pub df_grid: &'a DistanceFieldGridResource, // @group(0)
+    pub molecule: &'a AtomsWithLookupResource,  // @group(1)
 }
 
 impl<'a> ProbeResources<'a> {
     pub fn new(common: &'a CommonResources) -> Self {
         Self {
-            ses_grid: &common.ses_resource,
+            df_grid: &common.df_grid_resource,
             molecule: &common.molecule_resource,
         }
     }
@@ -29,7 +29,7 @@ impl ProbePass {
         let shader = wgpu::include_wgsl!("../shaders/probe.wgsl");
 
         let bind_group_layouts = &[
-            &resources.ses_grid.bind_group_layout,
+            &resources.df_grid.bind_group_layout,
             &resources.molecule.bind_group_layout,
         ];
 
@@ -47,7 +47,7 @@ impl ProbePass {
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
-        compute_pass.set_bind_group(0, &resources.ses_grid.bind_group, &[]);
+        compute_pass.set_bind_group(0, &resources.df_grid.bind_group, &[]);
         compute_pass.set_bind_group(1, &resources.molecule.bind_group, &[]);
 
         let work_groups_count = f32::ceil(grid_points_count as f32 / 64.0) as u32;

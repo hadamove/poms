@@ -138,7 +138,7 @@ impl App {
             }
         }
         self.resources
-            .ses_resource
+            .df_grid_resource
             .update(&self.context.queue, &molecule.atoms.data, progress);
     }
 
