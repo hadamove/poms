@@ -1,7 +1,6 @@
 use self::atoms_with_lookup::AtomsWithLookupResource;
 
 pub mod atoms_with_lookup;
-pub mod df_grid;
 pub mod df_texture;
 pub mod grid;
 

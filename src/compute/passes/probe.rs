@@ -1,9 +1,8 @@
 use crate::{
     common::resources::{
-        atoms_with_lookup::AtomsWithLookupResource, df_grid::MixedComputeStuffResource,
-        grid::GridResource, CommonResources,
+        atoms_with_lookup::AtomsWithLookupResource, grid::GridResource, CommonResources,
     },
-    compute::composer::ComputeOwnedResources,
+    compute::{composer::ComputeOwnedResources, resources::df_grid::MixedComputeStuffResource},
 };
 
 use super::util;

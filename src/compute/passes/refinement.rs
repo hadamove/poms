@@ -1,10 +1,10 @@
 use crate::{
     common::resources::{
-        atoms_with_lookup::AtomsWithLookupResource, df_grid::MixedComputeStuffResource,
-        grid::GridResource, CommonResources,
+        atoms_with_lookup::AtomsWithLookupResource, grid::GridResource, CommonResources,
     },
     compute::{
-        composer::ComputeOwnedResources, resources::df_texture::DistanceFieldTextureCompute,
+        composer::ComputeOwnedResources,
+        resources::{df_grid::MixedComputeStuffResource, df_texture::DistanceFieldTextureCompute},
     },
 };
 

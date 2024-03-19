@@ -1,7 +1,7 @@
 use super::passes::probe::{ProbePass, ProbeResources};
 use super::passes::refinement::{RefinementPass, RefinementResources};
+use super::resources::df_grid::MixedComputeStuffResource;
 use super::resources::df_texture::DistanceFieldTextureCompute;
-use crate::common::resources::df_grid::MixedComputeStuffResource;
 use crate::common::resources::grid::GridResource;
 use crate::{app::constants::MIN_DISTANCE_FIELD_RESOLUTION, common::resources::CommonResources};
 
