@@ -16,7 +16,10 @@ struct AtomBuffer {
     atoms: array<Atom>,
 };
 
+// Atoms Resource
 @group(0) @binding(0) var<storage, read> atoms: AtomBuffer;
+
+// Scene Resource
 @group(1) @binding(0) var<uniform> camera: CameraUniform;
 
 

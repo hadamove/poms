@@ -19,16 +19,17 @@ struct GridCell {
     atoms_count: u32,
 }
 
+// Atoms Resource
 @group(0) @binding(0) var<storage, read> atoms_sorted: array<Atom>;
-
 @group(0) @binding(1) var<uniform> atoms_lookup_grid: GridUniform;
 @group(0) @binding(2) var<storage, read> atoms_by_voxel: array<GridCell>;
 
-
-@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>; // TODO: Rename
+// Distance Field Resource
+@group(2) @binding(0) var<uniform> probe_radius: f32;
 @group(1) @binding(0) var<uniform> df_grid: GridUniform;
 
-@group(2) @binding(0) var<uniform> probe_radius: f32;
+// Distance Field Grid Points Resource
+@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>; // TODO: Rename
 @group(2) @binding(1) var<uniform> grid_point_index_offset: u32;
 
 
@@ -76,6 +77,7 @@ fn main(
                 if (neighbor_voxel_index >= res * res * res || neighbor_voxel_index < 0) {
                     continue;
                 }
+                // TODO: Rename
                 var grid_cell: GridCell = atoms_by_voxel[neighbor_voxel_index];
 
                 // Classify the grid point based on the atoms in the neighboring voxels

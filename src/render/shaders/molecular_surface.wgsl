@@ -21,17 +21,20 @@ struct LightUniform {
     color: vec3<f32>,
 };
 
-
+// Distance Field Resource
 @group(0) @binding(0) var<uniform> df_grid: GridUniform;
-
 @group(1) @binding(0) var df_texture: texture_3d<f32>;
 @group(1) @binding(1) var df_sampler: sampler;
 
+// Scene Resource
 @group(2) @binding(0) var<uniform> camera: CameraUniform;
 @group(3) @binding(0) var<uniform> light: LightUniform; 
 
 
+
+
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {
+    // TODO: is this transformation necessary? Can we do without df_grid.origin?
     var tex_coord: vec3<f32> = (position - df_grid.origin.xyz) / (f32(df_grid.resolution) * df_grid.offset);
     return textureSampleLevel(df_texture, df_sampler, tex_coord, 0.).r;
 }

@@ -15,10 +15,12 @@ use super::{
 
 pub struct RenderOwnedResources {
     pub df_grid: GridResource,
-    pub depth_texture: DepthTexture,
+    pub df_texture: DistanceFieldTextureRender,
+
     pub light_resource: LightResource,
     pub camera_resource: CameraResource,
-    pub df_texture: DistanceFieldTextureRender,
+
+    pub depth_texture: DepthTexture,
 }
 
 /// Configuration for the renderer.

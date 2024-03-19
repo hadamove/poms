@@ -7,13 +7,14 @@ struct GridUniform {
     _padding: f32,
 };
 
-// TODO: give this a better name as it also contains predecessor indices.
-@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
 
+// Distance Field Resource
+@group(3) @binding(0) var<uniform> probe_radius: f32;
 @group(1) @binding(0) var<uniform> df_grid: GridUniform;
 @group(2) @binding(0) var df_texture: texture_storage_3d<rgba16float, write>;
 
-@group(3) @binding(0) var<uniform> probe_radius: f32;
+// Distance Field Grid Points Resource
+@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
 @group(3) @binding(1) var<uniform> grid_point_index_offset: u32;
 
 
