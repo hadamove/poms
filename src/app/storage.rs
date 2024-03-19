@@ -39,8 +39,12 @@ impl MoleculeStorage {
         self.current.and_then(|id| self.get_by_id(id))
     }
 
-    /// Adds a new molecule to the storage. The molecule is preprocessed for fast neighbor look up.
-    pub fn add_from_parsed(&mut self, parsed_molecule: ParsedMolecule, probe_radius: f32) {
+    /// Adds a new molecule to the storage. The molecule is preprocessed for fast neighbor look up. Returns a reference to the molecule data.
+    pub fn add_from_parsed(
+        &mut self,
+        parsed_molecule: ParsedMolecule,
+        probe_radius: f32,
+    ) -> &MoleculeData {
         let ParsedMolecule { atoms, header } = parsed_molecule;
 
         // Convert atoms to our internal representation.
@@ -53,6 +57,8 @@ impl MoleculeStorage {
         let molecule_data = MoleculeData { id, header, atoms };
         self.loadded_molecules.insert(id, molecule_data);
         self.current = Some(id);
+
+        self.get_by_id(id).unwrap()
     }
 
     pub fn on_probe_radius_changed(&mut self, probe_radius: f32) {

@@ -159,16 +159,14 @@ impl App {
                 }
                 UserEvent::LoadedMolecule(molecule) => {
                     // TODO: Recreate ComputeJobs
-                    self.storage.add_from_parsed(molecule, 1.4); // TODO: Remove hardcoded probe radius
+                    let current = self.storage.add_from_parsed(molecule, 1.4); // TODO: Remove hardcoded probe radius
 
-                    if let Some(current) = self.storage.get_current() {
-                        self.camera
-                            .set_target(calculate_center(&current.atoms.data));
+                    self.camera
+                        .set_target(calculate_center(&current.atoms.data));
 
-                        self.resources
-                            .molecule_resource
-                            .update(&self.context.queue, &current.atoms);
-                    }
+                    self.resources
+                        .molecule_resource
+                        .update(&self.context.queue, &current.atoms);
                 }
                 UserEvent::SesResolutionChanged(_resolution) => {
                     // TODO: Recreate ComputeJobs?
