@@ -1,7 +1,7 @@
 use super::passes::probe::{ProbePass, ProbeResources};
 use super::passes::refinement::{RefinementPass, RefinementResources};
 use super::resources::df_texture::DistanceFieldTextureCompute;
-use crate::{app::constants::MIN_SES_RESOLUTION, common::resources::CommonResources};
+use crate::{app::constants::MIN_DISTANCE_FIELD_RESOLUTION, common::resources::CommonResources};
 
 #[derive(Clone, Debug)]
 pub enum ComputePhase {
@@ -127,7 +127,7 @@ impl ComputeJobs {
         let resources = ComputeOwnedResources {
             df_texture: DistanceFieldTextureCompute::new_with_resolution(
                 device,
-                MIN_SES_RESOLUTION,
+                MIN_DISTANCE_FIELD_RESOLUTION,
             ),
         };
 

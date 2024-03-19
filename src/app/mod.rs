@@ -145,7 +145,7 @@ impl App {
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {
         for event in ui_events {
             match event {
-                UserEvent::RenderSesChanged(enabled) => {
+                UserEvent::RenderMolecularSurfaceChanged(enabled) => {
                     self.render.config.render_molecular_surface = enabled;
                 }
                 UserEvent::RenderSpacefillChanged(enabled) => {
@@ -168,7 +168,7 @@ impl App {
                         .molecule_resource
                         .update(&self.context.queue, &current.atoms);
                 }
-                UserEvent::SesResolutionChanged(_resolution) => {
+                UserEvent::DistanceFieldResolutionChanged(_resolution) => {
                     // TODO: Recreate ComputeJobs?
                 }
                 UserEvent::ProbeRadiusChanged(probe_radius) => {

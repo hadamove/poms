@@ -2,18 +2,19 @@ use egui::{Button, Checkbox, Pos2, Slider, Window};
 
 use crate::app::{
     constants::{
-        ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION,
-        DEFAULT_PROBE_RADIUS, DEFAULT_SES_RESOLUTION, MAX_PROBE_RADIUS, MAX_SES_RESOLUTION,
+        ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_DISTANCE_FIELD_RESOLUTION, DEFAULT_LIGHT_COLOR,
+        DEFAULT_LIGHT_DIRECTION, DEFAULT_PROBE_RADIUS, MAX_DISTANCE_FIELD_RESOLUTION,
+        MAX_PROBE_RADIUS,
     },
     dtos::LightData,
     ui::event::UserEvent,
 };
 
 pub struct SettingsState {
-    ses_resolution: u32,
+    df_resolution: u32,
     probe_radius: f32,
     render_spacefill: bool,
-    render_ses: bool,
+    render_molecular_surface: bool,
 
     light_follow_camera: bool,
     light_direction: [f32; 3],
@@ -26,10 +27,10 @@ pub struct SettingsState {
 impl Default for SettingsState {
     fn default() -> Self {
         Self {
-            ses_resolution: DEFAULT_SES_RESOLUTION,
+            df_resolution: DEFAULT_DISTANCE_FIELD_RESOLUTION,
             probe_radius: DEFAULT_PROBE_RADIUS,
             render_spacefill: true,
-            render_ses: true,
+            render_molecular_surface: true,
 
             light_follow_camera: true,
             light_direction: DEFAULT_LIGHT_DIRECTION,
@@ -53,7 +54,9 @@ pub fn settings(
     window.show(context, |ui| {
         // Model parameters.
         if ui.add(resolution_slider(state)).changed() {
-            dispatch(UserEvent::SesResolutionChanged(state.ses_resolution));
+            dispatch(UserEvent::DistanceFieldResolutionChanged(
+                state.df_resolution,
+            ));
         }
         if ui.add(probe_radius_slider(state)).changed() {
             dispatch(UserEvent::ProbeRadiusChanged(state.probe_radius));
@@ -64,8 +67,10 @@ pub fn settings(
             if ui.add(spacefill_pass_checkbox(state)).changed() {
                 dispatch(UserEvent::RenderSpacefillChanged(state.render_spacefill));
             }
-            if ui.add(ses_pass_checkbox(state)).changed() {
-                dispatch(UserEvent::RenderSesChanged(state.render_ses));
+            if ui.add(molecular_surface_pass_checkbox(state)).changed() {
+                dispatch(UserEvent::RenderMolecularSurfaceChanged(
+                    state.render_molecular_surface,
+                ));
             }
         });
 
@@ -131,7 +136,7 @@ pub fn settings(
 }
 
 fn resolution_slider(state: &mut SettingsState) -> Slider {
-    Slider::new(&mut state.ses_resolution, 64..=MAX_SES_RESOLUTION).text("SES resolution")
+    Slider::new(&mut state.df_resolution, 64..=MAX_DISTANCE_FIELD_RESOLUTION).text("SES resolution")
 }
 
 fn probe_radius_slider(state: &mut SettingsState) -> Slider {
@@ -146,8 +151,8 @@ fn spacefill_pass_checkbox(state: &mut SettingsState) -> Checkbox {
     Checkbox::new(&mut state.render_spacefill, "Spacefill")
 }
 
-fn ses_pass_checkbox(state: &mut SettingsState) -> Checkbox {
-    Checkbox::new(&mut state.render_ses, "SES")
+fn molecular_surface_pass_checkbox(state: &mut SettingsState) -> Checkbox {
+    Checkbox::new(&mut state.render_molecular_surface, "Molecular Surface")
 }
 
 fn animation_button(state: &mut SettingsState) -> Button {

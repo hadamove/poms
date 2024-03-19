@@ -78,13 +78,13 @@ struct DistanceFieldGridBuffers {
 impl DistanceFieldGridBuffers {
     fn new(device: &wgpu::Device) -> Self {
         let df_grid_render_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Ses Grid Render Uniform Buffer"),
+            label: Some("DF Grid Render Uniform Buffer"),
             contents: bytemuck::cast_slice(&[GridUniform::default()]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
         let df_grid_compute_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Ses Grid Compute Uniform Buffer"),
+            label: Some("DF Grid Compute Uniform Buffer"),
             contents: bytemuck::cast_slice(&[GridUniform::default()]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
