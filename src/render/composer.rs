@@ -8,7 +8,7 @@ use super::{
         spacefill::{SpacefillPass, SpacefillResources},
     },
     resources::{
-        camera::CameraResource, depth_texture::DepthTexture, df_texture::DistanceFieldRender,
+        camera::CameraResource, depth_texture::DepthTexture, distance_field::DistanceFieldRender,
         light::LightResource,
     },
 };

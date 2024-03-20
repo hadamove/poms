@@ -1,6 +1,8 @@
 use crate::render::{
     composer::RenderOwnedResources,
-    resources::{camera::CameraResource, df_texture::DistanceFieldRender, light::LightResource},
+    resources::{
+        camera::CameraResource, distance_field::DistanceFieldRender, light::LightResource,
+    },
 };
 
 use super::util;

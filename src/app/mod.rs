@@ -5,8 +5,8 @@ use crate::{
         models::{atom::calculate_center, grid::create_compute_grid_around_molecule},
         resources::CommonResources,
     },
-    compute::{composer::ComputeJobs, resources::df_texture::DistanceFieldCompute},
-    render::{composer::RenderJobs, resources::df_texture::DistanceFieldRender},
+    compute::{composer::ComputeJobs, resources::distance_field::DistanceFieldCompute},
+    render::{composer::RenderJobs, resources::distance_field::DistanceFieldRender},
 };
 
 use self::{

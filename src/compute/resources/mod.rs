@@ -1,2 +1,2 @@
-pub mod df_texture;
+pub mod distance_field;
 pub mod grid_points;

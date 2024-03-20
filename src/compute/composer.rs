@@ -1,6 +1,6 @@
 use super::passes::probe::{ProbePass, ProbeResources};
 use super::passes::refinement::{RefinementPass, RefinementResources};
-use super::resources::df_texture::DistanceFieldCompute;
+use super::resources::distance_field::DistanceFieldCompute;
 use super::resources::grid_points::GridPointsResource;
 use crate::{app::constants::MIN_DISTANCE_FIELD_RESOLUTION, common::resources::CommonResources};
 

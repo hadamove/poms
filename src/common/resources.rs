@@ -2,7 +2,6 @@ use self::atoms_with_lookup::AtomsWithLookupResource;
 
 pub mod atoms_with_lookup;
 pub mod df_texture;
-pub mod grid;
 
 /// For efficiency, some resources (e.g. the molecule) are shared between render and compute passes.
 pub struct CommonResources {

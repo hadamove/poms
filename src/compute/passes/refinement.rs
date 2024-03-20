@@ -1,6 +1,6 @@
 use crate::compute::{
     composer::ComputeOwnedResources,
-    resources::{df_texture::DistanceFieldCompute, grid_points::GridPointsResource},
+    resources::{distance_field::DistanceFieldCompute, grid_points::GridPointsResource},
 };
 
 const WGPU_LABEL: &str = "Compute Refinement";
