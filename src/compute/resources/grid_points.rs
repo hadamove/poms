@@ -5,7 +5,6 @@ use crate::compute::composer::ComputeProgress;
 // TODO: Come up with a name for this
 // TODO: Move this file close to Compute stuff
 pub struct GridPointsResource {
-    // TODO: Move this to the AtomsWithLookupResource?
     probe_radius_buffer: wgpu::Buffer,
     // TODO: This should be together with grid_point_memory
     grid_point_index_offset_buffer: wgpu::Buffer,
