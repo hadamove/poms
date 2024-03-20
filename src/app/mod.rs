@@ -5,8 +5,8 @@ use crate::{
         models::{atom::calculate_center, grid::create_compute_grid_around_molecule},
         resources::CommonResources,
     },
-    compute::{composer::ComputeJobs, resources::df_texture::DistanceFieldTextureCompute},
-    render::{composer::RenderJobs, resources::df_texture::DistanceFieldTextureRender},
+    compute::{composer::ComputeJobs, resources::df_texture::DistanceFieldCompute},
+    render::{composer::RenderJobs, resources::df_texture::DistanceFieldRender},
 };
 
 use self::{
@@ -126,15 +126,15 @@ impl App {
         if let Some(render_resolution) = progress.last_computed_resolution {
             if render_resolution != self.render.resources.df_texture.resolution() {
                 // New resolution has been computed, swap the texture
-                let new_compute_texture = DistanceFieldTextureCompute::new_with_resolution(
-                    &self.context.device,
-                    progress.current_resolution,
+                let new_compute_texture =
+                    DistanceFieldCompute::new(&self.context.device, progress.current_resolution);
+
+                let old_compute_texture = std::mem::replace(
+                    &mut self.compute.resources.distance_field,
+                    new_compute_texture,
                 );
 
-                let old_compute_texture =
-                    std::mem::replace(&mut self.compute.resources.df_texture, new_compute_texture);
-
-                self.render.resources.df_texture = DistanceFieldTextureRender::from_texture(
+                self.render.resources.df_texture = DistanceFieldRender::from_texture(
                     &self.context.device,
                     old_compute_texture.texture,
                 );
@@ -151,21 +151,22 @@ impl App {
             }
         }
 
-        self.compute
-            .resources
-            .mixed_stuff
-            .update(&self.context.queue, &progress);
-
         let df_grid_compute = create_compute_grid_around_molecule(
             &molecule.atoms.data,
             progress.current_resolution,
             progress.probe_radius,
         );
 
+        // TODO: Update both resources at once?
+        self.compute.resources.distance_field.update_uniforms(
+            &self.context.queue,
+            progress.probe_radius,
+            &df_grid_compute,
+        );
         self.compute
             .resources
-            .df_grid
-            .update(&self.context.queue, &df_grid_compute);
+            .df_grid_points
+            .update(&self.context.queue, &progress);
     }
 
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {

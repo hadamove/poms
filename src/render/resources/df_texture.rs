@@ -1,12 +1,12 @@
 use crate::common::resources::df_texture::create_distance_field_texture;
 
-pub struct DistanceFieldTextureRender {
+pub struct DistanceFieldRender {
     pub texture: wgpu::Texture,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }
 
-impl DistanceFieldTextureRender {
+impl DistanceFieldRender {
     pub fn resolution(&self) -> u32 {
         self.texture.depth_or_array_layers()
     }

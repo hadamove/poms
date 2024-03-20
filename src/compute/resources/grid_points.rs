@@ -1,13 +1,10 @@
 use wgpu::util::DeviceExt;
 
-use crate::compute::composer::ComputeProgress;
+use crate::{app::constants::MAX_NUM_GRID_POINTS, compute::composer::ComputeProgress};
 
-// TODO: Come up with a name for this
-// TODO: Move this file close to Compute stuff
 pub struct GridPointsResource {
-    probe_radius_buffer: wgpu::Buffer,
-    // TODO: This should be together with grid_point_memory
-    grid_point_index_offset_buffer: wgpu::Buffer,
+    pub grid_point_memory_buffer: wgpu::Buffer,
+    pub grid_point_index_offset_buffer: wgpu::Buffer,
 
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
@@ -15,15 +12,17 @@ pub struct GridPointsResource {
 
 impl GridPointsResource {
     pub fn new(device: &wgpu::Device) -> Self {
-        let probe_radius_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Probe Radius Uniform Buffer"),
-            contents: bytemuck::cast_slice(&[1.4f32]), // TODO: Replace with constant
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
+        let grid_point_memory_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Grid point memory"),
+                // TODO: Move the constant to common/limits.rs
+                contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+            });
 
         let grid_point_index_offset_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Grid point index offset Buffer"),
+                label: Some("Grid point index offset"),
                 contents: bytemuck::cast_slice(&[0u32]),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             });
@@ -35,7 +34,7 @@ impl GridPointsResource {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: probe_radius_buffer.as_entire_binding(),
+                    resource: grid_point_memory_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
@@ -46,7 +45,7 @@ impl GridPointsResource {
         });
 
         Self {
-            probe_radius_buffer,
+            grid_point_memory_buffer,
             grid_point_index_offset_buffer,
             bind_group_layout,
             bind_group,
@@ -54,12 +53,6 @@ impl GridPointsResource {
     }
 
     pub fn update(&self, queue: &wgpu::Queue, progress: &ComputeProgress) {
-        queue.write_buffer(
-            &self.probe_radius_buffer,
-            0,
-            bytemuck::cast_slice(&[progress.probe_radius]),
-        );
-
         queue.write_buffer(
             &self.grid_point_index_offset_buffer,
             0,
@@ -75,7 +68,7 @@ const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
                 binding: 0,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
+                    ty: wgpu::BufferBindingType::Storage { read_only: false },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
@@ -92,5 +85,5 @@ const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
                 count: None,
             },
         ],
-        label: Some("Shared Bind Group Layout"),
+        label: Some("Grid Points Bind Group Layout"),
     };

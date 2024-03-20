@@ -1,8 +1,7 @@
 use super::passes::probe::{ProbePass, ProbeResources};
 use super::passes::refinement::{RefinementPass, RefinementResources};
-use super::resources::df_grid::GridPointsResource;
-use super::resources::df_texture::DistanceFieldTextureCompute;
-use crate::common::resources::grid::GridResource;
+use super::resources::df_texture::DistanceFieldCompute;
+use super::resources::grid_points::GridPointsResource;
 use crate::{app::constants::MIN_DISTANCE_FIELD_RESOLUTION, common::resources::CommonResources};
 
 #[derive(Clone, Debug)]
@@ -113,9 +112,8 @@ impl ComputeProgress {
 }
 
 pub struct ComputeOwnedResources {
-    pub df_grid: GridResource,
-    pub df_texture: DistanceFieldTextureCompute,
-    pub mixed_stuff: GridPointsResource, // TODO: Rename this
+    pub distance_field: DistanceFieldCompute,
+    pub df_grid_points: GridPointsResource,
 }
 
 /// TODO: Add docs!!!
@@ -129,16 +127,12 @@ pub struct ComputeJobs {
 impl ComputeJobs {
     pub fn new(device: &wgpu::Device, common: &CommonResources) -> Self {
         let resources = ComputeOwnedResources {
-            df_grid: GridResource::new(device),
-            df_texture: DistanceFieldTextureCompute::new_with_resolution(
-                device,
-                MIN_DISTANCE_FIELD_RESOLUTION,
-            ),
-            mixed_stuff: GridPointsResource::new(device),
+            distance_field: DistanceFieldCompute::new(device, MIN_DISTANCE_FIELD_RESOLUTION),
+            df_grid_points: GridPointsResource::new(device),
         };
 
         let probe_resources = ProbeResources::new(&resources, common);
-        let refinement_resources = RefinementResources::new(&resources, common);
+        let refinement_resources = RefinementResources::new(&resources);
 
         Self {
             probe_pass: ProbePass::new(device, probe_resources),
@@ -162,7 +156,7 @@ impl ComputeJobs {
                     .execute(encoder, grid_points_count, probe_resources);
             }
             ComputePhase::Refinement => {
-                let refinement_resources = RefinementResources::new(&self.resources, common);
+                let refinement_resources = RefinementResources::new(&self.resources);
                 self.refinement_pass
                     .execute(encoder, grid_points_count, refinement_resources);
             }

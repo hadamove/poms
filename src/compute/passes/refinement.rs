@@ -1,30 +1,20 @@
-use crate::{
-    common::resources::{
-        atoms_with_lookup::AtomsWithLookupResource, grid::GridResource, CommonResources,
-    },
-    compute::{
-        composer::ComputeOwnedResources,
-        resources::{df_grid::GridPointsResource, df_texture::DistanceFieldTextureCompute},
-    },
+use crate::compute::{
+    composer::ComputeOwnedResources,
+    resources::{df_texture::DistanceFieldCompute, grid_points::GridPointsResource},
 };
 
 const WGPU_LABEL: &str = "Compute Refinement";
 
 pub struct RefinementResources<'a> {
-    // TODO: Rename
-    pub atoms_with_lookup: &'a AtomsWithLookupResource, // @group(0)
-    pub df_grid: &'a GridResource,                      // @group(1)
-    pub df_texture: &'a DistanceFieldTextureCompute,    // @group(2)
-    pub mixed_stuff: &'a GridPointsResource,            // @group(3)
+    pub distance_field: &'a DistanceFieldCompute, // @group(0)
+    pub df_grid_points: &'a GridPointsResource,   // @group(1)
 }
 
 impl<'a> RefinementResources<'a> {
-    pub fn new(resources: &'a ComputeOwnedResources, common: &'a CommonResources) -> Self {
+    pub fn new(resources: &'a ComputeOwnedResources) -> Self {
         Self {
-            mixed_stuff: &resources.mixed_stuff,
-            df_grid: &resources.df_grid,
-            atoms_with_lookup: &common.atoms_resource,
-            df_texture: &resources.df_texture,
+            df_grid_points: &resources.df_grid_points,
+            distance_field: &resources.distance_field,
         }
     }
 }
@@ -38,10 +28,8 @@ impl RefinementPass {
         let shader = wgpu::include_wgsl!("../shaders/refinement.wgsl");
 
         let bind_group_layouts = &[
-            &resources.atoms_with_lookup.bind_group_layout,
-            &resources.df_grid.bind_group_layout,
-            &resources.df_texture.bind_group_layout,
-            &resources.mixed_stuff.bind_group_layout,
+            &resources.distance_field.bind_group_layout,
+            &resources.df_grid_points.bind_group_layout,
         ];
 
         let compute_pipeline =
@@ -58,10 +46,8 @@ impl RefinementPass {
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
-        compute_pass.set_bind_group(0, &resources.atoms_with_lookup.bind_group, &[]);
-        compute_pass.set_bind_group(1, &resources.df_grid.bind_group, &[]);
-        compute_pass.set_bind_group(2, &resources.df_texture.bind_group, &[]);
-        compute_pass.set_bind_group(3, &resources.mixed_stuff.bind_group, &[]);
+        compute_pass.set_bind_group(0, &resources.distance_field.bind_group, &[]);
+        compute_pass.set_bind_group(1, &resources.df_grid_points.bind_group, &[]);
 
         let work_groups_count = f32::ceil(grid_points_count as f32 / 64.0) as u32;
 

@@ -25,11 +25,11 @@ struct GridCell {
 @group(0) @binding(2) var<storage, read> atoms_by_voxel: array<GridCell>;
 
 // Distance Field Resource
-@group(2) @binding(0) var<uniform> probe_radius: f32;
-@group(1) @binding(0) var<uniform> df_grid: GridUniform;
+@group(1) @binding(0) var<uniform> probe_radius: f32;
+@group(1) @binding(1) var<uniform> df_grid: GridUniform;
 
 // Distance Field Grid Points Resource
-@group(0) @binding(3) var<storage, read_write> df_grid_point_memory: array<u32>; // TODO: Rename
+@group(2) @binding(0) var<storage, read_write> df_grid_point_memory: array<u32>;
 @group(2) @binding(1) var<uniform> df_grid_point_index_offset: u32;
 
 

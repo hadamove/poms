@@ -9,13 +9,13 @@ struct GridUniform {
 
 
 // Distance Field Resource
-@group(3) @binding(0) var<uniform> probe_radius: f32;
-@group(1) @binding(0) var<uniform> df_grid: GridUniform;
-@group(2) @binding(0) var df_texture: texture_storage_3d<rgba16float, write>;
+@group(0) @binding(0) var<uniform> probe_radius: f32;
+@group(0) @binding(1) var<uniform> df_grid: GridUniform;
+@group(0) @binding(2) var df_texture: texture_storage_3d<rgba16float, write>;
 
 // Distance Field Grid Points Resource
-@group(0) @binding(3) var<storage, read_write> df_grid_point_memory: array<u32>;
-@group(3) @binding(1) var<uniform> df_grid_point_index_offset: u32;
+@group(1) @binding(0) var<storage, read_write> df_grid_point_memory: array<u32>;
+@group(1) @binding(1) var<uniform> df_grid_point_index_offset: u32;
 
 
 fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {

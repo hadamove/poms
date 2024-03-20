@@ -3,7 +3,7 @@ use crate::{
     render::{
         composer::RenderOwnedResources,
         resources::{
-            camera::CameraResource, df_texture::DistanceFieldTextureRender, light::LightResource,
+            camera::CameraResource, df_texture::DistanceFieldRender, light::LightResource,
         },
     },
 };
@@ -13,10 +13,10 @@ use super::util;
 const WGPU_LABEL: &str = "Render Molecular Surface";
 
 pub struct MolecularSurfaceResources<'a> {
-    pub df_grid: &'a GridResource,                  // @group(0)
-    pub df_texture: &'a DistanceFieldTextureRender, // @group(1)
-    pub camera: &'a CameraResource,                 // @group(2)
-    pub light: &'a LightResource,                   // @group(3)
+    pub df_grid: &'a GridResource,           // @group(0)
+    pub df_texture: &'a DistanceFieldRender, // @group(1)
+    pub camera: &'a CameraResource,          // @group(2)
+    pub light: &'a LightResource,            // @group(3)
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
