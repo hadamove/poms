@@ -14,8 +14,8 @@ struct GridUniform {
 @group(2) @binding(0) var df_texture: texture_storage_3d<rgba16float, write>;
 
 // Distance Field Grid Points Resource
-@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>;
-@group(3) @binding(1) var<uniform> grid_point_index_offset: u32;
+@group(0) @binding(3) var<storage, read_write> df_grid_point_memory: array<u32>;
+@group(3) @binding(1) var<uniform> df_grid_point_index_offset: u32;
 
 
 fn grid_point_index_to_position(grid_point_index: u32) -> vec3<f32> {
@@ -43,28 +43,28 @@ fn compute_distance(grid_point_index: u32) -> f32 {
                 // TODO: Remove this type casting
                 var neighbor_index: u32 = u32(i32(grid_point_index) + x + y * res + z * res * res);
 
-                if neighbor_index >= arrayLength(&grid_point_class) {
+                if neighbor_index >= arrayLength(&df_grid_point_memory) {
                     continue;
                 }
 
                 var neighbor_point_pos: vec3<f32> = grid_point_index_to_position(neighbor_index);
                 var distance: f32 = HUGE_DISTANCE;
 
-                if grid_point_class[neighbor_index] == 0u {
+                if df_grid_point_memory[neighbor_index] == 0u {
                     distance = length(neighbor_point_pos - grid_point_pos);
-                } else if grid_point_class[neighbor_index] != 0u {
-                    var predecessor_pos: vec3<f32> = grid_point_index_to_position(grid_point_class[neighbor_index] - 3u);
+                } else if df_grid_point_memory[neighbor_index] != 0u {
+                    var predecessor_pos: vec3<f32> = grid_point_index_to_position(df_grid_point_memory[neighbor_index] - 3u);
                     distance = length(predecessor_pos - grid_point_pos);
                 }
 
                 if distance < min_distance {
                     min_distance = distance;
 
-                    if grid_point_class[neighbor_index] == 0u {
+                    if df_grid_point_memory[neighbor_index] == 0u {
                         // TODO: Explain `+ 3u`, this whole thing
-                        grid_point_class[grid_point_index] = neighbor_index + 3u;
+                        df_grid_point_memory[grid_point_index] = neighbor_index + 3u;
                     } else {
-                        grid_point_class[grid_point_index] = grid_point_class[neighbor_index];
+                        df_grid_point_memory[grid_point_index] = df_grid_point_memory[neighbor_index];
                     }
                 }
             }
@@ -82,7 +82,7 @@ fn compute_distance(grid_point_index: u32) -> f32 {
 fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {
-    var grid_point_index: u32 = global_invocation_id.x + grid_point_index_offset;
+    var grid_point_index: u32 = global_invocation_id.x + df_grid_point_index_offset;
     var total: u32 = df_grid.resolution * df_grid.resolution * df_grid.resolution;
     if (grid_point_index >= total) {
         return;
@@ -95,7 +95,7 @@ fn main(
     );
 
     // Switch cases with constants are not supported yet.
-    switch (grid_point_class[grid_point_index]) {
+    switch (df_grid_point_memory[grid_point_index]) {
         case 0u: { // Exterior point
             textureStore(df_texture, texture_index, vec4<f32>(probe_radius));
             return;

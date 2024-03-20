@@ -9,7 +9,7 @@ pub struct AtomsWithLookupResource {
     atoms_by_voxel_buffer: wgpu::Buffer,
 
     // TODO: Move this somewhere else
-    grid_point_class_buffer: wgpu::Buffer,
+    grid_point_memory_buffer: wgpu::Buffer,
 
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
@@ -36,7 +36,7 @@ impl AtomsWithLookupResource {
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
 
-        let grid_point_class_buffer =
+        let grid_point_memory_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Grid point classification buffer"),
                 contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
@@ -62,7 +62,7 @@ impl AtomsWithLookupResource {
                 },
                 wgpu::BindGroupEntry {
                     binding: 3,
-                    resource: grid_point_class_buffer.as_entire_binding(),
+                    resource: grid_point_memory_buffer.as_entire_binding(),
                 },
             ],
             label: Some("Molecule Grid Bind Group"),
@@ -72,7 +72,7 @@ impl AtomsWithLookupResource {
             atoms_data_buffer,
             atoms_lookup_grid_buffer,
             atoms_by_voxel_buffer,
-            grid_point_class_buffer,
+            grid_point_memory_buffer,
             bind_group_layout,
             bind_group,
         }

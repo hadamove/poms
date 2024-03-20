@@ -29,8 +29,8 @@ struct GridCell {
 @group(1) @binding(0) var<uniform> df_grid: GridUniform;
 
 // Distance Field Grid Points Resource
-@group(0) @binding(3) var<storage, read_write> grid_point_class: array<u32>; // TODO: Rename
-@group(2) @binding(1) var<uniform> grid_point_index_offset: u32;
+@group(0) @binding(3) var<storage, read_write> df_grid_point_memory: array<u32>; // TODO: Rename
+@group(2) @binding(1) var<uniform> df_grid_point_index_offset: u32;
 
 
 
@@ -39,17 +39,17 @@ struct GridCell {
 fn main(
     @builtin(global_invocation_id) global_invocation_id: vec3<u32>,
 ) {
-    var GRID_POINT_CLASS_EXTERIOR: u32 = 0u;
-    var GRID_POINT_CLASS_INTERIOR: u32 = 1u;
-    var GRID_POINT_CLASS_BOUNDARY: u32 = 2u;
+    var df_grid_point_memory_EXTERIOR: u32 = 0u;
+    var df_grid_point_memory_INTERIOR: u32 = 1u;
+    var df_grid_point_memory_BOUNDARY: u32 = 2u;
 
-    var grid_point_index: u32 = global_invocation_id.x + grid_point_index_offset;
+    var grid_point_index: u32 = global_invocation_id.x + df_grid_point_index_offset;
     var total: u32 = df_grid.resolution * df_grid.resolution * df_grid.resolution;
     if (grid_point_index >= total) {
         return;
     }
 
-    grid_point_class[grid_point_index] = GRID_POINT_CLASS_EXTERIOR;
+    df_grid_point_memory[grid_point_index] = df_grid_point_memory_EXTERIOR;
 
     // Compute the grid position
     var grid_point: vec3<f32> = df_grid.origin.xyz + vec3<f32>(
@@ -89,12 +89,12 @@ fn main(
 
                     if (distance < atom.radius - df_grid.offset) {
                         // The grid point is inside an atom, no need to check the other atoms
-                        grid_point_class[grid_point_index] = GRID_POINT_CLASS_INTERIOR;
+                        df_grid_point_memory[grid_point_index] = df_grid_point_memory_INTERIOR;
                         return;
                     }
                     if (distance < atom.radius + probe_radius) {
                         // The grid point is within the probe radius of an atom, it is a boundary point
-                        grid_point_class[grid_point_index] = GRID_POINT_CLASS_BOUNDARY;
+                        df_grid_point_memory[grid_point_index] = df_grid_point_memory_BOUNDARY;
                     }
                 }
             }

@@ -2,7 +2,7 @@ use crate::{
     common::resources::{
         atoms_with_lookup::AtomsWithLookupResource, grid::GridResource, CommonResources,
     },
-    compute::{composer::ComputeOwnedResources, resources::df_grid::MixedComputeStuffResource},
+    compute::{composer::ComputeOwnedResources, resources::df_grid::GridPointsResource},
 };
 
 use super::util;
@@ -10,9 +10,9 @@ use super::util;
 const WGPU_LABEL: &str = "Compute Probe";
 
 pub struct ProbeResources<'a> {
-    pub atoms: &'a AtomsWithLookupResource,         // @group(0)
-    pub df_grid: &'a GridResource,                  // @group(1)
-    pub mixed_stuff: &'a MixedComputeStuffResource, // @group(2)
+    pub atoms: &'a AtomsWithLookupResource,  // @group(0)
+    pub df_grid: &'a GridResource,           // @group(1)
+    pub mixed_stuff: &'a GridPointsResource, // @group(2)
 }
 
 impl<'a> ProbeResources<'a> {

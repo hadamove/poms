@@ -4,17 +4,17 @@ use crate::compute::composer::ComputeProgress;
 
 // TODO: Come up with a name for this
 // TODO: Move this file close to Compute stuff
-pub struct MixedComputeStuffResource {
+pub struct GridPointsResource {
     // TODO: Move this to the AtomsWithLookupResource?
     probe_radius_buffer: wgpu::Buffer,
-    // TODO: This should be together with grid_point_class
+    // TODO: This should be together with grid_point_memory
     grid_point_index_offset_buffer: wgpu::Buffer,
 
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }
 
-impl MixedComputeStuffResource {
+impl GridPointsResource {
     pub fn new(device: &wgpu::Device) -> Self {
         let probe_radius_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Probe Radius Uniform Buffer"),

@@ -1,6 +1,6 @@
 use super::passes::probe::{ProbePass, ProbeResources};
 use super::passes::refinement::{RefinementPass, RefinementResources};
-use super::resources::df_grid::MixedComputeStuffResource;
+use super::resources::df_grid::GridPointsResource;
 use super::resources::df_texture::DistanceFieldTextureCompute;
 use crate::common::resources::grid::GridResource;
 use crate::{app::constants::MIN_DISTANCE_FIELD_RESOLUTION, common::resources::CommonResources};
@@ -115,7 +115,7 @@ impl ComputeProgress {
 pub struct ComputeOwnedResources {
     pub df_grid: GridResource,
     pub df_texture: DistanceFieldTextureCompute,
-    pub mixed_stuff: MixedComputeStuffResource, // TODO: Rename this
+    pub mixed_stuff: GridPointsResource, // TODO: Rename this
 }
 
 /// TODO: Add docs!!!
@@ -134,7 +134,7 @@ impl ComputeJobs {
                 device,
                 MIN_DISTANCE_FIELD_RESOLUTION,
             ),
-            mixed_stuff: MixedComputeStuffResource::new(device),
+            mixed_stuff: GridPointsResource::new(device),
         };
 
         let probe_resources = ProbeResources::new(&resources, common);

@@ -4,7 +4,7 @@ use crate::{
     },
     compute::{
         composer::ComputeOwnedResources,
-        resources::{df_grid::MixedComputeStuffResource, df_texture::DistanceFieldTextureCompute},
+        resources::{df_grid::GridPointsResource, df_texture::DistanceFieldTextureCompute},
     },
 };
 
@@ -15,7 +15,7 @@ pub struct RefinementResources<'a> {
     pub atoms_with_lookup: &'a AtomsWithLookupResource, // @group(0)
     pub df_grid: &'a GridResource,                      // @group(1)
     pub df_texture: &'a DistanceFieldTextureCompute,    // @group(2)
-    pub mixed_stuff: &'a MixedComputeStuffResource,     // @group(3)
+    pub mixed_stuff: &'a GridPointsResource,            // @group(3)
 }
 
 impl<'a> RefinementResources<'a> {
