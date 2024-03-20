@@ -23,12 +23,12 @@ struct LightUniform {
 
 // Distance Field Resource
 @group(0) @binding(0) var<uniform> df_grid: GridUniform;
-@group(1) @binding(0) var df_texture: texture_3d<f32>;
-@group(1) @binding(1) var df_sampler: sampler;
+@group(0) @binding(1) var df_texture: texture_3d<f32>;
+@group(0) @binding(2) var df_sampler: sampler;
 
-// Scene Resource
-@group(2) @binding(0) var<uniform> camera: CameraUniform;
-@group(3) @binding(0) var<uniform> light: LightUniform; 
+// Camera & Light Resources
+@group(1) @binding(0) var<uniform> camera: CameraUniform;
+@group(2) @binding(0) var<uniform> light: LightUniform; 
 
 
 

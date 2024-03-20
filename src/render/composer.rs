@@ -1,6 +1,6 @@
 // TODO: Clean up imports
 
-use crate::common::resources::{grid::GridResource, CommonResources};
+use crate::common::resources::CommonResources;
 
 use super::{
     passes::{
@@ -15,8 +15,7 @@ use super::{
 
 pub struct RenderOwnedResources {
     // TODO: Merge this into a single struct
-    pub df_grid: GridResource,
-    pub df_texture: DistanceFieldRender,
+    pub distance_field: DistanceFieldRender,
 
     // TODO: Merge this into a single struct
     pub light_resource: LightResource,
@@ -66,11 +65,10 @@ impl RenderJobs {
         common: &CommonResources,
     ) -> RenderJobs {
         let resources = RenderOwnedResources {
-            df_grid: GridResource::new(device),
             light_resource: LightResource::new(device),
             camera_resource: CameraResource::new(device),
             depth_texture: DepthTexture::new(device, config),
-            df_texture: DistanceFieldRender::new_with_resolution(device, 1), // TODO: Replace with some reasonabel constant
+            distance_field: DistanceFieldRender::new_with_resolution(device, 1), // TODO: Replace with some reasonabel constant
         };
 
         let spacefill_resources = SpacefillResources::new(&resources, common);

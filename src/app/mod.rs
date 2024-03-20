@@ -124,7 +124,7 @@ impl App {
 
         let progress = self.compute.progress.clone();
         if let Some(render_resolution) = progress.last_computed_resolution {
-            if render_resolution != self.render.resources.df_texture.resolution() {
+            if render_resolution != self.render.resources.distance_field.resolution() {
                 // New resolution has been computed, swap the texture
                 let new_compute_texture =
                     DistanceFieldCompute::new(&self.context.device, progress.current_resolution);
@@ -134,7 +134,7 @@ impl App {
                     new_compute_texture,
                 );
 
-                self.render.resources.df_texture = DistanceFieldRender::from_texture(
+                self.render.resources.distance_field = DistanceFieldRender::from_texture(
                     &self.context.device,
                     old_compute_texture.texture,
                 );
@@ -143,11 +143,10 @@ impl App {
                     render_resolution,
                     progress.probe_radius,
                 );
-                self.context.queue.write_buffer(
-                    &self.render.resources.df_grid.buffer,
-                    0,
-                    bytemuck::cast_slice(&[df_grid_render]),
-                );
+                self.render
+                    .resources
+                    .distance_field
+                    .update_uniforms(&self.context.queue, &df_grid_render);
             }
         }
 

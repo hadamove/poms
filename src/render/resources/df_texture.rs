@@ -1,7 +1,13 @@
-use crate::common::resources::df_texture::create_distance_field_texture;
+use wgpu::util::DeviceExt;
+
+use crate::common::{
+    models::grid::GridUniform, resources::df_texture::create_distance_field_texture,
+};
 
 pub struct DistanceFieldRender {
+    pub grid_buffer: wgpu::Buffer,
     pub texture: wgpu::Texture,
+
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }
@@ -16,8 +22,18 @@ impl DistanceFieldRender {
         Self::from_texture(device, texture)
     }
 
+    pub fn update_uniforms(&self, queue: &wgpu::Queue, grid: &GridUniform) {
+        queue.write_buffer(&self.grid_buffer, 0, bytemuck::cast_slice(&[*grid]));
+    }
+
     pub fn from_texture(device: &wgpu::Device, texture: wgpu::Texture) -> Self {
         let view = texture.create_view(&Default::default());
+
+        let grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Grid Buffer"),
+            contents: bytemuck::cast_slice(&[GridUniform::default()]),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
 
         let bind_group_layout = device.create_bind_group_layout(&Self::LAYOUT_DESCRIPTOR);
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
@@ -34,10 +50,14 @@ impl DistanceFieldRender {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
+                    resource: grid_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
                     resource: wgpu::BindingResource::Sampler(&sampler),
                 },
             ],
@@ -45,6 +65,7 @@ impl DistanceFieldRender {
         });
 
         Self {
+            grid_buffer,
             texture,
             bind_group_layout,
             bind_group,
@@ -57,6 +78,16 @@ impl DistanceFieldRender {
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
                     visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Texture {
                         sample_type: wgpu::TextureSampleType::Float { filterable: true },
                         view_dimension: wgpu::TextureViewDimension::D3,
@@ -65,7 +96,7 @@ impl DistanceFieldRender {
                     count: None,
                 },
                 wgpu::BindGroupLayoutEntry {
-                    binding: 1,
+                    binding: 2,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: None,

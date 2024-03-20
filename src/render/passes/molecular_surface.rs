@@ -1,11 +1,6 @@
-use crate::{
-    common::resources::grid::GridResource,
-    render::{
-        composer::RenderOwnedResources,
-        resources::{
-            camera::CameraResource, df_texture::DistanceFieldRender, light::LightResource,
-        },
-    },
+use crate::render::{
+    composer::RenderOwnedResources,
+    resources::{camera::CameraResource, df_texture::DistanceFieldRender, light::LightResource},
 };
 
 use super::util;
@@ -13,17 +8,15 @@ use super::util;
 const WGPU_LABEL: &str = "Render Molecular Surface";
 
 pub struct MolecularSurfaceResources<'a> {
-    pub df_grid: &'a GridResource,           // @group(0)
-    pub df_texture: &'a DistanceFieldRender, // @group(1)
-    pub camera: &'a CameraResource,          // @group(2)
-    pub light: &'a LightResource,            // @group(3)
+    pub distance_field: &'a DistanceFieldRender, // @group(0)
+    pub camera: &'a CameraResource,              // @group(1)
+    pub light: &'a LightResource,                // @group(2)
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
     pub fn new(resources: &'a RenderOwnedResources) -> Self {
         Self {
-            df_grid: &resources.df_grid,
-            df_texture: &resources.df_texture,
+            distance_field: &resources.distance_field,
             camera: &resources.camera_resource,
             light: &resources.light_resource,
         }
@@ -43,8 +36,7 @@ impl MolecularSurfacePass {
         let shader = wgpu::include_wgsl!("../shaders/molecular_surface.wgsl");
 
         let bind_group_layouts = &[
-            &resources.df_grid.bind_group_layout,
-            &resources.df_texture.bind_group_layout,
+            &resources.distance_field.bind_group_layout,
             &resources.camera.bind_group_layout,
             &resources.light.bind_group_layout,
         ];
@@ -86,10 +78,9 @@ impl MolecularSurfacePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, &resources.df_grid.bind_group, &[]);
-        render_pass.set_bind_group(1, &resources.df_texture.bind_group, &[]);
-        render_pass.set_bind_group(2, &resources.camera.bind_group, &[]);
-        render_pass.set_bind_group(3, &resources.light.bind_group, &[]);
+        render_pass.set_bind_group(0, &resources.distance_field.bind_group, &[]);
+        render_pass.set_bind_group(1, &resources.camera.bind_group, &[]);
+        render_pass.set_bind_group(2, &resources.light.bind_group, &[]);
 
         let number_of_vertices: u32 = 6; // Render a full screen quad
 
