@@ -2,6 +2,8 @@ use std::f32::consts::PI;
 
 use cgmath::{InnerSpace, Matrix4, MetricSpace, Point3, Rad, SquareMatrix, Vector3};
 
+use crate::render::resources::camera::CameraUniform;
+
 use super::input::Input;
 
 #[derive(Debug)]
@@ -28,6 +30,21 @@ impl CameraController {
         0.0, 0.0, 0.5, 0.0,
         0.0, 0.0, 0.5, 1.0,
     );
+
+    pub fn to_uniform(&self) -> CameraUniform {
+        let view_matrix = self.view;
+        let proj_matrix = self.projection_matrix();
+
+        CameraUniform {
+            position: self.position.to_homogeneous().into(),
+            view_matrix: view_matrix.into(),
+            proj_matrix: proj_matrix.into(),
+
+            // We can unwrap here because the matrices are invertible.
+            view_inverse_matrix: view_matrix.invert().unwrap().into(),
+            proj_inverse_matrix: proj_matrix.invert().unwrap().into(),
+        }
+    }
 
     pub fn from_config(config: &wgpu::SurfaceConfiguration) -> Self {
         Self {

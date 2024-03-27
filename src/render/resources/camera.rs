@@ -1,8 +1,28 @@
 use cgmath::{SquareMatrix, Zero};
 use wgpu::util::DeviceExt;
 
-// TODO: Get rid of this dependency
-use crate::app::camera::CameraController;
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct CameraUniform {
+    pub position: [f32; 4],
+    pub view_matrix: [[f32; 4]; 4],
+    pub proj_matrix: [[f32; 4]; 4],
+    pub view_inverse_matrix: [[f32; 4]; 4],
+    pub proj_inverse_matrix: [[f32; 4]; 4],
+}
+
+impl CameraUniform {
+    fn default() -> Self {
+        let identity = cgmath::Matrix4::identity();
+        Self {
+            position: cgmath::Vector4::zero().into(),
+            view_matrix: identity.into(),
+            proj_matrix: identity.into(),
+            view_inverse_matrix: identity.into(),
+            proj_inverse_matrix: identity.into(),
+        }
+    }
+}
 
 pub struct CameraResource {
     pub buffer: wgpu::Buffer,
@@ -49,47 +69,7 @@ impl CameraResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, camera: &CameraController) {
-        let uniform = CameraUniform::from_camera(camera);
+    pub fn update(&self, queue: &wgpu::Queue, uniform: CameraUniform) {
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-struct CameraUniform {
-    position: [f32; 4],
-    view_matrix: [[f32; 4]; 4],
-    proj_matrix: [[f32; 4]; 4],
-    view_inverse_matrix: [[f32; 4]; 4],
-    proj_inverse_matrix: [[f32; 4]; 4],
-}
-
-impl CameraUniform {
-    fn default() -> Self {
-        let identity = cgmath::Matrix4::identity();
-        Self {
-            position: cgmath::Vector4::zero().into(),
-            view_matrix: identity.into(),
-            proj_matrix: identity.into(),
-            view_inverse_matrix: identity.into(),
-            proj_inverse_matrix: identity.into(),
-        }
-    }
-
-    // TODO: Move this construction to ArcballCameraController instead to remove the dependency
-    fn from_camera(camera: &CameraController) -> Self {
-        let view_matrix = camera.view;
-        let proj_matrix = camera.projection_matrix();
-
-        Self {
-            position: camera.position.to_homogeneous().into(),
-            view_matrix: view_matrix.into(),
-            proj_matrix: proj_matrix.into(),
-
-            // We can unwrap here because the matrices are invertible.
-            view_inverse_matrix: view_matrix.invert().unwrap().into(),
-            proj_inverse_matrix: proj_matrix.invert().unwrap().into(),
-        }
     }
 }

@@ -6,7 +6,10 @@ use crate::{
         resources::CommonResources,
     },
     compute::{composer::ComputeJobs, resources::distance_field::DistanceFieldCompute},
-    render::{composer::RenderJobs, resources::distance_field::DistanceFieldRender},
+    render::{
+        composer::RenderJobs,
+        resources::{distance_field::DistanceFieldRender, light::LightUniform},
+    },
 };
 
 use self::{
@@ -20,7 +23,6 @@ use self::{
 pub mod camera;
 pub mod constants;
 pub mod context;
-pub mod dtos; // TODO: Refactor this into something else please
 pub mod file;
 pub mod input;
 pub mod storage;
@@ -30,11 +32,9 @@ pub mod utils;
 pub struct App {
     context: Context,
 
-    // TODO: These are imported from outside crates
     compute: ComputeJobs,
     render: RenderJobs,
 
-    // TODO: These are within app/ submodules
     ui: UserInterface,
     storage: MoleculeStorage,
     resources: CommonResources,
@@ -109,11 +109,12 @@ impl App {
         self.render
             .resources
             .camera_resource
-            .update(&self.context.queue, &self.camera);
-        self.render
-            .resources
-            .light_resource
-            .update_camera(&self.context.queue, &self.camera);
+            .update(&self.context.queue, self.camera.to_uniform());
+
+        self.render.resources.light_resource.update(
+            &self.context.queue,
+            LightUniform::new(self.camera.look_direction().into()),
+        );
     }
 
     // TODO: Refactor
@@ -208,12 +209,12 @@ impl App {
                 UserEvent::AnimationSpeedChanged(_) => {
                     // TODO: Fix animations
                 }
-                UserEvent::UpdateLight(light_data) => {
+                UserEvent::UpdateLight(uniform) => {
                     // TODO: Make this nicer
                     self.render
                         .resources
                         .light_resource
-                        .update(&self.context.queue, light_data);
+                        .update(&self.context.queue, uniform);
                 }
                 _ => {}
             }

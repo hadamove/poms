@@ -1,4 +1,7 @@
-use crate::app::{constants::ColorTheme, dtos::LightData, utils::parser::ParsedMolecule};
+use crate::{
+    app::{constants::ColorTheme, utils::parser::ParsedMolecule},
+    render::resources::light::LightUniform,
+};
 
 pub enum UserEvent {
     OpenFileDialog,
@@ -9,6 +12,6 @@ pub enum UserEvent {
     RenderMolecularSurfaceChanged(bool),
     ToggleAnimation,
     ToggleTheme(ColorTheme),
-    UpdateLight(LightData),
+    UpdateLight(LightUniform),
     AnimationSpeedChanged(u32),
 }

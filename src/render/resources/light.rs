@@ -1,27 +1,17 @@
 use wgpu::util::DeviceExt;
 
-use crate::app::{
-    camera::CameraController,
-    constants::{DEFAULT_LIGHT_COLOR, DEFAULT_LIGHT_DIRECTION},
-    dtos::LightData,
-};
-
 #[repr(C)]
-#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Debug, Default, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct LightUniform {
     direction: [f32; 3],
     _padding: f32,
-    color: [f32; 3],
-    _padding2: f32,
 }
 
 impl LightUniform {
-    fn default() -> Self {
+    pub fn new(direction: [f32; 3]) -> Self {
         Self {
-            direction: DEFAULT_LIGHT_DIRECTION,
-            color: DEFAULT_LIGHT_COLOR,
+            direction,
             _padding: 0.0,
-            _padding2: 0.0,
         }
     }
 }
@@ -34,6 +24,7 @@ pub struct LightResource {
 
 impl LightResource {
     pub fn new(device: &wgpu::Device) -> Self {
+        // TODO: Where we pass default stuff into buffer maybe `create_buffer` is better than `create_buffer_init`
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Light Buffer"),
             contents: bytemuck::cast_slice(&[LightUniform::default()]),
@@ -70,24 +61,7 @@ impl LightResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, light_data: LightData) {
-        if let Some(direction) = light_data.direction {
-            queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[direction]));
-        }
-        if let Some(color) = light_data.color {
-            let offset = std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress;
-            queue.write_buffer(&self.buffer, offset, bytemuck::cast_slice(&[color]));
-        }
-    }
-
-    pub fn update_camera(&self, queue: &wgpu::Queue, camera: &CameraController) {
-        // TODO: Only update if we follow the camera (Add if statement)
-        self.update(
-            queue,
-            LightData {
-                direction: Some(camera.look_direction().into()),
-                ..Default::default()
-            },
-        );
+    pub fn update(&self, queue: &wgpu::Queue, uniform: LightUniform) {
+        queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }
 }

@@ -18,7 +18,6 @@ struct GridUniform {
 
 struct LightUniform {
     direction: vec3<f32>,
-    color: vec3<f32>,
 };
 
 // Distance Field Resource
@@ -31,6 +30,7 @@ struct LightUniform {
 @group(2) @binding(0) var<uniform> light: LightUniform; 
 
 
+const SURFACE_COLOR: vec3<f32> = vec3<f32>(1.0, 0.8, 0.8);
 
 
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {
@@ -146,7 +146,7 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
             var reflect_dir: vec3<f32> = reflect(light_dir, normal);  
             var specular: f32 = pow(max(dot(direction, reflect_dir), 0.0), 16.0) * 0.3;
 
-            rayhit.color = color * (ambient + specular + diffuse) * light.color;
+            rayhit.color = color * (ambient + specular + diffuse) * SURFACE_COLOR;
 
             rayhit.hit = true;
             rayhit.position = p;
