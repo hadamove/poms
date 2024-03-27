@@ -10,7 +10,8 @@ use crate::app::{
     ui::event::UserEvent,
 };
 
-pub struct SettingsState {
+// TODO: Move this up in the module hierarchy.
+pub struct UIState {
     df_resolution: u32,
     probe_radius: f32,
     render_spacefill: bool,
@@ -24,7 +25,7 @@ pub struct SettingsState {
     animation_speed: u32,
 }
 
-impl Default for SettingsState {
+impl Default for UIState {
     fn default() -> Self {
         Self {
             df_resolution: DEFAULT_DISTANCE_FIELD_RESOLUTION,
@@ -42,11 +43,7 @@ impl Default for SettingsState {
     }
 }
 
-pub fn settings(
-    context: &egui::Context,
-    state: &mut SettingsState,
-    dispatch: &mut dyn FnMut(UserEvent),
-) {
+pub fn settings(context: &egui::Context, state: &mut UIState, dispatch: &mut dyn FnMut(UserEvent)) {
     let window = Window::new("Settings")
         .default_pos(Pos2::new(100.0, 100.0))
         .default_width(100.0);
@@ -135,11 +132,11 @@ pub fn settings(
     });
 }
 
-fn resolution_slider(state: &mut SettingsState) -> Slider {
+fn resolution_slider(state: &mut UIState) -> Slider {
     Slider::new(&mut state.df_resolution, 64..=MAX_DISTANCE_FIELD_RESOLUTION).text("SES resolution")
 }
 
-fn probe_radius_slider(state: &mut SettingsState) -> Slider {
+fn probe_radius_slider(state: &mut UIState) -> Slider {
     Slider::new(
         &mut state.probe_radius,
         DEFAULT_PROBE_RADIUS..=MAX_PROBE_RADIUS,
@@ -147,15 +144,15 @@ fn probe_radius_slider(state: &mut SettingsState) -> Slider {
     .text("Probe radius")
 }
 
-fn spacefill_pass_checkbox(state: &mut SettingsState) -> Checkbox {
+fn spacefill_pass_checkbox(state: &mut UIState) -> Checkbox {
     Checkbox::new(&mut state.render_spacefill, "Spacefill")
 }
 
-fn molecular_surface_pass_checkbox(state: &mut SettingsState) -> Checkbox {
+fn molecular_surface_pass_checkbox(state: &mut UIState) -> Checkbox {
     Checkbox::new(&mut state.render_molecular_surface, "Molecular Surface")
 }
 
-fn animation_button(state: &mut SettingsState) -> Button {
+fn animation_button(state: &mut UIState) -> Button {
     match state.is_animation_active {
         true => Button::new("⏸"),
         false => Button::new("▶"),

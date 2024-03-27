@@ -12,7 +12,7 @@ pub mod event;
 pub struct UserInterface {
     egui: egui_wrapper::EguiWrapper,
 
-    settings: elements::SettingsState,
+    state: elements::UIState,
     active_errors: Vec<elements::ErrorMessageState>,
 
     file_loader: AsyncFileLoader,
@@ -27,7 +27,7 @@ impl UserInterface {
 
         Self {
             egui,
-            settings: elements::SettingsState::default(),
+            state: elements::UIState::default(),
             active_errors: Vec::new(),
             file_loader: AsyncFileLoader::new(),
 
@@ -45,7 +45,7 @@ impl UserInterface {
         };
 
         elements::menu_bar(context, &mut dispatch);
-        elements::settings(context, &mut self.settings, &mut dispatch);
+        elements::settings(context, &mut self.state, &mut dispatch);
         for error in &mut self.active_errors {
             elements::error_message(context, error);
         }
