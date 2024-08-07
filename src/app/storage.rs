@@ -6,6 +6,7 @@ use crate::common::models::atom::{Atom, AtomsWithLookup};
 
 use super::utils::parser::ParsedMolecule;
 
+// TODO: Add `frames` instead of `atoms` to store the data for each frame.
 pub struct MoleculeData {
     /// The unique identifier of the molecule within the application. Generated after parsing the molecule from a file.
     pub id: Uuid,
@@ -15,28 +16,30 @@ pub struct MoleculeData {
     pub atoms: AtomsWithLookup,
 }
 
-#[derive(Default)]
 pub struct MoleculeStorage {
     /// Id of the molecule currently opened for viewing.
-    current: Option<Uuid>,
+    current: Uuid,
     /// Molecules that are preloaded and ready to be displayed.
     loadded_molecules: HashMap<Uuid, MoleculeData>,
 }
 
 impl MoleculeStorage {
-    /// Creates a new molecule storage.
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new(initial_molecule: ParsedMolecule) -> Self {
+        let mut storage = Self {
+            current: Uuid::new_v4(),
+            loadded_molecules: HashMap::new(),
+        };
 
-    /// Returns a molecule by its unique identifier.
-    pub fn get_by_id(&self, id: Uuid) -> Option<&MoleculeData> {
-        self.loadded_molecules.get(&id)
+        // TODO: remove hardcoded probe radius
+        storage.add_from_parsed(initial_molecule, 1.4);
+        storage
     }
 
     /// Returns data associated with currently opened molecule.
-    pub fn get_current(&self) -> Option<&MoleculeData> {
-        self.current.and_then(|id| self.get_by_id(id))
+    pub fn get_current(&self) -> &MoleculeData {
+        self.loadded_molecules
+            .get(&self.current)
+            .expect("current should always be valid")
     }
 
     /// Adds a new molecule to the storage. The molecule is preprocessed for fast neighbor look up. Returns a reference to the molecule data.
@@ -50,17 +53,18 @@ impl MoleculeStorage {
         // Convert atoms to our internal representation.
         let atoms = atoms.into_iter().map(Atom::from).collect::<Vec<_>>();
 
-        // Create data structure for efficient neighbor lookup necessary for molecular surface algorithm
+        // Create data structure for efficient neighbor lookup needed for molecular surface algorithm
         let atoms = AtomsWithLookup::new(atoms, probe_radius);
 
         let id = Uuid::new_v4();
         let molecule_data = MoleculeData { id, header, atoms };
         self.loadded_molecules.insert(id, molecule_data);
-        self.current = Some(id);
+        self.current = id;
 
-        self.get_by_id(id).unwrap()
+        self.get_current()
     }
 
+    // TODO: Only recompute current molecule, not all of them?
     pub fn on_probe_radius_changed(&mut self, probe_radius: f32) {
         // In case probe radius changes, neighbor lookup has to be recomputed, as the spacing of the grid depends on it.
         for molecule_data in &mut self.loadded_molecules.values_mut() {

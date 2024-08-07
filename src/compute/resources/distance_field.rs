@@ -1,11 +1,11 @@
 use wgpu::util::DeviceExt;
 
-use crate::common::{
-    models::grid::GridUniform, resources::df_texture::create_distance_field_texture,
+use crate::{
+    common::{models::grid::GridUniform, resources::df_texture::create_distance_field_texture},
+    compute::composer::ComputeState,
 };
 
 pub struct DistanceFieldCompute {
-    pub probe_radius_buffer: wgpu::Buffer,
     pub grid_buffer: wgpu::Buffer,
     pub texture: wgpu::Texture,
 
@@ -14,20 +14,14 @@ pub struct DistanceFieldCompute {
 }
 
 impl DistanceFieldCompute {
-    pub fn new(device: &wgpu::Device, resolution: u32) -> Self {
-        let probe_radius_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Probe Radius Uniform Buffer"),
-            contents: bytemuck::cast_slice(&[1.4f32]), // TODO: Replace with constant
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-
+    pub fn new(device: &wgpu::Device, grid: GridUniform) -> Self {
         let grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Grid Buffer"),
-            contents: bytemuck::cast_slice(&[GridUniform::default()]),
+            contents: bytemuck::cast_slice(&[grid]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
-        let texture = create_distance_field_texture(device, resolution);
+        let texture = create_distance_field_texture(device, grid.resolution);
         let view = texture.create_view(&Default::default());
 
         let bind_group_layout = device.create_bind_group_layout(&Self::LAYOUT_DESCRIPTOR);
@@ -37,14 +31,10 @@ impl DistanceFieldCompute {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: probe_radius_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
                     resource: grid_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
-                    binding: 2,
+                    binding: 1,
                     resource: wgpu::BindingResource::TextureView(&view),
                 },
             ],
@@ -52,7 +42,6 @@ impl DistanceFieldCompute {
         });
 
         Self {
-            probe_radius_buffer,
             grid_buffer,
             bind_group_layout,
             bind_group,
@@ -60,32 +49,20 @@ impl DistanceFieldCompute {
         }
     }
 
-    pub fn update_uniforms(&self, queue: &wgpu::Queue, probe_radius: f32, grid: &GridUniform) {
+    pub fn update(&self, queue: &wgpu::Queue, compute_state: &ComputeState) {
         queue.write_buffer(
-            &self.probe_radius_buffer,
+            &self.grid_buffer,
             0,
-            bytemuck::cast_slice(&[probe_radius]),
+            bytemuck::cast_slice(&[compute_state.grid]),
         );
-        queue.write_buffer(&self.grid_buffer, 0, bytemuck::cast_slice(&[*grid]));
     }
 
     const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
         wgpu::BindGroupLayoutDescriptor {
             entries: &[
-                // Probe radius
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
                 // Grid buffer
                 wgpu::BindGroupLayoutEntry {
-                    binding: 1,
+                    binding: 0,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
@@ -96,7 +73,7 @@ impl DistanceFieldCompute {
                 },
                 // Distance field texture
                 wgpu::BindGroupLayoutEntry {
-                    binding: 2,
+                    binding: 1,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::WriteOnly,

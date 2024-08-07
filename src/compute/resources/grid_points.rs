@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::{app::constants::MAX_NUM_GRID_POINTS, compute::composer::ComputeProgress};
+use crate::compute::composer::ComputeState;
 
 pub struct GridPointsResource {
     pub grid_point_memory_buffer: wgpu::Buffer,
@@ -11,12 +11,15 @@ pub struct GridPointsResource {
 }
 
 impl GridPointsResource {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device, max_resolution: u32) -> Self {
+        // The maximum number of grid points is the cube of the maximum resolution.
+        let grid_points_memory_size = max_resolution.pow(3) as usize;
+
         let grid_point_memory_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Grid point memory"),
                 // TODO: Move the constant to common/limits.rs
-                contents: bytemuck::cast_slice(&vec![0u32; MAX_NUM_GRID_POINTS]),
+                contents: bytemuck::cast_slice(&vec![0u32; grid_points_memory_size]),
                 usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
 
@@ -52,11 +55,11 @@ impl GridPointsResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, progress: &ComputeProgress) {
+    pub fn update(&self, queue: &wgpu::Queue, compute_state: &ComputeState) {
         queue.write_buffer(
             &self.grid_point_index_offset_buffer,
             0,
-            bytemuck::cast_slice(&[progress.grid_points_index_offset()]),
+            bytemuck::cast_slice(&[compute_state.grid_points_index_offset()]),
         );
     }
 }

@@ -3,7 +3,7 @@ struct GridUniform {
     origin: vec4<f32>,
     resolution: u32,
     offset: f32,
-    size: f32,
+    probe_radius: f32,
     // Add 4 bytes padding to avoid alignment issues.
     _padding: f32,
 };
@@ -25,8 +25,7 @@ struct GridCell {
 @group(0) @binding(2) var<storage, read> atoms_by_voxel: array<GridCell>;
 
 // Distance Field Resource
-@group(1) @binding(0) var<uniform> probe_radius: f32;
-@group(1) @binding(1) var<uniform> df_grid: GridUniform;
+@group(1) @binding(0) var<uniform> df_grid: GridUniform;
 
 // Distance Field Grid Points Resource
 @group(2) @binding(0) var<storage, read_write> df_grid_point_memory: array<u32>;
@@ -92,7 +91,7 @@ fn main(
                         df_grid_point_memory[grid_point_index] = df_grid_point_memory_INTERIOR;
                         return;
                     }
-                    if (distance < atom.radius + probe_radius) {
+                    if (distance < atom.radius + df_grid.probe_radius) {
                         // The grid point is within the probe radius of an atom, it is a boundary point
                         df_grid_point_memory[grid_point_index] = df_grid_point_memory_BOUNDARY;
                     }

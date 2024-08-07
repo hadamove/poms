@@ -74,6 +74,7 @@ impl AtomsWithLookup {
         }
     }
 }
+
 pub fn calculate_center(atoms: &[Atom]) -> Point3<f32> {
     let mut center = Point3::new(0.0, 0.0, 0.0);
     for atom in atoms.iter() {

@@ -17,21 +17,17 @@ impl DistanceFieldRender {
         self.texture.depth_or_array_layers()
     }
 
-    pub fn new_with_resolution(device: &wgpu::Device, resolution: u32) -> Self {
-        let texture = create_distance_field_texture(device, resolution);
-        Self::from_texture(device, texture)
+    pub fn new(device: &wgpu::Device, grid: GridUniform) -> Self {
+        let texture = create_distance_field_texture(device, grid.resolution);
+        Self::from_texture(device, grid, texture)
     }
 
-    pub fn update_uniforms(&self, queue: &wgpu::Queue, grid: &GridUniform) {
-        queue.write_buffer(&self.grid_buffer, 0, bytemuck::cast_slice(&[*grid]));
-    }
-
-    pub fn from_texture(device: &wgpu::Device, texture: wgpu::Texture) -> Self {
+    pub fn from_texture(device: &wgpu::Device, grid: GridUniform, texture: wgpu::Texture) -> Self {
         let view = texture.create_view(&Default::default());
 
         let grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Grid Buffer"),
-            contents: bytemuck::cast_slice(&[GridUniform::default()]),
+            contents: bytemuck::cast_slice(&[grid]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -70,6 +66,10 @@ impl DistanceFieldRender {
             bind_group_layout,
             bind_group,
         }
+    }
+
+    pub fn update_grid(&self, queue: &wgpu::Queue, grid: &GridUniform) {
+        queue.write_buffer(&self.grid_buffer, 0, bytemuck::cast_slice(&[*grid]));
     }
 
     const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =

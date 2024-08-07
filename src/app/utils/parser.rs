@@ -10,6 +10,34 @@ pub struct ParsedMolecule {
     pub atoms: Vec<Atom>,
 }
 
+impl ParsedMolecule {
+    pub fn h2o_demo() -> Self {
+        Self {
+            header: Some("h2o".to_string()),
+            atoms: vec![
+                // Oxygen
+                Atom {
+                    position: [0.0, 0.0, 0.0],
+                    radius: 1.4,
+                    color: [1.0, 0.0, 0.0, 1.0],
+                },
+                // Hydrogen 1
+                Atom {
+                    position: [0.9572, 0.0, 0.0],
+                    radius: 1.2,
+                    color: [1.0, 1.0, 1.0, 1.0],
+                },
+                // Hydrogen 2
+                Atom {
+                    position: [-0.2396, 0.927, 0.0],
+                    radius: 1.2,
+                    color: [1.0, 1.0, 1.0, 1.0],
+                },
+            ],
+        }
+    }
+}
+
 /// Internal error type for parsing.
 #[derive(thiserror::Error, Debug)]
 pub enum ParseError {
