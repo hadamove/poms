@@ -6,7 +6,7 @@ const MAX_NUM_GRID_POINTS: usize = u32::pow(MAX_DISTANCE_FIELD_RESOLUTION, 3) as
 
 use crate::models::{atom::AtomsWithLookup, grid::GridUniform};
 
-// TODO: Divide this into atoms data and atoms lookup
+/// Contains buffers with atoms data and lookup grid for neighbor atoms.
 pub struct AtomsWithLookupResource {
     atoms_data_buffer: wgpu::Buffer,
     atoms_lookup_grid_buffer: wgpu::Buffer,

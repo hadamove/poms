@@ -87,7 +87,7 @@ impl ComputeState {
         // In each refinement cycle, a single layer of grid points is processed
         // The maximum number of cycles is equivalent to number of layers within probe
         // TODO: better comment
-        (self.grid.probe_radius / self.grid.offset) as u32 + 1
+        (self.grid.probe_radius / self.grid.spacing) as u32 + 1
     }
 
     fn grid_points_count_of_current_resolution(&self) -> u32 {

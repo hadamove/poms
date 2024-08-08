@@ -2,7 +2,7 @@
 struct GridUniform {
     origin: vec4<f32>,
     resolution: u32,
-    offset: f32,
+    spacing: f32,
     probe_radius: f32,
     // Add 4 bytes padding to avoid alignment issues.
     _padding: f32,
@@ -14,7 +14,7 @@ struct Atom {
     color: vec4<f32>,
 };
 
-struct GridCell {
+struct AtomSegment {
     first_atom_index: u32,
     atoms_count: u32,
 }
@@ -22,7 +22,7 @@ struct GridCell {
 // Atoms Resource
 @group(0) @binding(0) var<storage, read> atoms_sorted: array<Atom>;
 @group(0) @binding(1) var<uniform> atoms_lookup_grid: GridUniform;
-@group(0) @binding(2) var<storage, read> atoms_by_voxel: array<GridCell>;
+@group(0) @binding(2) var<storage, read> atom_segment_by_voxel: array<AtomSegment>;
 
 // Distance Field Resource
 @group(1) @binding(0) var<uniform> df_grid: GridUniform;
@@ -55,16 +55,17 @@ fn main(
         f32(grid_point_index % df_grid.resolution),
         f32((grid_point_index / df_grid.resolution) % df_grid.resolution),
         f32(grid_point_index / (df_grid.resolution * df_grid.resolution))
-    ) * df_grid.offset;
+    ) * df_grid.spacing;
 
+    // Compute the offset of the grid point from the origin of the atoms lookup grid
     var offset_grid_point: vec3<f32> = grid_point - atoms_lookup_grid.origin.xyz;
 
     var res: i32 = i32(atoms_lookup_grid.resolution);
 
-    // Find index of the voxel containing the grid point
-    var voxel_index: i32 = i32(offset_grid_point.x / atoms_lookup_grid.offset) +
-        i32(offset_grid_point.y / atoms_lookup_grid.offset) * res +
-        i32(offset_grid_point.z / atoms_lookup_grid.offset) * res * res;
+    // Find index of the voxel containing the grid point within the atoms lookup grid
+    var voxel_index: i32 = i32(offset_grid_point.x / atoms_lookup_grid.spacing) +
+        i32(offset_grid_point.y / atoms_lookup_grid.spacing) * res +
+        i32(offset_grid_point.z / atoms_lookup_grid.spacing) * res * res;
 
     // Check all 27 neighboring voxels
     for (var x: i32 = -1; x <= 1; x = x + 1) {
@@ -76,17 +77,16 @@ fn main(
                 if (neighbor_voxel_index >= res * res * res || neighbor_voxel_index < 0) {
                     continue;
                 }
-                // TODO: Rename
-                var grid_cell: GridCell = atoms_by_voxel[neighbor_voxel_index];
+                var atom_segment: AtomSegment = atom_segment_by_voxel[neighbor_voxel_index];
 
                 // Classify the grid point based on the atoms in the neighboring voxels
-                for (var i: i32 = 0; i < i32(grid_cell.atoms_count); i = i + 1) {
-                    var atom_index: u32 = grid_cell.first_atom_index + u32(i);
+                for (var i: i32 = 0; i < i32(atom_segment.atoms_count); i = i + 1) {
+                    var atom_index: u32 = atom_segment.first_atom_index + u32(i);
 
                     var atom: Atom = atoms_sorted[atom_index];
                     var distance: f32 = length(grid_point - atom.position);
 
-                    if (distance < atom.radius - df_grid.offset) {
+                    if (distance < atom.radius - df_grid.spacing) {
                         // The grid point is inside an atom, no need to check the other atoms
                         df_grid_point_memory[grid_point_index] = df_grid_point_memory_INTERIOR;
                         return;

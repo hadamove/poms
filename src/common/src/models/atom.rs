@@ -14,7 +14,7 @@ pub struct Atom {
 /// Since the atoms are sorted by voxel index, we can use this to quickly find all atoms in a voxel.
 #[repr(C)]
 #[derive(Default, Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct AtomsSegment {
+pub struct AtomSegment {
     pub first_atom_index: u32,
     pub atoms_count: u32,
 }
@@ -27,7 +27,7 @@ pub struct AtomsWithLookup {
     /// The grid that divdes the space around the molecule into neighborhood voxels. Usually, the spacing is equal to the probe radius plus the maximum atom radius.
     pub atoms_lookup_grid: GridUniform,
     /// Segment of atoms for each voxel of the neighbor lookup grid. The length of this vector is equal to the number of voxels in the grid (resolution^3).
-    pub atoms_by_voxel: Vec<AtomsSegment>,
+    pub atoms_by_voxel: Vec<AtomSegment>,
 }
 
 impl AtomsWithLookup {
@@ -51,7 +51,7 @@ impl AtomsWithLookup {
 
         // Create a look-up table for each voxel in the grid.
         let voxels_count = u32::pow(atoms_lookup_grid.resolution, 3) as usize;
-        let mut atoms_by_voxel = vec![AtomsSegment::default(); voxels_count];
+        let mut atoms_by_voxel = vec![AtomSegment::default(); voxels_count];
 
         // Assign first index and count the number of atoms in each voxel
         for (atom_index, &(_, voxel_index)) in atoms_with_voxel_indices.iter().enumerate() {
