@@ -18,7 +18,6 @@ impl GridPointsResource {
         let grid_point_memory_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Grid point memory"),
-                // TODO: Move the constant to common/limits.rs
                 contents: bytemuck::cast_slice(&vec![0u32; grid_points_memory_size]),
                 usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
