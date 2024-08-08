@@ -2,6 +2,8 @@ use std::sync::Arc;
 
 use crate::app::context::Context;
 
+use super::{elements::UiElement, UIState};
+
 /// TODO: Add documentation, glue between winit, wgpu and egui
 pub struct EguiWrapper {
     pub egui_handle: egui::Context,
@@ -36,20 +38,20 @@ impl EguiWrapper {
         }
     }
 
-    pub fn handle_winit_event(&mut self, event: &winit::event::WindowEvent) -> bool {
+    pub fn add_elements(&mut self, state: &mut UIState, elements: &[UiElement]) {
+        self.begin_frame();
+
+        for &element in elements {
+            element(&self.egui_handle, state);
+        }
+
+        self.end_frame();
+    }
+
+    pub fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
         self.egui_winit_state
             .on_window_event(&self.window, event)
             .consumed
-    }
-
-    pub fn begin_frame(&mut self) {
-        let egui_input = self.egui_winit_state.take_egui_input(&self.window);
-        self.egui_handle.begin_frame(egui_input);
-    }
-
-    pub fn end_frame(&mut self) {
-        let render_recipe = self.egui_handle.end_frame();
-        self.render_recipe = Some(render_recipe);
     }
 
     pub fn render(
@@ -109,5 +111,15 @@ impl EguiWrapper {
         for free_id in render_recipe.textures_delta.free {
             self.renderer.free_texture(&free_id);
         }
+    }
+
+    fn begin_frame(&mut self) {
+        let egui_input = self.egui_winit_state.take_egui_input(&self.window);
+        self.egui_handle.begin_frame(egui_input);
+    }
+
+    fn end_frame(&mut self) {
+        let render_recipe = self.egui_handle.end_frame();
+        self.render_recipe = Some(render_recipe);
     }
 }

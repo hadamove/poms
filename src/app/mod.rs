@@ -123,12 +123,8 @@ impl App {
         }
     }
 
-    // TODO: Refactor this
-    pub fn handle_event(&mut self, event: &WindowEvent) -> bool {
-        if !self.ui.handle_winit_event(event) {
-            self.ui.input.handle_window_event(event);
-        }
-        false
+    pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
+        self.ui.handle_window_event(event)
     }
 
     // TODO: Refactor this
@@ -227,6 +223,7 @@ impl App {
                         .light_resource
                         .update(&self.context.queue, uniform);
                 }
+                UserEvent::OpenFileDialog => self.ui.open_file_dialog(),
                 _ => {}
             }
         }

@@ -3,15 +3,18 @@ use crate::{
     render::resources::light::LightUniform,
 };
 
+// TODO: use structs e.g. AnimationSpeedChanged { speed: u32 }, DistanceFieldResolutionChanged { resolution: u32 }
 pub enum UserEvent {
-    OpenFileDialog,
-    LoadedMolecule(ParsedMolecule),
+    AnimationSpeedChanged(u32),
     DistanceFieldResolutionChanged(u32),
+    LoadedMolecule(ParsedMolecule),
+    OpenErrorMessage(String),
+    CloseErrorMessage(uuid::Uuid),
+    OpenFileDialog,
     ProbeRadiusChanged(f32),
-    RenderSpacefillChanged(bool),
     RenderMolecularSurfaceChanged(bool),
+    RenderSpacefillChanged(bool),
     ToggleAnimation,
     ToggleTheme(ColorTheme),
     UpdateLight(LightUniform),
-    AnimationSpeedChanged(u32),
 }

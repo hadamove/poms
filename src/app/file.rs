@@ -33,7 +33,7 @@ impl AsyncFileLoader {
         }
     }
 
-    pub fn load_pdb_files(&self) {
+    pub fn open_file_dialog(&self) {
         let dispatch = self.channel.0.clone();
         execute(async move {
             let file_dialog = rfd::AsyncFileDialog::new().add_filter("PDB", &["pdb", "cif"]);

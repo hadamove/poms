@@ -43,7 +43,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
             utils::wasm::resize_app_if_canvas_changed(&window, &mut app);
 
             match event {
-                Event::WindowEvent { event, .. } if !app.handle_event(&event) => {
+                Event::WindowEvent { event, .. } if !app.handle_window_event(&event) => {
                     match event {
                         WindowEvent::CloseRequested => elwt.exit(),
                         WindowEvent::Resized(physical_size) => app.resize(physical_size),

@@ -1,3 +1,4 @@
+use state::UIState;
 use winit::event::WindowEvent;
 
 use self::event::UserEvent;
@@ -8,13 +9,12 @@ use super::input::Input;
 pub mod egui_wrapper;
 pub mod elements;
 pub mod event;
+mod state;
 
+/// TODO: docs
 pub struct UserInterface {
     egui: egui_wrapper::EguiWrapper,
-
-    state: elements::UIState,
-    active_errors: Vec<elements::ErrorMessageState>,
-
+    state: UIState,
     file_loader: AsyncFileLoader,
 
     // TODO: make it private and unite with events
@@ -27,35 +27,25 @@ impl UserInterface {
 
         Self {
             egui,
-            state: elements::UIState::default(),
-            active_errors: Vec::new(),
+            state: UIState::default(),
             file_loader: AsyncFileLoader::new(),
-
             input: Input::default(),
         }
     }
 
     pub fn process_frame(&mut self) -> Vec<UserEvent> {
-        self.egui.begin_frame();
+        self.egui.add_elements(
+            &mut self.state,
+            &[
+                elements::menu_bar,
+                elements::settings,
+                elements::error_messages,
+            ],
+        );
 
-        let context = &self.egui.egui_handle;
-        let mut events = Vec::<UserEvent>::new();
-        let mut dispatch = |event: UserEvent| {
-            events.push(event);
-        };
+        self.process_file_loader_events();
 
-        elements::menu_bar(context, &mut dispatch);
-        elements::settings(context, &mut self.state, &mut dispatch);
-        for error in &mut self.active_errors {
-            elements::error_message(context, error);
-        }
-
-        self.egui.end_frame();
-
-        // TODO: Get rid of this
-        self.handle_internal_events(&mut events);
-
-        events
+        self.state.collect_events()
     }
 
     pub fn render(
@@ -65,33 +55,24 @@ impl UserInterface {
         encoder: &mut wgpu::CommandEncoder,
     ) {
         self.egui.render(context, view, encoder);
-        // TODO: Move this elsewhere
-        self.input.reset();
     }
 
-    pub fn handle_winit_event(&mut self, window_event: &WindowEvent) -> bool {
-        self.egui.handle_winit_event(window_event)
+    pub fn handle_window_event(&mut self, window_event: &WindowEvent) -> bool {
+        self.egui.handle_window_event(window_event) || self.input.handle_window_event(window_event)
     }
 
-    // TODO: Solve this stuff
-    pub fn handle_internal_events(&mut self, events: &mut Vec<UserEvent>) {
-        #[allow(clippy::single_match)]
-        for event in events.iter() {
-            match event {
-                UserEvent::OpenFileDialog => self.file_loader.load_pdb_files(),
-                _ => {}
-            }
-        }
-        self.handle_new_files(events)
+    pub fn open_file_dialog(&mut self) {
+        self.file_loader.open_file_dialog();
     }
 
-    fn handle_new_files(&mut self, events: &mut Vec<UserEvent>) {
+    fn process_file_loader_events(&mut self) {
         match self.file_loader.get_parsed_files() {
-            FileResponse::FileParsed(file) => events.push(UserEvent::LoadedMolecule(file)),
-            FileResponse::ParsingFailed(err) => {
-                eprintln!("Parsing failed: {}", err);
-                // TODO: Show error message in UI
+            FileResponse::FileParsed(file) => {
+                self.state.dispatch_event(UserEvent::LoadedMolecule(file))
             }
+            FileResponse::ParsingFailed(_) => self
+                .state
+                .open_error_message("Failed to parse the file".to_string()),
             FileResponse::NoContent => {}
         }
     }

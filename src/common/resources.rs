@@ -5,7 +5,6 @@ pub mod df_texture;
 
 /// For efficiency, some resources (e.g. the molecule) are shared between render and compute passes.
 pub struct CommonResources {
-    // TODO: Change this to common bind group?
     pub atoms_resource: AtomsWithLookupResource,
 }
 

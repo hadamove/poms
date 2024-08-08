@@ -17,7 +17,7 @@ impl Input {
         self.scroll = 0.0;
     }
 
-    pub fn handle_window_event(&mut self, event: &WindowEvent) {
+    pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::MouseWheel { delta, .. } => self.process_scroll(delta),
             WindowEvent::CursorMoved { position, .. } => self.process_cursor(*position),
@@ -28,6 +28,7 @@ impl Input {
             } => self.mouse_pressed = *state == ElementState::Pressed,
             _ => {}
         }
+        false
     }
 
     fn process_scroll(&mut self, delta: &MouseScrollDelta) {
