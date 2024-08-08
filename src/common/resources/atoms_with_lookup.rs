@@ -1,6 +1,9 @@
 use wgpu::util::DeviceExt;
 
-use crate::app::constants::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
+const MAX_NUM_ATOMS: usize = 1_000_000;
+const MAX_DISTANCE_FIELD_RESOLUTION: u32 = 256;
+const MAX_NUM_GRID_POINTS: usize = u32::pow(MAX_DISTANCE_FIELD_RESOLUTION, 3) as usize;
+
 use crate::common::models::{atom::AtomsWithLookup, grid::GridUniform};
 
 // TODO: Divide this into atoms data and atoms lookup
