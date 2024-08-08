@@ -1,0 +1,40 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+compute = { path = "../compute" }
+render = { path = "../render" }
+
+bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
+cgmath = "0.18"
+
+wgpu = "0.19"
+winit = { version = "0.29", features = ["x11"] }
+egui = "0.26"
+egui-wgpu = "0.26"
+egui-winit = "0.26"
+
+futures = "0.3"
+lazy_static = "1.4"
+log = "0.4"
+pdbtbx = "0.11"
+permutation = "0.4"
+rfd = "0.14"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+simple_logger = "4.0"
+uuid = { version = "1.7.0", features = ["v4"] }
+thiserror = "1.0.57"
+
+[target.wasm32-unknown-unknown.dependencies]
+console_error_panic_hook = "0.1"
+web-sys = { version = "0.3", features = ["Window"] }
+wasm-logger = "0.2"
+wasm-bindgen-futures = "0.4"
+
+[features]
+vulkan = []
+no-vsync = []

@@ -1,0 +1,10 @@
+[package]
+name = "render"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cgmath = "0.18"
+common = { path = "../common" }
+bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
+wgpu = "0.19"
