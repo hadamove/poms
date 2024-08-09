@@ -6,18 +6,16 @@ use compute::{ComputeJobs, ComputeParameters};
 use render::{RenderJobs, RenderParameters};
 
 use self::{
-    camera::CameraController,
     constants::ColorTheme,
     context::Context,
     storage::MoleculeStorage,
     ui::{event::UserEvent, UserInterface},
+    utils::camera::CameraController,
 };
 
-pub mod camera;
 pub mod constants;
 pub mod context;
 pub mod file;
-pub mod input;
 pub mod storage;
 pub mod ui;
 pub mod utils;
