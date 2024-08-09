@@ -1,4 +1,4 @@
-use self::atoms_with_lookup::AtomsWithLookupResource;
+use atoms_with_lookup::AtomsWithLookupResource;
 
 pub mod atoms_with_lookup;
 pub mod df_texture;
@@ -9,6 +9,7 @@ pub struct CommonResources {
 }
 
 impl CommonResources {
+    /// Creates a new instance of `CommonResources`.
     pub fn new(device: &wgpu::Device) -> Self {
         Self {
             atoms_resource: AtomsWithLookupResource::new(device),

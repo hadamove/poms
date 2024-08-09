@@ -9,7 +9,7 @@ pub struct GridUniform {
     pub origin: [f32; 4],
     /// Number of grid points in each direction.
     pub resolution: u32,
-    /// Distance between two adjacent grid points.
+    ///
     pub spacing: f32,
     /// Probe radius associated with the grid.
     pub probe_radius: f32,

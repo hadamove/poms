@@ -1,10 +1,10 @@
 use wgpu::util::DeviceExt;
 
+use crate::models::{atom::AtomsWithLookup, grid::GridUniform};
+
 const MAX_NUM_ATOMS: usize = 1_000_000;
 const MAX_DISTANCE_FIELD_RESOLUTION: u32 = 256;
 const MAX_NUM_GRID_POINTS: usize = u32::pow(MAX_DISTANCE_FIELD_RESOLUTION, 3) as usize;
-
-use crate::models::{atom::AtomsWithLookup, grid::GridUniform};
 
 /// Contains buffers with atoms data and lookup grid for neighbor atoms.
 pub struct AtomsWithLookupResource {
@@ -21,6 +21,8 @@ pub struct AtomsWithLookupResource {
 }
 
 impl AtomsWithLookupResource {
+    /// Creates a new instance of `AtomsWithLookupResource`.
+    /// Buffers of size `MAX_NUM_ATOMS` and `MAX_NUM_GRID_POINTS` are created to avoid resizing them later.
     pub fn new(device: &wgpu::Device) -> Self {
         let atoms_data_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Sorted Atoms Buffer"),
@@ -72,6 +74,7 @@ impl AtomsWithLookupResource {
         }
     }
 
+    /// Updates the buffers with the provided atoms data and lookup grid.
     pub fn update(&mut self, queue: &wgpu::Queue, atoms: &AtomsWithLookup) {
         self.number_of_atoms = atoms.data.len() as u32;
         queue.write_buffer(

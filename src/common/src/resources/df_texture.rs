@@ -1,7 +1,10 @@
+/// Creates a new distance field texture with the given resolution.
+/// Used both by the compute pipeline and the rendering pipeline.
 pub fn create_distance_field_texture(device: &wgpu::Device, resolution: u32) -> wgpu::Texture {
-    // wgpu requires that textures have at least 1 texel in each dimension.
-    // When initializing resources, it may happen that the resolution is 0.
-    let resolution = if resolution < 1 { 1 } else { resolution };
+    // Due to the requirements of the underlying wgpu API, we must ensure that the resolution is not zero.
+    // This should not happen in practice.
+    assert!(resolution > 0);
+
     device.create_texture(&wgpu::TextureDescriptor {
         label: Some("Distance field texture"),
         size: wgpu::Extent3d {
