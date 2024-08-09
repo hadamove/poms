@@ -1,4 +1,4 @@
-use crate::RenderParameters;
+use super::RenderParameters;
 
 /// Configuration for the renderer.
 pub struct RenderState {

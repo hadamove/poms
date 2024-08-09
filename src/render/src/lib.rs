@@ -1,21 +1,16 @@
-pub mod passes;
+mod passes;
+// TODO: private
 pub mod resources;
 mod state;
 
 use common::{models::grid::GridUniform, resources::CommonResources};
-use resources::{camera::CameraUniform, light::LightUniform};
-use state::RenderState;
 
-use crate::{
-    passes::{
-        molecular_surface::{MolecularSurfacePass, MolecularSurfaceResources},
-        spacefill::{SpacefillPass, SpacefillResources},
-    },
-    resources::{
-        camera::CameraResource, depth_texture::DepthTexture, distance_field::DistanceFieldRender,
-        light::LightResource,
-    },
-};
+use passes::molecular_surface::{MolecularSurfacePass, MolecularSurfaceResources};
+use passes::spacefill::{SpacefillPass, SpacefillResources};
+use resources::{camera::CameraResource, light::LightResource};
+use resources::{camera::CameraUniform, light::LightUniform};
+use resources::{depth_texture::DepthTexture, distance_field::DistanceFieldRender};
+use state::RenderState;
 
 /// Contains all resources that are owned by the render pipeline.
 pub struct RenderOwnedResources {

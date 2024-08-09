@@ -1,9 +1,7 @@
-use crate::{
-    resources::{
-        camera::CameraResource, distance_field::DistanceFieldRender, light::LightResource,
-    },
-    RenderOwnedResources,
+use crate::resources::{
+    camera::CameraResource, distance_field::DistanceFieldRender, light::LightResource,
 };
+use crate::RenderOwnedResources;
 
 use super::util;
 
@@ -88,12 +86,12 @@ impl MolecularSurfacePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        // TODO: Reorder based on frequency of change, higher frequency first
         render_pass.set_bind_group(0, &resources.distance_field.bind_group, &[]);
         render_pass.set_bind_group(1, &resources.camera.bind_group, &[]);
         render_pass.set_bind_group(2, &resources.light.bind_group, &[]);
 
-        let number_of_vertices: u32 = 6; // Render a full screen quad
+        // Render a full screen quad used for raymarching.
+        let number_of_vertices: u32 = 6;
 
         render_pass.draw(0..number_of_vertices, 0..1);
     }

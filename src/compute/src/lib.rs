@@ -1,3 +1,7 @@
+mod passes;
+mod resources;
+mod state;
+
 use common::models::atom::Atom;
 use common::models::grid::{create_compute_grid_around_molecule, GridUniform};
 use common::resources::CommonResources;
@@ -7,10 +11,6 @@ use passes::refinement::{RefinementPass, RefinementResources};
 use resources::distance_field::DistanceFieldCompute;
 use resources::grid_points::GridPointsResource;
 use state::{ComputePhase, ComputeState};
-
-mod passes;
-mod resources;
-mod state;
 
 /// Contains all resources that are owned by the compute pipeline.
 pub struct ComputeOwnedResources {
