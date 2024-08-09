@@ -1,4 +1,4 @@
-use common::{models::grid::GridUniform, resources::df_texture::create_distance_field_texture};
+use poms_common::{models::grid::GridUniform, resources::df_texture::create_distance_field_texture};
 use wgpu::util::DeviceExt;
 
 /// The signed distance field produced by the probe and refinement steps.

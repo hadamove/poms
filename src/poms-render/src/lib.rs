@@ -2,7 +2,7 @@ mod passes;
 mod resources;
 mod state;
 
-use common::{models::grid::GridUniform, resources::CommonResources};
+use poms_common::{models::grid::GridUniform, resources::CommonResources};
 
 use passes::molecular_surface::{MolecularSurfacePass, MolecularSurfaceResources};
 use passes::spacefill::{SpacefillPass, SpacefillResources};

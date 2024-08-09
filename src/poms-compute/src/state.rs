@@ -1,4 +1,4 @@
-use common::models::grid::GridUniform;
+use poms_common::models::grid::GridUniform;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ComputePhase {

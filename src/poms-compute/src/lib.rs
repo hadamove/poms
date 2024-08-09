@@ -2,9 +2,9 @@ mod passes;
 mod resources;
 mod state;
 
-use common::models::atom::Atom;
-use common::models::grid::{create_compute_grid_around_molecule, GridUniform};
-use common::resources::CommonResources;
+use poms_common::models::atom::Atom;
+use poms_common::models::grid::{create_compute_grid_around_molecule, GridUniform};
+use poms_common::resources::CommonResources;
 
 use passes::probe::{ProbePass, ProbeResources};
 use passes::refinement::{RefinementPass, RefinementResources};

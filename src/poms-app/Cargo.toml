@@ -1,12 +1,12 @@
 [package]
-name = "app"
+name = "poms-app"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-common = { path = "../common" }
-compute = { path = "../compute" }
-render = { path = "../render" }
+poms-common = { path = "../poms-common" }
+poms-compute = { path = "../poms-compute" }
+poms-render = { path = "../poms-render" }
 
 bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
 cgmath = "0.18"

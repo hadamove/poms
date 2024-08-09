@@ -1,6 +1,6 @@
 use std::io::{BufReader, Cursor};
 
-use common::models::atom::Atom;
+use poms_common::models::atom::Atom;
 
 /// A parsed molecule from a PDB or mmCIF file.
 pub struct ParsedMolecule {

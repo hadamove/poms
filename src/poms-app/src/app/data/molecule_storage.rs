@@ -1,4 +1,4 @@
-use common::models::atom::{Atom, AtomsWithLookup};
+use poms_common::models::atom::{Atom, AtomsWithLookup};
 use uuid::Uuid;
 
 use std::collections::HashMap;

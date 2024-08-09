@@ -3,9 +3,9 @@ pub mod data;
 pub mod input;
 pub mod ui;
 
-use common::{models::atom::calculate_center, resources::CommonResources};
-use compute::{ComputeJobs, ComputeParameters};
-use render::{RenderJobs, RenderParameters};
+use poms_common::{models::atom::calculate_center, resources::CommonResources};
+use poms_compute::{ComputeJobs, ComputeParameters};
+use poms_render::{RenderJobs, RenderParameters};
 
 use crate::gpu_context::Context;
 use constants::ColorTheme;

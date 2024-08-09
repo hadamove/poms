@@ -1,4 +1,4 @@
-use common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonResources};
+use poms_common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonResources};
 
 use crate::{resources::camera::CameraResource, RenderOwnedResources};
 

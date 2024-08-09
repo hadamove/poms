@@ -80,37 +80,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "cgmath",
- "common",
- "compute",
- "console_error_panic_hook",
- "egui",
- "egui-wgpu",
- "egui-winit",
- "futures",
- "lazy_static",
- "log",
- "pdbtbx",
- "permutation",
- "render",
- "rfd",
- "serde",
- "serde_json",
- "simple_logger",
- "thiserror",
- "uuid",
- "wasm-bindgen-futures",
- "wasm-logger",
- "web-sys",
- "wgpu",
- "winit",
-]
-
-[[package]]
 name = "approx"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -640,24 +609,6 @@ checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
 dependencies = [
  "bytes",
  "memchr",
-]
-
-[[package]]
-name = "common"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "cgmath",
- "wgpu",
-]
-
-[[package]]
-name = "compute"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "common",
- "wgpu",
 ]
 
 [[package]]
@@ -1995,6 +1946,65 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22686f4785f02a4fcc856d3b3bb19bf6c8160d103f7a99cc258bddd0251dc7f2"
 
 [[package]]
+name = "poms-app"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "cgmath",
+ "console_error_panic_hook",
+ "egui",
+ "egui-wgpu",
+ "egui-winit",
+ "futures",
+ "lazy_static",
+ "log",
+ "pdbtbx",
+ "permutation",
+ "poms-common",
+ "poms-compute",
+ "poms-render",
+ "rfd",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "thiserror",
+ "uuid",
+ "wasm-bindgen-futures",
+ "wasm-logger",
+ "web-sys",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
+name = "poms-common"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "cgmath",
+ "wgpu",
+]
+
+[[package]]
+name = "poms-compute"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "poms-common",
+ "wgpu",
+]
+
+[[package]]
+name = "poms-render"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "cgmath",
+ "poms-common",
+ "wgpu",
+]
+
+[[package]]
 name = "powerfmt"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2168,16 +2178,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a908a6e00f1fdd0dfd9c0eb08ce85126f6d8bbda50017e74bc4a4b7d4a926a4"
 dependencies = [
  "bitflags 2.6.0",
-]
-
-[[package]]
-name = "render"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "cgmath",
- "common",
- "wgpu",
 ]
 
 [[package]]

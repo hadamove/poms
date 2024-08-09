@@ -1,4 +1,9 @@
 [workspace]
-members = ["src/app", "src/common", "src/compute", "src/render"]
+members = [
+    "src/poms-app",
+    "src/poms-common",
+    "src/poms-compute",
+    "src/poms-render",
+]
 
 resolver = "2"
