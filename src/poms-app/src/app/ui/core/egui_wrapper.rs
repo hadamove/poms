@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::gpu_context::GpuContext;
 
-use super::{elements::UiElement, UIState};
+use super::super::{elements::UiElement, UIState};
 
 /// TODO: Add documentation, glue between winit, wgpu and egui
 pub struct EguiWrapper {

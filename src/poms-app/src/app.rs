@@ -1,7 +1,7 @@
-pub mod constants;
-pub mod data;
-pub mod input;
-pub mod ui;
+mod constants;
+mod data;
+mod input;
+mod ui;
 
 use poms_common::{models::atom::calculate_center, resources::CommonResources};
 use poms_compute::{ComputeJobs, ComputeParameters};
@@ -11,7 +11,7 @@ use crate::gpu_context::GpuContext;
 use constants::ColorTheme;
 use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
 use input::camera_controller::CameraController;
-use ui::{event::UserEvent, UserInterface};
+use ui::{events::UserEvent, UserInterface};
 
 struct AppSettings {
     pub init_resolution: u32,

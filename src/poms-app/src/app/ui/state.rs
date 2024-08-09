@@ -2,7 +2,7 @@ use crate::app::constants::{
     ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_DISTANCE_FIELD_RESOLUTION, DEFAULT_PROBE_RADIUS,
 };
 
-use super::event::UserEvent;
+use super::events::UserEvent;
 
 /// Struct that represents an error message that should be displayed to the user.
 pub struct ErrorMessage {

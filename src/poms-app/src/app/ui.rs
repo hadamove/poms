@@ -1,6 +1,9 @@
-pub mod egui_wrapper;
-pub mod elements;
-pub mod event;
+pub mod events;
+
+mod core {
+    pub mod egui_wrapper;
+}
+mod elements;
 mod state;
 
 use state::UIState;
@@ -9,11 +12,11 @@ use winit::event::WindowEvent;
 use super::data::file_loader::{AsyncFileLoader, FileResponse};
 use super::input::mouse_input::Input;
 use crate::gpu_context::GpuContext;
-use event::UserEvent;
+use events::UserEvent;
 
 /// TODO: docs
 pub struct UserInterface {
-    egui: egui_wrapper::EguiWrapper,
+    egui: core::egui_wrapper::EguiWrapper,
     state: UIState,
     file_loader: AsyncFileLoader,
 
@@ -23,7 +26,7 @@ pub struct UserInterface {
 
 impl UserInterface {
     pub fn new(context: &GpuContext) -> Self {
-        let egui = egui_wrapper::EguiWrapper::new(context);
+        let egui = core::egui_wrapper::EguiWrapper::new(context);
 
         Self {
             egui,
