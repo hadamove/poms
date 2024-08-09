@@ -19,12 +19,6 @@ pub struct AsyncFileLoader {
     ),
 }
 
-impl Default for AsyncFileLoader {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// TODO: docs, explain why it's async
 impl AsyncFileLoader {
     pub fn new() -> Self {
@@ -56,6 +50,12 @@ impl AsyncFileLoader {
             Ok(parsed) => FileResponse::FileParsed(parsed),
             Err(err) => FileResponse::ParsingFailed(err),
         }
+    }
+}
+
+impl Default for AsyncFileLoader {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

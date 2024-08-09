@@ -12,6 +12,7 @@ pub struct SpacefillResources<'a> {
 }
 
 impl<'a> SpacefillResources<'a> {
+    /// TODO: Mention that constructing this is each frame but its cheap
     pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
         Self {
             molecule: &common.atoms_resource,

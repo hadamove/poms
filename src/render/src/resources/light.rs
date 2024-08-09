@@ -24,7 +24,6 @@ pub struct LightResource {
 
 impl LightResource {
     pub fn new(device: &wgpu::Device) -> Self {
-        // TODO: Where we pass default stuff into buffer maybe `create_buffer` is better than `create_buffer_init`
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Light Buffer"),
             contents: bytemuck::cast_slice(&[LightUniform::default()]),

@@ -1,8 +1,9 @@
-// TODO: Clean up imports
 pub mod passes;
 pub mod resources;
+mod state;
 
 use common::{models::grid::GridUniform, resources::CommonResources};
+use state::RenderState;
 
 use crate::{
     passes::{
@@ -15,36 +16,14 @@ use crate::{
     },
 };
 
+/// Contains all resources that are owned by the render pipeline.
 pub struct RenderOwnedResources {
-    // TODO: Merge this into a single struct
     pub distance_field: DistanceFieldRender,
 
-    // TODO: Merge this into a single struct
     pub light_resource: LightResource,
     pub camera_resource: CameraResource,
 
     pub depth_texture: DepthTexture,
-}
-
-/// Configuration for the renderer.
-pub struct RenderState {
-    /// Whether to render the spacefill representation.
-    pub render_spacefill: bool,
-    /// Whether to render the molecular surface representation.
-    pub render_molecular_surface: bool,
-    /// The clear color of the renderer.
-    pub clear_color: wgpu::Color,
-    // TODO: Add ArcballCamera?
-}
-
-impl<'a> From<&RenderParameters<'a>> for RenderState {
-    fn from(params: &RenderParameters) -> Self {
-        RenderState {
-            render_spacefill: params.render_spacefill,
-            render_molecular_surface: params.render_molecular_surface,
-            clear_color: params.clear_color,
-        }
-    }
 }
 
 pub struct RenderParameters<'a> {
@@ -101,9 +80,10 @@ impl RenderJobs {
         common: &CommonResources,
     ) {
         let depth_view = &self.resources.depth_texture.view;
-        let spacefil_resources = SpacefillResources::new(&self.resources, common);
 
         if self.state.render_spacefill {
+            let spacefil_resources = SpacefillResources::new(&self.resources, common);
+
             self.spacefill_pass.render(
                 view,
                 depth_view,
