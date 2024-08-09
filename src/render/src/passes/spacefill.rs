@@ -4,15 +4,15 @@ use crate::{resources::camera::CameraResource, RenderOwnedResources};
 
 use super::util;
 
-const WGPU_LABEL: &str = "Render Spacefill";
-
+/// Contains resources that are required to render the spacefill representation of the molecule.
 pub struct SpacefillResources<'a> {
     pub molecule: &'a AtomsWithLookupResource, // @group(0)
     pub camera: &'a CameraResource,            // @group(1)
 }
 
 impl<'a> SpacefillResources<'a> {
-    /// TODO: Mention that constructing this is each frame but its cheap
+    /// Creates a new instance of `SpacefillResources`.
+    /// It is okay and cheap to construct this each frame, as it only contains references to resources.
     pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
         Self {
             molecule: &common.atoms_resource,
@@ -21,11 +21,16 @@ impl<'a> SpacefillResources<'a> {
     }
 }
 
+/// Wrapper around `wgpu::RenderPipeline` that is used to render the spacefill representation of the molecule.
 pub struct SpacefillPass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
+const WGPU_LABEL: &str = "Render Spacefill";
+
 impl SpacefillPass {
+    /// Creates a new instance of `SpacefillPass` using the provided resources.
+    /// The spacefill representation is rendered using sphere impostors.
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
@@ -44,6 +49,8 @@ impl SpacefillPass {
         Self { render_pipeline }
     }
 
+    /// Records the created render pass to the provided `encoder`.
+    /// Call this every frame to render the spacefill representation.
     pub fn render(
         &self,
         view: &wgpu::TextureView,

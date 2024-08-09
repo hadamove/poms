@@ -4,6 +4,7 @@ use wgpu::util::DeviceExt;
 #[derive(Debug, Default, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct LightUniform {
     direction: [f32; 3],
+    /// Padding to align the struct to a multiple of 16 bytes.
     _padding: f32,
 }
 
@@ -16,6 +17,8 @@ impl LightUniform {
     }
 }
 
+/// A lightweight (pun intended) resource that only contains the light direction
+/// as the main render shaders only use directional lighting.
 pub struct LightResource {
     pub buffer: wgpu::Buffer,
     pub bind_group_layout: wgpu::BindGroupLayout,
@@ -60,6 +63,7 @@ impl LightResource {
         }
     }
 
+    /// This might be called every frame to update the light direction to match the camera's view.
     pub fn update(&self, queue: &wgpu::Queue, uniform: LightUniform) {
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }

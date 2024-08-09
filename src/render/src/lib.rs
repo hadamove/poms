@@ -29,6 +29,7 @@ pub struct RenderOwnedResources {
 /// A collection of render passes that are executed in order to render the molecule.
 pub struct RenderJobs {
     /// Configuration for the renderer. This is used to control what is rendered.
+    // TODO: Make these private
     pub state: RenderState,
     pub resources: RenderOwnedResources,
 

@@ -1,3 +1,4 @@
+/// Depth texture used for depth testing in the renderer.
 pub struct DepthTexture {
     pub view: wgpu::TextureView,
 }

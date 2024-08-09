@@ -31,6 +31,8 @@ pub struct CameraResource {
 }
 
 impl CameraResource {
+    /// Constructs a new instance of `CameraResource`.
+    /// This resource is used to store the camera's position and matrices.
     pub fn new(device: &wgpu::Device) -> Self {
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Uniform Buffer"),
@@ -69,6 +71,8 @@ impl CameraResource {
         }
     }
 
+    /// Updates the camera uniform buffer with the new camera data.
+    /// Usually called once per frame.
     pub fn update(&self, queue: &wgpu::Queue, uniform: CameraUniform) {
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }

@@ -1,6 +1,9 @@
 use common::{models::grid::GridUniform, resources::df_texture::create_distance_field_texture};
 use wgpu::util::DeviceExt;
 
+/// The signed distance field that is used for rendering of the molecular surface using raymarching.
+/// Each voxel in the distance field is a signed distance to the nearest surface.
+/// The distance field can either be provided externally or generated using the `poms-compute` crate.
 pub struct DistanceFieldRender {
     pub grid_buffer: wgpu::Buffer,
     pub texture: wgpu::Texture,
@@ -10,15 +13,14 @@ pub struct DistanceFieldRender {
 }
 
 impl DistanceFieldRender {
-    pub fn resolution(&self) -> u32 {
-        self.texture.depth_or_array_layers()
-    }
-
+    /// Creates a new instance of `DistanceFieldRender` with a new distance field texture.
+    /// The resolution, origin, and scale of the grid are provided in the `GridUniform` struct.
     pub fn new(device: &wgpu::Device, grid: GridUniform) -> Self {
         let texture = create_distance_field_texture(device, grid.resolution);
         Self::from_texture(device, grid, texture)
     }
 
+    /// Constructs a new instance of `DistanceFieldRender` from an existing texture.
     pub fn from_texture(device: &wgpu::Device, grid: GridUniform, texture: wgpu::Texture) -> Self {
         let view = texture.create_view(&Default::default());
 
@@ -65,6 +67,7 @@ impl DistanceFieldRender {
         }
     }
 
+    /// Updates the grid buffer with the new grid data.
     pub fn update_grid(&self, queue: &wgpu::Queue, grid: &GridUniform) {
         queue.write_buffer(&self.grid_buffer, 0, bytemuck::cast_slice(&[*grid]));
     }

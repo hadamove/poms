@@ -7,8 +7,7 @@ use crate::{
 
 use super::util;
 
-const WGPU_LABEL: &str = "Render Molecular Surface";
-
+/// Contains resources that are required to render the molecular surface representation of the molecule.
 pub struct MolecularSurfaceResources<'a> {
     pub distance_field: &'a DistanceFieldRender, // @group(0)
     pub camera: &'a CameraResource,              // @group(1)
@@ -16,6 +15,8 @@ pub struct MolecularSurfaceResources<'a> {
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
+    /// Creates a new instance of `MolecularSurfaceResources`.
+    /// It is okay and cheap to construct this each frame, as it only contains references to resources.
     pub fn new(resources: &'a RenderOwnedResources) -> Self {
         Self {
             distance_field: &resources.distance_field,
@@ -25,11 +26,16 @@ impl<'a> MolecularSurfaceResources<'a> {
     }
 }
 
+/// Wrapper around `wgpu::RenderPipeline` that is used to render the molecular surface representation of the molecule.
 pub struct MolecularSurfacePass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
+const WGPU_LABEL: &str = "Render Molecular Surface";
+
 impl MolecularSurfacePass {
+    /// Creates a new instance of `MolecularSurfacePass` using the provided resources.
+    /// The surface is rendered using raymarching and the signed distance field.
     pub fn new(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
@@ -49,6 +55,8 @@ impl MolecularSurfacePass {
         Self { render_pipeline }
     }
 
+    /// Records the created render pass to the provided `encoder`.
+    /// Call this every frame to render the molecular surface.
     pub fn render(
         &self,
         view: &wgpu::TextureView,
@@ -80,6 +88,7 @@ impl MolecularSurfacePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
+        // TODO: Reorder based on frequency of change, higher frequency first
         render_pass.set_bind_group(0, &resources.distance_field.bind_group, &[]);
         render_pass.set_bind_group(1, &resources.camera.bind_group, &[]);
         render_pass.set_bind_group(2, &resources.light.bind_group, &[]);
