@@ -40,6 +40,7 @@ pub struct ComputeParameters<'a> {
 }
 
 impl ComputeJobs {
+    /// Creates a new instance of `ComputeJobs` with the given parameters.
     pub fn new(device: &wgpu::Device, params: ComputeParameters) -> Self {
         // Create a grid around the molecule with the initial resolution.
         let grid = create_compute_grid_around_molecule(
@@ -112,8 +113,10 @@ impl ComputeJobs {
     /// Ensure that the buffers representing the grid points and distance field are synchronized
     /// with the latest state of the computation. Call this function before executing the compute passes.
     pub fn update_buffers(&mut self, queue: &wgpu::Queue) {
-        self.resources.df_grid_points.update(queue, &self.state);
-        self.resources.distance_field.update(queue, &self.state);
+        self.resources.distance_field.update(queue, self.state.grid);
+        self.resources
+            .df_grid_points
+            .update(queue, self.state.grid_points_index_offset());
     }
 
     /// Returns the last computed distance field texture and its associated grid.

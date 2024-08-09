@@ -5,12 +5,15 @@ use crate::{
 
 const WGPU_LABEL: &str = "Compute Refinement";
 
+/// Contains resources required to execute the refinement pass.
 pub struct RefinementResources<'a> {
     pub distance_field: &'a DistanceFieldCompute, // @group(0)
     pub df_grid_points: &'a GridPointsResource,   // @group(1)
 }
 
 impl<'a> RefinementResources<'a> {
+    /// Creates a new instance of `RefinementResources`.
+    /// This struct simply holds references to resources and is cheap to create each frame.
     pub fn new(resources: &'a ComputeOwnedResources) -> Self {
         Self {
             df_grid_points: &resources.df_grid_points,
@@ -19,11 +22,14 @@ impl<'a> RefinementResources<'a> {
     }
 }
 
+/// Wrapper around `wgpu::ComputePipeline` that is used to execute the refinement step of the algorithm.
 pub struct RefinementPass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
 impl RefinementPass {
+    /// Creates a new instance of `RefinementPass` using the provided resources.
+    /// The refinement step computes the distance field for grid points classified as on the boundary of the molecular surface.
     pub fn new(device: &wgpu::Device, resources: RefinementResources) -> Self {
         let shader = wgpu::include_wgsl!("../shaders/refinement.wgsl");
 
@@ -38,6 +44,8 @@ impl RefinementPass {
         Self { compute_pipeline }
     }
 
+    /// Records the created compute pass to the provided `encoder`.
+    /// This method should be called every frame to execute the refinement step on `grid_points_count` grid points.
     pub fn execute(
         &mut self,
         encoder: &mut wgpu::CommandEncoder,

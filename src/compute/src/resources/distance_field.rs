@@ -1,8 +1,8 @@
 use common::{models::grid::GridUniform, resources::df_texture::create_distance_field_texture};
 use wgpu::util::DeviceExt;
 
-use crate::ComputeState;
-
+/// The signed distance field produced by the probe and refinement steps.
+/// Each voxel in the distance field is a signed distance to the nearest surface.
 pub struct DistanceFieldCompute {
     pub grid_buffer: wgpu::Buffer,
     pub texture: wgpu::Texture,
@@ -12,6 +12,8 @@ pub struct DistanceFieldCompute {
 }
 
 impl DistanceFieldCompute {
+    /// Creates a new instance of `DistanceFieldCompute` with a new distance field texture.
+    /// The resolution, origin, and scale of the grid are provided in the `GridUniform` struct.
     pub fn new(device: &wgpu::Device, grid: GridUniform) -> Self {
         let grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Grid Buffer"),
@@ -47,12 +49,9 @@ impl DistanceFieldCompute {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, compute_state: &ComputeState) {
-        queue.write_buffer(
-            &self.grid_buffer,
-            0,
-            bytemuck::cast_slice(&[compute_state.grid]),
-        );
+    /// Updates the grid buffer with the new grid data.
+    pub fn update(&self, queue: &wgpu::Queue, grid: GridUniform) {
+        queue.write_buffer(&self.grid_buffer, 0, bytemuck::cast_slice(&[grid]));
     }
 
     const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =

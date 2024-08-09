@@ -1,7 +1,7 @@
 use wgpu::util::DeviceExt;
 
-use crate::ComputeState;
-
+/// An auxiliary resource that stores values associated with each grid point (classifications, etc.).
+/// This resource also stores the index offset in the buffer since the computation on grid points is split across multiple frames.
 pub struct GridPointsResource {
     pub grid_point_memory_buffer: wgpu::Buffer,
     pub grid_point_index_offset_buffer: wgpu::Buffer,
@@ -11,6 +11,8 @@ pub struct GridPointsResource {
 }
 
 impl GridPointsResource {
+    /// Creates a new instance of `GridPointsResource`.
+    /// We create a buffer of size `max_resolution^3` in order to not have to resize it later as the resolution upscales.
     pub fn new(device: &wgpu::Device, max_resolution: u32) -> Self {
         // The maximum number of grid points is the cube of the maximum resolution.
         let grid_points_memory_size = max_resolution.pow(3) as usize;
@@ -54,11 +56,11 @@ impl GridPointsResource {
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, compute_state: &ComputeState) {
+    pub fn update(&self, queue: &wgpu::Queue, grid_points_index_offset: u32) {
         queue.write_buffer(
             &self.grid_point_index_offset_buffer,
             0,
-            bytemuck::cast_slice(&[compute_state.grid_points_index_offset()]),
+            bytemuck::cast_slice(&[grid_points_index_offset]),
         );
     }
 }

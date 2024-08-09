@@ -7,8 +7,7 @@ use crate::{
 
 use super::util;
 
-const WGPU_LABEL: &str = "Compute Probe";
-
+/// Contains resources required to execute the probe pass.
 pub struct ProbeResources<'a> {
     pub atoms: &'a AtomsWithLookupResource,       // @group(0)
     pub distance_field: &'a DistanceFieldCompute, // @group(1)
@@ -16,6 +15,8 @@ pub struct ProbeResources<'a> {
 }
 
 impl<'a> ProbeResources<'a> {
+    /// Creates a new instance of `ProbeResources`.
+    /// It is okay and cheap to construct this each frame, as it only contains references to resources.
     pub fn new(resources: &'a ComputeOwnedResources, common: &'a CommonResources) -> Self {
         Self {
             df_grid_points: &resources.df_grid_points,
@@ -25,11 +26,16 @@ impl<'a> ProbeResources<'a> {
     }
 }
 
+/// Wrapper around `wgpu::ComputePipeline` that is used to execute the probe step of the algorithm.
 pub struct ProbePass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
+const WGPU_LABEL: &str = "Compute Probe";
+
 impl ProbePass {
+    /// Creates a new instance of `ProbePass` using the provided resources.
+    /// The probe step is executed to classify each grid point (inside, outside, or on the boundary of the molecular surface).
     pub fn new(device: &wgpu::Device, resources: ProbeResources) -> Self {
         let shader = wgpu::include_wgsl!("../shaders/probe.wgsl");
 
@@ -45,6 +51,8 @@ impl ProbePass {
         Self { compute_pipeline }
     }
 
+    /// Records the created compute pass to the provided `encoder`.
+    /// Call this every frame to execute the probe step on `grid_points_count` grid points.
     pub fn execute(
         &mut self,
         encoder: &mut wgpu::CommandEncoder,
