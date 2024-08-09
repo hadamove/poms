@@ -15,23 +15,27 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
     window.show(context, |ui| {
         // Model parameters.
         if ui.add(resolution_slider(state)).changed() {
-            state.dispatch_event(UserEvent::DistanceFieldResolutionChanged(
-                state.df_resolution,
-            ));
+            state.dispatch_event(UserEvent::DistanceFieldResolutionChanged {
+                resolution: state.df_resolution,
+            });
         }
         if ui.add(probe_radius_slider(state)).changed() {
-            state.dispatch_event(UserEvent::ProbeRadiusChanged(state.probe_radius));
+            state.dispatch_event(UserEvent::ProbeRadiusChanged {
+                probe_radius: state.probe_radius,
+            });
         }
         ui.separator();
 
         ui.collapsing("Render Passes", |ui| {
             if ui.add(spacefill_pass_checkbox(state)).changed() {
-                state.dispatch_event(UserEvent::RenderSpacefillChanged(state.render_spacefill));
+                state.dispatch_event(UserEvent::RenderSpacefillChanged {
+                    is_enabled: state.render_spacefill,
+                });
             }
             if ui.add(molecular_surface_pass_checkbox(state)).changed() {
-                state.dispatch_event(UserEvent::RenderMolecularSurfaceChanged(
-                    state.render_molecular_surface,
-                ));
+                state.dispatch_event(UserEvent::RenderMolecularSurfaceChanged {
+                    is_enabled: state.render_molecular_surface,
+                });
             }
         });
 
@@ -41,7 +45,9 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
                 .add(Slider::new(&mut state.animation_speed, 1..=10).text("Speed"))
                 .changed()
             {
-                state.dispatch_event(UserEvent::AnimationSpeedChanged(state.animation_speed));
+                state.dispatch_event(UserEvent::AnimationSpeedChanged {
+                    speed: state.animation_speed,
+                });
             }
             ui.horizontal(|ui| {
                 if ui.add(animation_button(state)).clicked() {

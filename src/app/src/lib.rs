@@ -143,19 +143,19 @@ impl App {
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {
         for event in ui_events {
             match event {
-                UserEvent::RenderMolecularSurfaceChanged(is_enabled) => {
+                UserEvent::RenderMolecularSurfaceChanged { is_enabled } => {
                     self.renderer.toggle_molecular_surface(is_enabled);
                 }
-                UserEvent::RenderSpacefillChanged(enabled) => {
-                    self.renderer.toggle_spacefill(enabled);
+                UserEvent::RenderSpacefillChanged { is_enabled } => {
+                    self.renderer.toggle_spacefill(is_enabled);
                 }
-                UserEvent::ToggleTheme(theme) => {
+                UserEvent::ToggleTheme { theme } => {
                     self.renderer.change_clear_color(match theme {
                         ColorTheme::Dark => wgpu::Color::BLACK,
                         ColorTheme::Light => wgpu::Color::WHITE,
                     });
                 }
-                UserEvent::LoadedMolecule(molecule) => {
+                UserEvent::LoadedMolecule { molecule } => {
                     // TODO: Recreate ComputeJobs
                     let current = self.molecules.add_from_parsed(molecule, 1.4); // TODO: Remove hardcoded probe radius
 
@@ -177,7 +177,7 @@ impl App {
                         },
                     );
                 }
-                UserEvent::DistanceFieldResolutionChanged(resolution) => {
+                UserEvent::DistanceFieldResolutionChanged { resolution } => {
                     println!("res  changed {}", resolution);
                     let current = self.molecules.get_current();
                     self.compute = ComputeJobs::new(
@@ -191,7 +191,7 @@ impl App {
                         },
                     );
                 }
-                UserEvent::ProbeRadiusChanged(probe_radius) => {
+                UserEvent::ProbeRadiusChanged { probe_radius } => {
                     println!("probe radius changed {}", probe_radius);
                     self.molecules.on_probe_radius_changed(probe_radius);
                     let current = self.molecules.get_current();
@@ -210,7 +210,7 @@ impl App {
                     // TODO: Fix animations (custom module)
                     // TODO: Recreate ComputeJobs?
                 }
-                UserEvent::AnimationSpeedChanged(_) => {
+                UserEvent::AnimationSpeedChanged { speed: _ } => {
                     // TODO: Fix animations
                 }
                 UserEvent::UpdateLight { direction } => {

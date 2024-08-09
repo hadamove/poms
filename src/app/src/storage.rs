@@ -30,6 +30,7 @@ impl MoleculeStorage {
         };
 
         // TODO: remove hardcoded probe radius
+        // this could solve our weird problem
         storage.add_from_parsed(initial_molecule, 1.4);
         storage
     }

@@ -14,11 +14,15 @@ pub fn menu_bar(context: &egui::Context, state: &mut UIState) {
             if ui.visuals().dark_mode {
                 if ui.button("🔆").clicked() {
                     context.set_visuals(Visuals::light());
-                    state.dispatch_event(UserEvent::ToggleTheme(ColorTheme::Light));
+                    state.dispatch_event(UserEvent::ToggleTheme {
+                        theme: ColorTheme::Light,
+                    });
                 }
             } else if ui.button("🌙").clicked() {
                 context.set_visuals(Visuals::dark());
-                state.dispatch_event(UserEvent::ToggleTheme(ColorTheme::Dark));
+                state.dispatch_event(UserEvent::ToggleTheme {
+                    theme: ColorTheme::Dark,
+                });
             }
 
             ui.menu_button("File", |ui| {

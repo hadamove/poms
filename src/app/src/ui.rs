@@ -67,12 +67,12 @@ impl UserInterface {
 
     fn process_file_loader_events(&mut self) {
         match self.file_loader.get_parsed_files() {
-            FileResponse::FileParsed(file) => {
-                self.state.dispatch_event(UserEvent::LoadedMolecule(file))
-            }
-            FileResponse::ParsingFailed(_) => self
+            FileResponse::FileParsed { molecule } => self
                 .state
-                .open_error_message("Failed to parse the file".to_string()),
+                .dispatch_event(UserEvent::LoadedMolecule { molecule }),
+            FileResponse::ParsingFailed { error } => self
+                .state
+                .open_error_message(format!("Parsing failed: {}", error)),
             FileResponse::NoContent => {}
         }
     }

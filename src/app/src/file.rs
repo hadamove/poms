@@ -3,13 +3,13 @@ use std::sync::mpsc;
 use super::utils::parser::{parse_atoms_from_pdb_file, ParseError, ParsedMolecule};
 
 pub enum FileResponse {
-    FileParsed(ParsedMolecule),
-    ParsingFailed(ParseError),
+    FileParsed { molecule: ParsedMolecule },
+    ParsingFailed { error: ParseError },
     NoContent,
 }
 
 enum AsyncFileMessage {
-    FileLoaded(Vec<u8>),
+    FileLoaded { content: Vec<u8> },
 }
 
 pub struct AsyncFileLoader {
@@ -35,20 +35,20 @@ impl AsyncFileLoader {
             if let Some(files) = file_dialog.pick_files().await {
                 for file in files {
                     let content = file.read().await;
-                    dispatch.send(AsyncFileMessage::FileLoaded(content)).ok();
+                    dispatch.send(AsyncFileMessage::FileLoaded { content }).ok();
                 }
             }
         })
     }
 
     pub fn get_parsed_files(&mut self) -> FileResponse {
-        let Ok(AsyncFileMessage::FileLoaded(content)) = self.channel.1.try_recv() else {
+        let Ok(AsyncFileMessage::FileLoaded { content }) = self.channel.1.try_recv() else {
             return FileResponse::NoContent;
         };
 
         match parse_atoms_from_pdb_file(&content) {
-            Ok(parsed) => FileResponse::FileParsed(parsed),
-            Err(err) => FileResponse::ParsingFailed(err),
+            Ok(molecule) => FileResponse::FileParsed { molecule },
+            Err(error) => FileResponse::ParsingFailed { error },
         }
     }
 }

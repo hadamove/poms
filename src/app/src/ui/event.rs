@@ -1,17 +1,15 @@
 use crate::{constants::ColorTheme, utils::parser::ParsedMolecule};
 
-// TODO: use structs e.g. AnimationSpeedChanged { speed: u32 }, DistanceFieldResolutionChanged { resolution: u32 }
 pub enum UserEvent {
-    AnimationSpeedChanged(u32),
-    DistanceFieldResolutionChanged(u32),
-    LoadedMolecule(ParsedMolecule),
-    OpenErrorMessage(String),
-    CloseErrorMessage(uuid::Uuid),
+    AnimationSpeedChanged { speed: u32 },
+    DistanceFieldResolutionChanged { resolution: u32 },
+    LoadedMolecule { molecule: ParsedMolecule },
+    OpenErrorMessage { error: String },
     OpenFileDialog,
-    ProbeRadiusChanged(f32),
-    RenderMolecularSurfaceChanged(bool),
-    RenderSpacefillChanged(bool),
+    ProbeRadiusChanged { probe_radius: f32 },
+    RenderMolecularSurfaceChanged { is_enabled: bool },
+    RenderSpacefillChanged { is_enabled: bool },
     ToggleAnimation,
-    ToggleTheme(ColorTheme),
+    ToggleTheme { theme: ColorTheme },
     UpdateLight { direction: cgmath::Vector3<f32> },
 }
