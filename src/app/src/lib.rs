@@ -128,11 +128,9 @@ impl App {
     fn update_resources(&mut self) {
         self.camera.update(&self.ui.input);
         self.renderer
-            .resources
-            .camera_resource
-            .update(&self.context.queue, self.camera.to_uniform());
+            .update_camera(&self.context.queue, self.camera.to_uniform());
 
-        self.renderer.resources.light_resource.update(
+        self.renderer.update_light(
             &self.context.queue,
             LightUniform::new(self.camera.look_direction().into()),
         );
@@ -214,11 +212,7 @@ impl App {
                     // TODO: Fix animations
                 }
                 UserEvent::UpdateLight(uniform) => {
-                    // TODO: Make this nicer
-                    self.renderer
-                        .resources
-                        .light_resource
-                        .update(&self.context.queue, uniform);
+                    self.renderer.update_light(&self.context.queue, uniform);
                 }
                 UserEvent::OpenFileDialog => self.ui.open_file_dialog(),
                 _ => {}

@@ -3,6 +3,7 @@ pub mod resources;
 mod state;
 
 use common::{models::grid::GridUniform, resources::CommonResources};
+use resources::{camera::CameraUniform, light::LightUniform};
 use state::RenderState;
 
 use crate::{
@@ -32,7 +33,7 @@ pub struct RenderOwnedResources {
 pub struct RenderJobs {
     /// Configuration for the renderer. This is used to control what is rendered.
     state: RenderState,
-    pub resources: RenderOwnedResources,
+    resources: RenderOwnedResources,
 
     spacefill_pass: SpacefillPass,
     molecular_surface_pass: MolecularSurfacePass,
@@ -137,5 +138,15 @@ impl RenderJobs {
     /// Used to switch between light and dark mode.
     pub fn change_clear_color(&mut self, color: wgpu::Color) {
         self.state.clear_color = color;
+    }
+
+    /// Updates the view of the molecule.
+    pub fn update_camera(&self, queue: &wgpu::Queue, camera_uniform: CameraUniform) {
+        self.resources.camera_resource.update(queue, camera_uniform);
+    }
+
+    /// Updates the light uniform used to shade the molecule.
+    pub fn update_light(&self, queue: &wgpu::Queue, light_uniform: LightUniform) {
+        self.resources.light_resource.update(queue, light_uniform);
     }
 }
