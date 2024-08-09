@@ -3,8 +3,6 @@ use crate::resources::{
 };
 use crate::RenderOwnedResources;
 
-use super::util;
-
 /// Contains resources that are required to render the molecular surface representation of the molecule.
 pub struct MolecularSurfaceResources<'a> {
     pub distance_field: &'a DistanceFieldRender, // @group(0)
@@ -29,7 +27,7 @@ pub struct MolecularSurfacePass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-const WGPU_LABEL: &str = "Render Molecular Surface";
+const WGPU_LABEL: &str = "Render Molecular Surface Pass";
 
 impl MolecularSurfacePass {
     /// Creates a new instance of `MolecularSurfacePass` using the provided resources.
@@ -48,7 +46,7 @@ impl MolecularSurfacePass {
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
-            util::create_render_pipeline(WGPU_LABEL, device, config, shader, bind_group_layouts);
+            super::create_render_pipeline(WGPU_LABEL, device, config, shader, bind_group_layouts);
 
         Self { render_pipeline }
     }

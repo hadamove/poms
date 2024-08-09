@@ -2,8 +2,6 @@ use poms_common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonR
 
 use crate::{resources::camera::CameraResource, RenderOwnedResources};
 
-use super::util;
-
 /// Contains resources that are required to render the spacefill representation of the molecule.
 pub struct SpacefillResources<'a> {
     pub molecule: &'a AtomsWithLookupResource, // @group(0)
@@ -26,7 +24,7 @@ pub struct SpacefillPass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-const WGPU_LABEL: &str = "Render Spacefill";
+const WGPU_LABEL: &str = "Render Spacefill Pass";
 
 impl SpacefillPass {
     /// Creates a new instance of `SpacefillPass` using the provided resources.
@@ -44,7 +42,7 @@ impl SpacefillPass {
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
-            util::create_render_pipeline(WGPU_LABEL, device, config, shader, bind_group_layouts);
+            super::create_render_pipeline(WGPU_LABEL, device, config, shader, bind_group_layouts);
 
         Self { render_pipeline }
     }

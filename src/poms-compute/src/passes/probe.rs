@@ -3,8 +3,6 @@ use crate::ComputeOwnedResources;
 
 use poms_common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonResources};
 
-use super::util;
-
 /// Contains resources required to execute the probe pass.
 pub struct ProbeResources<'a> {
     pub atoms: &'a AtomsWithLookupResource,       // @group(0)
@@ -29,7 +27,7 @@ pub struct ProbePass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
-const WGPU_LABEL: &str = "Compute Probe";
+const WGPU_LABEL: &str = "Compute Probe Pass";
 
 impl ProbePass {
     /// Creates a new instance of `ProbePass` using the provided resources.
@@ -44,7 +42,7 @@ impl ProbePass {
         ];
 
         let compute_pipeline =
-            util::create_compute_pipeline(WGPU_LABEL, device, shader, bind_group_layouts);
+            super::create_compute_pipeline(WGPU_LABEL, device, shader, bind_group_layouts);
 
         Self { compute_pipeline }
     }
