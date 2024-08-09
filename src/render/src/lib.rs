@@ -1,6 +1,5 @@
 mod passes;
-// TODO: private
-pub mod resources;
+mod resources;
 mod state;
 
 use common::{models::grid::GridUniform, resources::CommonResources};
@@ -8,7 +7,6 @@ use common::{models::grid::GridUniform, resources::CommonResources};
 use passes::molecular_surface::{MolecularSurfacePass, MolecularSurfaceResources};
 use passes::spacefill::{SpacefillPass, SpacefillResources};
 use resources::{camera::CameraResource, light::LightResource};
-use resources::{camera::CameraUniform, light::LightUniform};
 use resources::{depth_texture::DepthTexture, distance_field::DistanceFieldRender};
 use state::RenderState;
 
@@ -135,13 +133,21 @@ impl RenderJobs {
         self.state.clear_color = color;
     }
 
-    /// Updates the view of the molecule.
-    pub fn update_camera(&self, queue: &wgpu::Queue, camera_uniform: CameraUniform) {
-        self.resources.camera_resource.update(queue, camera_uniform);
+    /// Updates the camera uniform buffer with the new camera data.
+    pub fn update_camera(
+        &self,
+        queue: &wgpu::Queue,
+        position: cgmath::Point3<f32>,
+        view_matrix: cgmath::Matrix4<f32>,
+        projection_matrix: cgmath::Matrix4<f32>,
+    ) {
+        self.resources
+            .camera_resource
+            .update(queue, position, view_matrix, projection_matrix);
     }
 
     /// Updates the light uniform used to shade the molecule.
-    pub fn update_light(&self, queue: &wgpu::Queue, light_uniform: LightUniform) {
-        self.resources.light_resource.update(queue, light_uniform);
+    pub fn update_light(&self, queue: &wgpu::Queue, direction: cgmath::Vector3<f32>) {
+        self.resources.light_resource.update(queue, direction);
     }
 }

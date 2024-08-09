@@ -1,5 +1,3 @@
-use render::resources::light::LightUniform;
-
 use crate::{constants::ColorTheme, utils::parser::ParsedMolecule};
 
 // TODO: use structs e.g. AnimationSpeedChanged { speed: u32 }, DistanceFieldResolutionChanged { resolution: u32 }
@@ -15,5 +13,5 @@ pub enum UserEvent {
     RenderSpacefillChanged(bool),
     ToggleAnimation,
     ToggleTheme(ColorTheme),
-    UpdateLight(LightUniform),
+    UpdateLight { direction: cgmath::Vector3<f32> },
 }

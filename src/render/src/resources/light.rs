@@ -64,7 +64,8 @@ impl LightResource {
     }
 
     /// This might be called every frame to update the light direction to match the camera's view.
-    pub fn update(&self, queue: &wgpu::Queue, uniform: LightUniform) {
+    pub fn update(&self, queue: &wgpu::Queue, direction: cgmath::Vector3<f32>) {
+        let uniform = LightUniform::new(direction.into());
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }
 }

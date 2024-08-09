@@ -73,7 +73,21 @@ impl CameraResource {
 
     /// Updates the camera uniform buffer with the new camera data.
     /// Usually called once per frame.
-    pub fn update(&self, queue: &wgpu::Queue, uniform: CameraUniform) {
+    pub fn update(
+        &self,
+        queue: &wgpu::Queue,
+        position: cgmath::Point3<f32>,
+        view_matrix: cgmath::Matrix4<f32>,
+        projection_matrix: cgmath::Matrix4<f32>,
+    ) {
+        let uniform = CameraUniform {
+            position: position.to_homogeneous().into(),
+            view_matrix: view_matrix.into(),
+            proj_matrix: projection_matrix.into(),
+            // We can unwrap here because the matrices are invertible (unless something really weird happens).
+            view_inverse_matrix: view_matrix.invert().unwrap().into(),
+            proj_inverse_matrix: projection_matrix.invert().unwrap().into(),
+        };
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[uniform]));
     }
 }

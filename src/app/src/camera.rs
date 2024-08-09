@@ -2,8 +2,6 @@ use std::f32::consts::PI;
 
 use cgmath::{InnerSpace, Matrix4, MetricSpace, Point3, Rad, SquareMatrix, Vector3};
 
-use render::resources::camera::CameraUniform;
-
 use super::input::Input;
 
 #[derive(Debug)]
@@ -12,9 +10,11 @@ pub struct CameraController {
     pub target: Point3<f32>,
     pub position: Point3<f32>,
     pub screen_size: (u32, u32),
-    pub view: Matrix4<f32>,
+    pub view_matrix: Matrix4<f32>,
 }
 
+// TODO: make this more reliable
+// TODO: Add docs
 impl CameraController {
     const ZFAR: f32 = 1000.;
     const ZNEAR: f32 = 0.1;
@@ -31,28 +31,13 @@ impl CameraController {
         0.0, 0.0, 0.5, 1.0,
     );
 
-    pub fn to_uniform(&self) -> CameraUniform {
-        let view_matrix = self.view;
-        let proj_matrix = self.projection_matrix();
-
-        CameraUniform {
-            position: self.position.to_homogeneous().into(),
-            view_matrix: view_matrix.into(),
-            proj_matrix: proj_matrix.into(),
-
-            // We can unwrap here because the matrices are invertible.
-            view_inverse_matrix: view_matrix.invert().unwrap().into(),
-            proj_inverse_matrix: proj_matrix.invert().unwrap().into(),
-        }
-    }
-
     pub fn from_config(config: &wgpu::SurfaceConfiguration) -> Self {
         Self {
             offset: Self::INITIAL_OFFSET,
             target: Point3::new(0.0, 0.0, 0.0),
             position: Point3::new(0.0, 0.0, Self::INITIAL_OFFSET),
             screen_size: (config.width, config.height),
-            view: Matrix4::identity(),
+            view_matrix: Matrix4::identity(),
         }
     }
 
@@ -117,15 +102,23 @@ impl CameraController {
     }
 
     fn get_forward_vector(&self) -> Vector3<f32> {
-        Vector3::new(self.view.x.z, self.view.y.z, self.view.z.z)
+        Vector3::new(
+            self.view_matrix.x.z,
+            self.view_matrix.y.z,
+            self.view_matrix.z.z,
+        )
     }
 
     fn get_right_vector(&self) -> Vector3<f32> {
-        Vector3::new(self.view.x.x, self.view.y.x, self.view.z.x)
+        Vector3::new(
+            self.view_matrix.x.x,
+            self.view_matrix.y.x,
+            self.view_matrix.z.x,
+        )
     }
 
     fn set_position(&mut self, position: Point3<f32>) {
         self.position = position;
-        self.view = Matrix4::look_at_rh(self.position, self.target, Vector3::unit_y());
+        self.view_matrix = Matrix4::look_at_rh(self.position, self.target, Vector3::unit_y());
     }
 }

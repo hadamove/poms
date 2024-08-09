@@ -3,7 +3,6 @@ use winit::event::*;
 
 use common::{models::atom::calculate_center, resources::CommonResources};
 use compute::{ComputeJobs, ComputeParameters};
-use render::resources::light::LightUniform;
 use render::{RenderJobs, RenderParameters};
 
 use self::{
@@ -127,13 +126,16 @@ impl App {
     // TODO: Refactor this
     fn update_resources(&mut self) {
         self.camera.update(&self.ui.input);
-        self.renderer
-            .update_camera(&self.context.queue, self.camera.to_uniform());
 
-        self.renderer.update_light(
+        self.renderer.update_camera(
             &self.context.queue,
-            LightUniform::new(self.camera.look_direction().into()),
+            self.camera.position,
+            self.camera.view_matrix,
+            self.camera.projection_matrix(),
         );
+
+        self.renderer
+            .update_light(&self.context.queue, self.camera.look_direction());
 
         self.compute.update_buffers(&self.context.queue);
     }
@@ -211,8 +213,8 @@ impl App {
                 UserEvent::AnimationSpeedChanged(_) => {
                     // TODO: Fix animations
                 }
-                UserEvent::UpdateLight(uniform) => {
-                    self.renderer.update_light(&self.context.queue, uniform);
+                UserEvent::UpdateLight { direction } => {
+                    self.renderer.update_light(&self.context.queue, direction);
                 }
                 UserEvent::OpenFileDialog => self.ui.open_file_dialog(),
                 _ => {}
