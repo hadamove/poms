@@ -2,8 +2,7 @@ use std::sync::Arc;
 
 use winit::window::Window;
 
-// TODO: rename to GpuContext again!
-pub struct Context {
+pub struct GpuContext {
     pub window: Arc<Window>,
     pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
@@ -11,7 +10,7 @@ pub struct Context {
     pub config: wgpu::SurfaceConfiguration,
 }
 
-impl Context {
+impl GpuContext {
     pub async fn initialize(window: Arc<Window>) -> Self {
         #[cfg(feature = "vulkan")]
         let backends = wgpu::Backends::all();

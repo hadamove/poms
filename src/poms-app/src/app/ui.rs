@@ -8,7 +8,7 @@ use winit::event::WindowEvent;
 
 use super::data::file_loader::{AsyncFileLoader, FileResponse};
 use super::input::mouse_input::Input;
-use crate::gpu_context::Context;
+use crate::gpu_context::GpuContext;
 use event::UserEvent;
 
 /// TODO: docs
@@ -22,7 +22,7 @@ pub struct UserInterface {
 }
 
 impl UserInterface {
-    pub fn new(context: &Context) -> Self {
+    pub fn new(context: &GpuContext) -> Self {
         let egui = egui_wrapper::EguiWrapper::new(context);
 
         Self {
@@ -50,7 +50,7 @@ impl UserInterface {
 
     pub fn render(
         &mut self,
-        context: &Context,
+        context: &GpuContext,
         view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
     ) {
@@ -79,7 +79,7 @@ impl UserInterface {
 
     #[cfg(target_arch = "wasm32")]
     // Hot-fix for GUI not resizing with the window in the browser. There is probably a better way to fix this.
-    pub fn force_resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, context: &Context) {
+    pub fn force_resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, context: &GpuContext) {
         let raw_input = self.platform.raw_input_mut();
         raw_input.screen_rect = Some(egui::Rect::from_min_size(
             Default::default(),

@@ -8,7 +8,7 @@ use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
 
 use app::App;
-use gpu_context::Context;
+use gpu_context::GpuContext;
 
 fn main() {
     let event_loop = EventLoop::new().expect("Failed to create event loop");
@@ -32,7 +32,7 @@ fn main() {
 
 async fn run_loop(event_loop: EventLoop<()>, window: Window) {
     let window = Arc::new(window);
-    let context = Context::initialize(window.clone()).await;
+    let context = GpuContext::initialize(window.clone()).await;
     let mut app = App::new(context);
 
     event_loop

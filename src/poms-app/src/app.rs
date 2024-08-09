@@ -7,7 +7,7 @@ use poms_common::{models::atom::calculate_center, resources::CommonResources};
 use poms_compute::{ComputeJobs, ComputeParameters};
 use poms_render::{RenderJobs, RenderParameters};
 
-use crate::gpu_context::Context;
+use crate::gpu_context::GpuContext;
 use constants::ColorTheme;
 use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
 use input::camera_controller::CameraController;
@@ -20,7 +20,7 @@ struct AppSettings {
 }
 
 pub struct App {
-    context: Context,
+    context: GpuContext,
     settings: AppSettings,
 
     compute: ComputeJobs,
@@ -46,7 +46,7 @@ impl App {
         )
     }
 
-    pub fn new(context: Context) -> Self {
+    pub fn new(context: GpuContext) -> Self {
         let settings = AppSettings {
             init_resolution: 64,
             target_resolution: 128,

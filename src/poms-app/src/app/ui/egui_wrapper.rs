@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::gpu_context::Context;
+use crate::gpu_context::GpuContext;
 
 use super::{elements::UiElement, UIState};
 
@@ -16,7 +16,7 @@ pub struct EguiWrapper {
 }
 
 impl EguiWrapper {
-    pub fn new(context: &Context) -> Self {
+    pub fn new(context: &GpuContext) -> Self {
         let egui_handle = egui::Context::default();
 
         let egui_winit_state = egui_winit::State::new(
@@ -56,7 +56,7 @@ impl EguiWrapper {
 
     pub fn render(
         &mut self,
-        context: &Context,
+        context: &GpuContext,
         view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
     ) {
