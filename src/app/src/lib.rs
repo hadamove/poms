@@ -42,7 +42,7 @@ impl App {
         let molecule_storage = MoleculeStorage::new(initial_molecule);
 
         // Resources that are shared between render and compute passes.
-        let resources = CommonResources::new(&context.device);
+        let mut resources = CommonResources::new(&context.device);
         resources
             .atoms_resource
             .update(&context.queue, &molecule_storage.get_current().atoms);
@@ -66,6 +66,7 @@ impl App {
                     render_spacefill: false,
                     render_molecular_surface: true,
                     clear_color: wgpu::Color::BLACK,
+                    number_of_atoms: molecule_storage.get_current().atoms.data.len() as u32,
                 },
             ),
             ui: UserInterface::new(&context),

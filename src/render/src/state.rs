@@ -8,7 +8,6 @@ pub struct RenderState {
     pub render_molecular_surface: bool,
     /// The clear color of the renderer.
     pub clear_color: wgpu::Color,
-    // TODO: Add ArcballCamera?
 }
 
 impl<'a> From<&RenderParameters<'a>> for RenderState {

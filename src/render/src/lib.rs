@@ -26,25 +26,23 @@ pub struct RenderOwnedResources {
     pub depth_texture: DepthTexture,
 }
 
+/// A collection of render passes that are executed in order to render the molecule.
+pub struct RenderJobs {
+    /// Configuration for the renderer. This is used to control what is rendered.
+    pub state: RenderState,
+    pub resources: RenderOwnedResources,
+
+    spacefill_pass: SpacefillPass,
+    molecular_surface_pass: MolecularSurfacePass,
+}
+
 pub struct RenderParameters<'a> {
     pub common_resources: &'a CommonResources,
     pub surface_config: &'a wgpu::SurfaceConfiguration,
     pub render_spacefill: bool,
     pub render_molecular_surface: bool,
     pub clear_color: wgpu::Color,
-}
-
-// TODO: Rename to RenderComposer
-/// A collection of render passes that are executed in order to render the molecule.
-pub struct RenderJobs {
-    /// Configuration for the renderer. This is used to control what is rendered.
-    pub state: RenderState,
-
-    /// The resources required for rendering. TODO: Better docs.
-    pub resources: RenderOwnedResources,
-
-    spacefill_pass: SpacefillPass,
-    molecular_surface_pass: MolecularSurfacePass,
+    pub number_of_atoms: u32,
 }
 
 impl RenderJobs {

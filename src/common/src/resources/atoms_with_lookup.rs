@@ -14,6 +14,10 @@ pub struct AtomsWithLookupResource {
 
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
+
+    /// Number of atoms in the molecule.
+    /// This is used to determine how many instances to render for the spacefill representation.
+    pub number_of_atoms: u32,
 }
 
 impl AtomsWithLookupResource {
@@ -64,10 +68,12 @@ impl AtomsWithLookupResource {
             atoms_by_voxel_buffer,
             bind_group_layout,
             bind_group,
+            number_of_atoms: 0,
         }
     }
 
-    pub fn update(&self, queue: &wgpu::Queue, atoms: &AtomsWithLookup) {
+    pub fn update(&mut self, queue: &wgpu::Queue, atoms: &AtomsWithLookup) {
+        self.number_of_atoms = atoms.data.len() as u32;
         queue.write_buffer(
             &self.atoms_data_buffer,
             0,

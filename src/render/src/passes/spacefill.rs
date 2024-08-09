@@ -78,9 +78,10 @@ impl SpacefillPass {
         render_pass.set_bind_group(0, &resources.molecule.bind_group, &[]);
         render_pass.set_bind_group(1, &resources.camera.bind_group, &[]);
 
-        let num_atoms = 100; // TODO: FIX THIS
-        let vertices_per_atom: u32 = 6; // Draw a quad (sphere impostor) for each atom
-        let number_of_vertices: u32 = num_atoms * vertices_per_atom;
+        let number_of_atoms: u32 = resources.molecule.number_of_atoms;
+        // Each atom is drawn as a sphere impostor with 6 vertices.
+        let vertices_per_atom: u32 = 6;
+        let number_of_vertices: u32 = number_of_atoms * vertices_per_atom;
 
         render_pass.draw(0..number_of_vertices, 0..1);
     }
