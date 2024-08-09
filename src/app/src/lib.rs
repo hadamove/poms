@@ -143,17 +143,17 @@ impl App {
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {
         for event in ui_events {
             match event {
-                UserEvent::RenderMolecularSurfaceChanged(enabled) => {
-                    self.renderer.state.render_molecular_surface = enabled;
+                UserEvent::RenderMolecularSurfaceChanged(is_enabled) => {
+                    self.renderer.toggle_molecular_surface(is_enabled);
                 }
                 UserEvent::RenderSpacefillChanged(enabled) => {
-                    self.renderer.state.render_spacefill = enabled;
+                    self.renderer.toggle_spacefill(enabled);
                 }
                 UserEvent::ToggleTheme(theme) => {
-                    self.renderer.state.clear_color = match theme {
+                    self.renderer.change_clear_color(match theme {
                         ColorTheme::Dark => wgpu::Color::BLACK,
                         ColorTheme::Light => wgpu::Color::WHITE,
-                    };
+                    });
                 }
                 UserEvent::LoadedMolecule(molecule) => {
                     // TODO: Recreate ComputeJobs

@@ -26,11 +26,12 @@ pub struct RenderOwnedResources {
     pub depth_texture: DepthTexture,
 }
 
-/// A collection of render passes that are executed in order to render the molecule.
+/// Manages the rendering of a molecule, so far two representations are supported:
+/// - **Spacefill**: Atoms are represented as spheres.
+/// - **Molecular Surface**: The surface of the molecule is rendered. Requires a distance field texture.
 pub struct RenderJobs {
     /// Configuration for the renderer. This is used to control what is rendered.
-    // TODO: Make these private
-    pub state: RenderState,
+    state: RenderState,
     pub resources: RenderOwnedResources,
 
     spacefill_pass: SpacefillPass,
@@ -47,6 +48,7 @@ pub struct RenderParameters<'a> {
 }
 
 impl RenderJobs {
+    /// Creates a new instance of `RenderJobs` with the given parameters.
     pub fn new(device: &wgpu::Device, params: RenderParameters) -> RenderJobs {
         let state = RenderState::from(&params);
 
@@ -72,6 +74,7 @@ impl RenderJobs {
         }
     }
 
+    /// Records the enabled representations to the provided `encoder`.
     pub fn render(
         &mut self,
         view: &wgpu::TextureView,
@@ -105,6 +108,7 @@ impl RenderJobs {
         }
     }
 
+    /// Use this method to update the distance field texture upon completion of a compute pass.
     pub fn update_distance_field_texture(
         &mut self,
         device: &wgpu::Device,
@@ -117,5 +121,21 @@ impl RenderJobs {
     /// On resize, the depth texture needs to be recreated.
     pub fn resize(&mut self, device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) {
         self.resources.depth_texture = DepthTexture::new(device, config);
+    }
+
+    /// Enables or disables rendering of spacefill representation.
+    pub fn toggle_spacefill(&mut self, is_enabled: bool) {
+        self.state.render_spacefill = is_enabled;
+    }
+
+    /// Enables or disables rendering of molecular surface representation.
+    pub fn toggle_molecular_surface(&mut self, is_enabled: bool) {
+        self.state.render_molecular_surface = is_enabled;
+    }
+
+    /// Updates the clear color used by the render passes.
+    /// Used to switch between light and dark mode.
+    pub fn change_clear_color(&mut self, color: wgpu::Color) {
+        self.state.clear_color = color;
     }
 }
