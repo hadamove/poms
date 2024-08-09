@@ -1,15 +1,15 @@
-use state::UIState;
-use winit::event::WindowEvent;
-
-use self::event::UserEvent;
-use super::context::Context;
-use super::file::{AsyncFileLoader, FileResponse};
-use super::utils::input::Input;
-
 pub mod egui_wrapper;
 pub mod elements;
 pub mod event;
 mod state;
+
+use state::UIState;
+use winit::event::WindowEvent;
+
+use super::data::file_loader::{AsyncFileLoader, FileResponse};
+use super::input::mouse_input::Input;
+use crate::gpu_context::Context;
+use event::UserEvent;
 
 /// TODO: docs
 pub struct UserInterface {

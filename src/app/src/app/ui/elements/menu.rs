@@ -1,9 +1,7 @@
 use egui::{menu, TopBottomPanel, Visuals};
 
-use crate::{
-    constants::ColorTheme,
-    ui::{event::UserEvent, UIState},
-};
+use crate::app::constants::ColorTheme;
+use crate::app::ui::{event::UserEvent, state::UIState};
 
 /// Component that displays the menu bar.
 /// Contains buttons for opening files and changing visual theme.

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use winit::window::Window;
 
+// TODO: rename to GpuContext again!
 pub struct Context {
     pub window: Arc<Window>,
     pub surface: wgpu::Surface<'static>,

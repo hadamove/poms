@@ -1,24 +1,17 @@
-use utils::parser::ParsedMolecule;
-use winit::event::*;
+pub mod constants;
+pub mod data;
+pub mod input;
+pub mod ui;
 
 use common::{models::atom::calculate_center, resources::CommonResources};
 use compute::{ComputeJobs, ComputeParameters};
 use render::{RenderJobs, RenderParameters};
 
-use self::{
-    constants::ColorTheme,
-    context::Context,
-    storage::MoleculeStorage,
-    ui::{event::UserEvent, UserInterface},
-    utils::camera::CameraController,
-};
-
-pub mod constants;
-pub mod context;
-pub mod file;
-pub mod storage;
-pub mod ui;
-pub mod utils;
+use crate::gpu_context::Context;
+use constants::ColorTheme;
+use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
+use input::camera_controller::CameraController;
+use ui::{event::UserEvent, UserInterface};
 
 struct AppSettings {
     pub init_resolution: u32,
@@ -143,7 +136,7 @@ impl App {
         }
     }
 
-    pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
+    pub fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
         self.ui.handle_window_event(event)
     }
 
@@ -210,11 +203,7 @@ impl App {
                 UserEvent::AnimationSpeedChanged { speed: _ } => {
                     // TODO: Fix animations
                 }
-                UserEvent::UpdateLight { direction } => {
-                    self.renderer.update_light(&self.context.queue, direction);
-                }
                 UserEvent::OpenFileDialog => self.ui.open_file_dialog(),
-                _ => {}
             }
         }
     }

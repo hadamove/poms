@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use egui::{Align, Layout, Window};
 
-use crate::ui::UIState;
+use crate::app::ui::state::UIState;
 
 /// Component that displays error messages and allows to close them.
 pub fn error_messages(context: &egui::Context, state: &mut UIState) {

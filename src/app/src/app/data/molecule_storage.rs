@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use std::collections::HashMap;
 
-use super::utils::parser::ParsedMolecule;
+use super::molecule_parser::ParsedMolecule;
 
 // TODO: Add `frames` instead of `atoms` to store the data for each frame.
 pub struct MoleculeData {

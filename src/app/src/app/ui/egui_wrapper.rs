@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::context::Context;
+use crate::gpu_context::Context;
 
 use super::{elements::UiElement, UIState};
 

@@ -1,4 +1,4 @@
-use crate::constants::{
+use crate::app::constants::{
     ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_DISTANCE_FIELD_RESOLUTION, DEFAULT_PROBE_RADIUS,
 };
 

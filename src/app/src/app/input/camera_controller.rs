@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use cgmath::{InnerSpace, Matrix4, MetricSpace, Point3, Rad, SquareMatrix, Vector3};
 
-use super::input::Input;
+use super::mouse_input::Input;
 
 #[derive(Debug)]
 pub struct CameraController {

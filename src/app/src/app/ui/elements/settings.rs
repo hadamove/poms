@@ -1,9 +1,9 @@
 use egui::{Button, Checkbox, Pos2, Slider, Window};
 
-use crate::{
-    constants::{DEFAULT_PROBE_RADIUS, MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS},
-    ui::{event::UserEvent, UIState},
+use crate::app::constants::{
+    DEFAULT_PROBE_RADIUS, MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS,
 };
+use crate::app::ui::{event::UserEvent, UIState};
 
 /// Component that displays settings window.
 /// Allows to change model parameters and toggle render passes.

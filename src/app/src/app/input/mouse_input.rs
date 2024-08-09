@@ -12,11 +12,6 @@ pub struct Input {
 }
 
 impl Input {
-    pub fn reset(&mut self) {
-        self.mouse_delta = (0.0, 0.0);
-        self.scroll = 0.0;
-    }
-
     pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::MouseWheel { delta, .. } => self.process_scroll(delta),

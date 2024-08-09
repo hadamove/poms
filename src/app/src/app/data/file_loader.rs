@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 
-use super::utils::parser::{parse_atoms_from_pdb_file, ParseError, ParsedMolecule};
+use super::molecule_parser::{parse_atoms_from_pdb_file, ParseError, ParsedMolecule};
 
 pub enum FileResponse {
     FileParsed { molecule: ParsedMolecule },
