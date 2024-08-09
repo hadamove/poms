@@ -1,7 +1,5 @@
-use crate::{
-    resources::{distance_field::DistanceFieldCompute, grid_points::GridPointsResource},
-    ComputeOwnedResources,
-};
+use crate::resources::{distance_field::DistanceFieldCompute, grid_points::GridPointsResource};
+use crate::ComputeOwnedResources;
 
 const WGPU_LABEL: &str = "Compute Refinement";
 

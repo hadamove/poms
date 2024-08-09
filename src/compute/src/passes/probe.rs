@@ -1,9 +1,7 @@
-use common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonResources};
+use crate::resources::{distance_field::DistanceFieldCompute, grid_points::GridPointsResource};
+use crate::ComputeOwnedResources;
 
-use crate::{
-    resources::{distance_field::DistanceFieldCompute, grid_points::GridPointsResource},
-    ComputeOwnedResources,
-};
+use common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonResources};
 
 use super::util;
 
