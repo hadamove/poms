@@ -22,8 +22,15 @@ pub mod storage;
 pub mod ui;
 pub mod utils;
 
+struct AppSettings {
+    pub init_resolution: u32,
+    pub target_resolution: u32,
+    pub probe_radius: f32,
+}
+
 pub struct App {
     context: Context,
+    settings: AppSettings,
 
     compute: ComputeJobs,
     renderer: RenderJobs,
@@ -35,10 +42,29 @@ pub struct App {
 }
 
 impl App {
+    fn reset_compute_jobs(&mut self) {
+        self.compute = ComputeJobs::new(
+            &self.context.device,
+            ComputeParameters {
+                molecule: &self.molecules.get_current().atoms.data,
+                common_resources: &self.resources,
+                init_resolution: self.settings.init_resolution,
+                target_resolution: self.settings.target_resolution,
+                probe_radius: self.settings.probe_radius,
+            },
+        )
+    }
+
     pub fn new(context: Context) -> Self {
+        let settings = AppSettings {
+            init_resolution: 64,
+            target_resolution: 128,
+            probe_radius: 1.4,
+        };
+
         // Load the initial molecule.
         let initial_molecule = ParsedMolecule::h2o_demo();
-        let molecule_storage = MoleculeStorage::new(initial_molecule);
+        let molecule_storage = MoleculeStorage::new(initial_molecule, settings.probe_radius);
 
         // Resources that are shared between render and compute passes.
         let mut resources = CommonResources::new(&context.device);
@@ -52,9 +78,9 @@ impl App {
                 ComputeParameters {
                     molecule: &molecule_storage.get_current().atoms.data,
                     common_resources: &resources,
-                    init_resolution: 64,
-                    target_resolution: 128,
-                    probe_radius: 1.4,
+                    init_resolution: settings.init_resolution,
+                    target_resolution: settings.target_resolution,
+                    probe_radius: settings.probe_radius,
                 },
             ),
             renderer: RenderJobs::new(
@@ -62,12 +88,12 @@ impl App {
                 RenderParameters {
                     common_resources: &resources,
                     surface_config: &context.config,
-                    render_spacefill: false,
+                    render_spacefill: true,
                     render_molecular_surface: true,
                     clear_color: wgpu::Color::BLACK,
-                    number_of_atoms: molecule_storage.get_current().atoms.data.len() as u32,
                 },
             ),
+            settings,
             ui: UserInterface::new(&context),
             camera: CameraController::from_config(&context.config),
             molecules: molecule_storage,
@@ -157,7 +183,9 @@ impl App {
                 }
                 UserEvent::LoadedMolecule { molecule } => {
                     // TODO: Recreate ComputeJobs
-                    let current = self.molecules.add_from_parsed(molecule, 1.4); // TODO: Remove hardcoded probe radius
+                    let current = self
+                        .molecules
+                        .add_from_parsed(molecule, self.settings.probe_radius); // TODO: Remove hardcoded probe radius
 
                     self.camera
                         .set_target(calculate_center(&current.atoms.data));
@@ -166,45 +194,16 @@ impl App {
                         .atoms_resource
                         .update(&self.context.queue, &current.atoms);
 
-                    self.compute = ComputeJobs::new(
-                        &self.context.device,
-                        ComputeParameters {
-                            molecule: &current.atoms.data,
-                            common_resources: &self.resources,
-                            init_resolution: 64,
-                            target_resolution: 256,
-                            probe_radius: 1.4,
-                        },
-                    );
+                    self.reset_compute_jobs();
                 }
                 UserEvent::DistanceFieldResolutionChanged { resolution } => {
-                    println!("res  changed {}", resolution);
-                    let current = self.molecules.get_current();
-                    self.compute = ComputeJobs::new(
-                        &self.context.device,
-                        ComputeParameters {
-                            molecule: &current.atoms.data,
-                            common_resources: &self.resources,
-                            init_resolution: 64,
-                            target_resolution: resolution,
-                            probe_radius: 1.4,
-                        },
-                    );
+                    self.settings.target_resolution = resolution;
+                    self.reset_compute_jobs();
                 }
                 UserEvent::ProbeRadiusChanged { probe_radius } => {
-                    println!("probe radius changed {}", probe_radius);
+                    self.settings.probe_radius = probe_radius;
                     self.molecules.on_probe_radius_changed(probe_radius);
-                    let current = self.molecules.get_current();
-                    self.compute = ComputeJobs::new(
-                        &self.context.device,
-                        ComputeParameters {
-                            molecule: &current.atoms.data,
-                            common_resources: &self.resources,
-                            init_resolution: 64,
-                            target_resolution: 256,
-                            probe_radius,
-                        },
-                    );
+                    self.reset_compute_jobs();
                 }
                 UserEvent::ToggleAnimation => {
                     // TODO: Fix animations (custom module)

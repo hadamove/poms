@@ -23,7 +23,7 @@ pub struct MoleculeStorage {
 }
 
 impl MoleculeStorage {
-    pub fn new(initial_molecule: ParsedMolecule) -> Self {
+    pub fn new(initial_molecule: ParsedMolecule, probe_radius: f32) -> Self {
         let mut storage = Self {
             current: Uuid::new_v4(),
             loadded_molecules: HashMap::new(),
@@ -31,7 +31,7 @@ impl MoleculeStorage {
 
         // TODO: remove hardcoded probe radius
         // this could solve our weird problem
-        storage.add_from_parsed(initial_molecule, 1.4);
+        storage.add_from_parsed(initial_molecule, probe_radius);
         storage
     }
 

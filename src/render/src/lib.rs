@@ -38,7 +38,6 @@ pub struct RenderParameters<'a> {
     pub render_spacefill: bool,
     pub render_molecular_surface: bool,
     pub clear_color: wgpu::Color,
-    pub number_of_atoms: u32,
 }
 
 impl RenderJobs {
