@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::super::{elements::UiElement, UIState};
+use super::{elements::UiElement, UIState};
 use crate::gpu_context::GpuContext;
 
 /// Serves as a glue between `winit`, `wgpu`, and `egui`, providing an abstraction used by the UI system.

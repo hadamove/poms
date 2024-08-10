@@ -24,7 +24,7 @@ pub struct AtomSegment {
 pub struct AtomsWithLookup {
     /// Atoms in the molecule, sorted by index of voxel they occupy for fast neighbor look up.
     pub data: Vec<Atom>,
-    /// The grid that divdes the space around the molecule into neighborhood voxels. Usually, the spacing is equal to the probe radius plus the maximum atom radius.
+    /// The grid that divdes the space around the molecule into neighborhood voxels. The spacing is equal to the probe radius plus the maximum atom radius.
     pub atoms_lookup_grid: GridUniform,
     /// Segment of atoms for each voxel of the neighbor lookup grid. The length of this vector is equal to the number of voxels in the grid (resolution^3).
     pub atoms_by_voxel: Vec<AtomSegment>,

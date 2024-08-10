@@ -11,7 +11,7 @@ pub struct MoleculeData {
     pub id: Uuid,
     /// The identifier as posed in the PDB Header or mmCIF entry.id
     pub header: Option<String>,
-    /// Atoms in the molecule, for fast lookup ... TODO
+    /// Atoms in the molecule with associated data structure for fast lookup.
     pub atoms: AtomsWithLookup,
 }
 
@@ -29,7 +29,6 @@ impl MoleculeStorage {
             loadded_molecules: HashMap::new(),
         };
 
-        // TODO: remove hardcoded probe radius
         // this could solve our weird problem
         storage.add_from_parsed(initial_molecule, probe_radius);
         storage
