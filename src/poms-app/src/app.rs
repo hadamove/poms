@@ -7,7 +7,7 @@ use poms_common::{models::atom::calculate_center, resources::CommonResources};
 use poms_compute::{ComputeJobs, ComputeParameters};
 use poms_render::{RenderJobs, RenderParameters};
 
-use crate::gpu_context::GpuContext;
+use super::gpu_context::GpuContext;
 use constants::ColorTheme;
 use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
 use input::{camera_controller::CameraController, mouse_input::MouseInput};
@@ -189,7 +189,7 @@ impl App {
     fn on_molecule_loaded(&mut self, molecule: ParsedMolecule) {
         let processed_molecule = self
             .molecule_storage
-            .add_from_parsed(molecule, self.settings.probe_radius); // TODO: Remove hardcoded probe radius
+            .add_from_parsed(molecule, self.settings.probe_radius);
 
         self.camera
             .set_target(calculate_center(&processed_molecule.atoms.data));

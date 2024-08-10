@@ -9,31 +9,30 @@ mod state;
 use state::UIState;
 use winit::event::WindowEvent;
 
-use super::data::file_loader::{AsyncFileLoader, FileResponse};
-use super::input::mouse_input::MouseInput;
+use super::data::file_loader::{FileLoader, FileResponse};
 use crate::gpu_context::GpuContext;
 use events::UserEvent;
 
 /// TODO: docs
 pub struct UserInterface {
-    egui: core::egui_wrapper::EguiWrapper,
     state: UIState,
-    file_loader: AsyncFileLoader,
+    egui_wrapper: core::egui_wrapper::EguiWrapper,
+    file_loader: FileLoader,
 }
 
 impl UserInterface {
     pub fn new(context: &GpuContext) -> Self {
-        let egui = core::egui_wrapper::EguiWrapper::new(context);
+        let egui_wrapper = core::egui_wrapper::EguiWrapper::new(context);
 
         Self {
-            egui,
+            egui_wrapper,
             state: UIState::default(),
-            file_loader: AsyncFileLoader::new(),
+            file_loader: FileLoader::new(),
         }
     }
 
     pub fn process_frame(&mut self) -> Vec<UserEvent> {
-        self.egui.add_elements(
+        self.egui_wrapper.add_elements(
             &mut self.state,
             &[
                 elements::menu_bar,
@@ -53,11 +52,11 @@ impl UserInterface {
         view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
     ) {
-        self.egui.render(context, view, encoder);
+        self.egui_wrapper.render(context, view, encoder);
     }
 
     pub fn handle_window_event(&mut self, window_event: &WindowEvent) -> bool {
-        self.egui.handle_window_event(window_event)
+        self.egui_wrapper.handle_window_event(window_event)
     }
 
     pub fn open_file_dialog(&mut self) {
