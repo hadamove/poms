@@ -10,7 +10,7 @@ use poms_render::{RenderJobs, RenderParameters};
 use crate::gpu_context::GpuContext;
 use constants::ColorTheme;
 use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
-use input::camera_controller::CameraController;
+use input::{camera_controller::CameraController, mouse_input::MouseInput};
 use ui::{events::UserEvent, UserInterface};
 
 struct AppSettings {
@@ -25,49 +25,37 @@ pub struct App {
 
     compute: ComputeJobs,
     renderer: RenderJobs,
+    resources: CommonResources,
+
+    molecule_storage: MoleculeStorage,
 
     ui: UserInterface,
-    molecules: MoleculeStorage,
-    resources: CommonResources,
+    mouse: MouseInput,
     camera: CameraController,
 }
 
 impl App {
-    fn reset_compute_jobs(&mut self) {
-        self.compute = ComputeJobs::new(
-            &self.context.device,
-            ComputeParameters {
-                molecule: &self.molecules.get_current().atoms.data,
-                common_resources: &self.resources,
-                init_resolution: self.settings.init_resolution,
-                target_resolution: self.settings.target_resolution,
-                probe_radius: self.settings.probe_radius,
-            },
-        )
-    }
-
     pub fn new(context: GpuContext) -> Self {
         let settings = AppSettings {
             init_resolution: 64,
-            target_resolution: 128,
+            target_resolution: 256,
             probe_radius: 1.4,
         };
 
         // Load the initial molecule.
         let initial_molecule = ParsedMolecule::h2o_demo();
         let molecule_storage = MoleculeStorage::new(initial_molecule, settings.probe_radius);
+        let atoms = &molecule_storage.get_current().atoms;
 
-        // Resources that are shared between render and compute passes.
+        // Upload the initial molecule to the GPU.
         let mut resources = CommonResources::new(&context.device);
-        resources
-            .atoms_resource
-            .update(&context.queue, &molecule_storage.get_current().atoms);
+        resources.atoms_resource.update(&context.queue, atoms);
 
         App {
             compute: ComputeJobs::new(
                 &context.device,
                 ComputeParameters {
-                    molecule: &molecule_storage.get_current().atoms.data,
+                    molecule: &atoms.data,
                     common_resources: &resources,
                     init_resolution: settings.init_resolution,
                     target_resolution: settings.target_resolution,
@@ -85,33 +73,29 @@ impl App {
                 },
             ),
             settings,
-            ui: UserInterface::new(&context),
-            camera: CameraController::from_config(&context.config),
-            molecules: molecule_storage,
-            context,
             resources,
+            molecule_storage,
+            ui: UserInterface::new(&context),
+            mouse: MouseInput::default(),
+            camera: CameraController::from_config(&context.config),
+            context,
         }
     }
 
     pub fn redraw(&mut self) {
-        let ui_events = self.ui.process_frame();
+        self.update_buffers();
 
-        self.update_resources();
+        let ui_events = self.ui.process_frame();
         self.handle_ui_events(ui_events);
 
         let mut encoder = self.context.get_command_encoder();
-        let output_texture = self.context.surface.get_current_texture().unwrap();
-        let view = output_texture.texture.create_view(&Default::default());
-
-        // If there is a new resolution of molecular surface available, use it.
-        if let Some((texture, grid)) = self.compute.last_computed_distance_field() {
-            self.renderer
-                .update_distance_field_texture(&self.context.device, texture, grid);
-        }
 
         // Add commands to execute compute passes
         self.compute
             .execute(&mut encoder, &self.context.device, &self.resources);
+
+        let output_texture = self.context.surface.get_current_texture().unwrap();
+        let view = output_texture.texture.create_view(&Default::default());
 
         // Add commands to execute render passes
         self.renderer.render(&view, &mut encoder, &self.resources);
@@ -137,12 +121,11 @@ impl App {
     }
 
     pub fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
-        self.ui.handle_window_event(event)
+        self.ui.handle_window_event(event) || self.mouse.handle_window_event(event)
     }
 
-    // TODO: Refactor this
-    fn update_resources(&mut self) {
-        self.camera.update(&self.ui.input);
+    fn update_buffers(&mut self) {
+        self.camera.update(&self.mouse);
 
         self.renderer.update_camera(
             &self.context.queue,
@@ -155,6 +138,12 @@ impl App {
             .update_light(&self.context.queue, self.camera.look_direction());
 
         self.compute.update_buffers(&self.context.queue);
+
+        // If there is a new resolution of molecular surface available, use it.
+        if let Some((texture, grid)) = self.compute.last_computed_distance_field() {
+            self.renderer
+                .update_distance_field_texture(&self.context.device, texture, grid);
+        }
     }
 
     fn handle_ui_events(&mut self, ui_events: Vec<UserEvent>) {
@@ -173,18 +162,7 @@ impl App {
                     });
                 }
                 UserEvent::LoadedMolecule { molecule } => {
-                    // TODO: Recreate ComputeJobs
-                    let current = self
-                        .molecules
-                        .add_from_parsed(molecule, self.settings.probe_radius); // TODO: Remove hardcoded probe radius
-
-                    self.camera
-                        .set_target(calculate_center(&current.atoms.data));
-
-                    self.resources
-                        .atoms_resource
-                        .update(&self.context.queue, &current.atoms);
-
+                    self.on_molecule_loaded(molecule);
                     self.reset_compute_jobs();
                 }
                 UserEvent::DistanceFieldResolutionChanged { resolution } => {
@@ -193,7 +171,7 @@ impl App {
                 }
                 UserEvent::ProbeRadiusChanged { probe_radius } => {
                     self.settings.probe_radius = probe_radius;
-                    self.molecules.on_probe_radius_changed(probe_radius);
+                    self.molecule_storage.on_probe_radius_changed(probe_radius);
                     self.reset_compute_jobs();
                 }
                 UserEvent::ToggleAnimation => {
@@ -206,5 +184,31 @@ impl App {
                 UserEvent::OpenFileDialog => self.ui.open_file_dialog(),
             }
         }
+    }
+
+    fn on_molecule_loaded(&mut self, molecule: ParsedMolecule) {
+        let processed_molecule = self
+            .molecule_storage
+            .add_from_parsed(molecule, self.settings.probe_radius); // TODO: Remove hardcoded probe radius
+
+        self.camera
+            .set_target(calculate_center(&processed_molecule.atoms.data));
+
+        self.resources
+            .atoms_resource
+            .update(&self.context.queue, &processed_molecule.atoms);
+    }
+
+    fn reset_compute_jobs(&mut self) {
+        self.compute = ComputeJobs::new(
+            &self.context.device,
+            ComputeParameters {
+                molecule: &self.molecule_storage.get_current().atoms.data,
+                common_resources: &self.resources,
+                init_resolution: self.settings.init_resolution,
+                target_resolution: self.settings.target_resolution,
+                probe_radius: self.settings.probe_radius,
+            },
+        )
     }
 }

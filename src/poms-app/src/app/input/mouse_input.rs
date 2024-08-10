@@ -4,14 +4,14 @@ use winit::{
 };
 
 #[derive(Debug, Default)]
-pub struct Input {
+pub struct MouseInput {
     pub scroll: f32,
     pub mouse_pressed: bool,
     pub last_mouse_position: (f64, f64),
     pub mouse_delta: (f64, f64),
 }
 
-impl Input {
+impl MouseInput {
     pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::MouseWheel { delta, .. } => self.process_scroll(delta),

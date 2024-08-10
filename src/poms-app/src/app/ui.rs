@@ -10,7 +10,7 @@ use state::UIState;
 use winit::event::WindowEvent;
 
 use super::data::file_loader::{AsyncFileLoader, FileResponse};
-use super::input::mouse_input::Input;
+use super::input::mouse_input::MouseInput;
 use crate::gpu_context::GpuContext;
 use events::UserEvent;
 
@@ -19,9 +19,6 @@ pub struct UserInterface {
     egui: core::egui_wrapper::EguiWrapper,
     state: UIState,
     file_loader: AsyncFileLoader,
-
-    // TODO: make it private and unite with events
-    pub input: Input,
 }
 
 impl UserInterface {
@@ -32,7 +29,6 @@ impl UserInterface {
             egui,
             state: UIState::default(),
             file_loader: AsyncFileLoader::new(),
-            input: Input::default(),
         }
     }
 
@@ -61,7 +57,7 @@ impl UserInterface {
     }
 
     pub fn handle_window_event(&mut self, window_event: &WindowEvent) -> bool {
-        self.egui.handle_window_event(window_event) || self.input.handle_window_event(window_event)
+        self.egui.handle_window_event(window_event)
     }
 
     pub fn open_file_dialog(&mut self) {

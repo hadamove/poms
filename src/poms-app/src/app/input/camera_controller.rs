@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use cgmath::{InnerSpace, Matrix4, MetricSpace, Point3, Rad, SquareMatrix, Vector3};
 
-use super::mouse_input::Input;
+use super::mouse_input::MouseInput;
 
 #[derive(Debug)]
 pub struct CameraController {
@@ -61,7 +61,7 @@ impl CameraController {
         self.screen_size = (config.width, config.height);
     }
 
-    pub fn update(&mut self, input: &Input) {
+    pub fn update(&mut self, input: &MouseInput) {
         if input.mouse_pressed {
             self.update_on_mouse_drag(input.mouse_delta);
         }
