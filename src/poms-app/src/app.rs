@@ -1,3 +1,4 @@
+mod anim;
 mod data;
 mod input;
 mod theme;
@@ -8,6 +9,7 @@ use poms_compute::{ComputeJobs, ComputeParameters};
 use poms_render::{RenderJobs, RenderParameters};
 
 use super::gpu_context::GpuContext;
+use anim::AnimationController;
 use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
 use input::{camera_controller::CameraController, mouse_input::MouseInput};
 use ui::{events::UserEvent, state::UIState, UserInterface};
@@ -16,10 +18,6 @@ struct AppSettings {
     pub init_resolution: u32,
     pub target_resolution: u32,
     pub probe_radius: f32,
-
-    pub animation_speed: u32,
-    pub is_animation_active: bool,
-    pub frame_count: u32,
 }
 
 pub struct App {
@@ -35,6 +33,7 @@ pub struct App {
     ui: UserInterface,
     mouse: MouseInput,
     camera: CameraController,
+    animation: AnimationController,
 }
 
 impl App {
@@ -43,9 +42,6 @@ impl App {
             init_resolution: 64,
             target_resolution: 256,
             probe_radius: 1.4,
-            animation_speed: 5,
-            is_animation_active: false,
-            frame_count: 0,
         };
 
         // Load the initial molecule.
@@ -59,14 +55,15 @@ impl App {
 
         let render_spacefill = true;
         let render_molecular_surface = false;
+        let animation = AnimationController::new(5, false);
 
         let initial_ui_state = UIState {
             target_resolution: settings.target_resolution,
             probe_radius: settings.probe_radius,
             render_spacefill,
             render_molecular_surface,
-            is_animation_active: false,
-            animation_speed: 5,
+            is_animation_active: animation.is_active,
+            animation_speed: animation.speed,
             ..Default::default()
         };
 
@@ -96,6 +93,7 @@ impl App {
             ui: UserInterface::new(&context, initial_ui_state),
             mouse: MouseInput::default(),
             camera: CameraController::from_config(&context.config),
+            animation,
             context,
             settings,
         }
@@ -126,10 +124,7 @@ impl App {
         // Draw a frame.
         output_texture.present();
 
-        self.settings.frame_count += 1;
-        if self.settings.is_animation_active
-            && self.settings.frame_count % (40 / self.settings.animation_speed) == 0
-        {
+        if self.animation.advance_tick() {
             self.molecule_storage.next_frame();
             self.resources.atoms_resource.update(
                 &self.context.queue,
@@ -210,10 +205,10 @@ impl App {
                     self.reset_compute_jobs();
                 }
                 UserEvent::ToggleAnimation => {
-                    self.settings.is_animation_active = !self.settings.is_animation_active;
+                    self.animation.is_active = !self.animation.is_active;
                 }
                 UserEvent::AnimationSpeedChanged { speed } => {
-                    self.settings.animation_speed = speed;
+                    self.animation.speed = speed;
                 }
                 UserEvent::OpenFileDialog => self.ui.open_file_dialog(),
             }
