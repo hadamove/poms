@@ -12,8 +12,16 @@ pub struct MouseInput {
 }
 
 impl MouseInput {
-    const ROTATION_SPEED: f64 = 2.0;
+    const ROTATION_SPEED: f64 = 3.0;
     const LINE_SCROLL_SPEED: f32 = 20.0;
+
+    /// Instead of resetting the mouse input back to zero each frame,
+    /// slowly decay the input values to zero to allow for smoother camera movement free of jitter.
+    pub fn decay_input(&mut self) {
+        let smooth = 0.8;
+        self.scroll *= smooth as f32;
+        self.mouse_delta = (self.mouse_delta.0 * smooth, self.mouse_delta.1 * smooth);
+    }
 
     /// Handles window-related events, such as mouse input and scrolling.
     pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {

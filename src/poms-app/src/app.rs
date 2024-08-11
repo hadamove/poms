@@ -156,6 +156,7 @@ impl App {
 
     fn update_buffers(&mut self) {
         self.camera.update(&self.mouse);
+        self.mouse.decay_input();
 
         self.renderer.update_camera(
             &self.context.queue,
