@@ -41,17 +41,16 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
             wasm::resize_app_if_canvas_changed(&window, &mut app);
 
             match event {
-                Event::WindowEvent { event, .. } if !app.handle_window_event(&event) => {
-                    match event {
-                        WindowEvent::CloseRequested => elwt.exit(),
-                        WindowEvent::Resized(physical_size) => app.resize(physical_size),
-                        // TODO: WindowEvent::ScaleFactorChanged
-                        WindowEvent::RedrawRequested => {
-                            app.redraw();
-                        }
-                        _ => {}
+                Event::WindowEvent { event, .. } if !app.handle_window_event(&event) => match event
+                {
+                    WindowEvent::CloseRequested => elwt.exit(),
+                    WindowEvent::Resized(physical_size) => app.resize(physical_size),
+                    WindowEvent::RedrawRequested => {
+                        app.redraw();
                     }
-                }
+                    _ => {}
+                },
+                Event::DeviceEvent { event, .. } => app.handle_device_event(&event),
                 Event::AboutToWait => window.request_redraw(),
                 _ => {}
             }

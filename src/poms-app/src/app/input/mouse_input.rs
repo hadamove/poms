@@ -3,19 +3,23 @@ use winit::{
     event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent},
 };
 
+/// Represents mouse input, including scroll, button presses, and cursor movement.
 #[derive(Debug, Default)]
 pub struct MouseInput {
     pub scroll: f32,
     pub mouse_pressed: bool,
-    pub last_mouse_position: (f64, f64),
     pub mouse_delta: (f64, f64),
 }
 
 impl MouseInput {
+    const ROTATION_SPEED: f64 = 2.0;
+    const LINE_SCROLL_SPEED: f32 = 20.0;
+
+    /// Handles window-related events, such as mouse input and scrolling.
     pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::MouseWheel { delta, .. } => self.process_scroll(delta),
-            WindowEvent::CursorMoved { position, .. } => self.process_cursor(*position),
+            // Updates mouse pressed state when the left mouse button is pressed/released
             WindowEvent::MouseInput {
                 button: MouseButton::Left,
                 state,
@@ -26,21 +30,31 @@ impl MouseInput {
         false
     }
 
-    fn process_scroll(&mut self, delta: &MouseScrollDelta) {
-        self.scroll = -match delta {
-            MouseScrollDelta::LineDelta(_, scroll) => scroll * 20.0,
-            MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => *scroll as f32,
-        };
+    /// Handles raw device events, such as direct mouse motion.
+    ///
+    /// We use `DeviceEvent` here because it provides raw, unfiltered data from the
+    /// input device, which is crucial for precise control, such as rotating a 3D camera.
+    ///
+    /// Using `WindowEvent` for camera rotation is not ideal because `WindowEvent::CursorMoved`
+    /// is influenced by the OS, including cursor acceleration and screen boundaries, which
+    /// can lead to inconsistent and less precise camera movements.
+    pub fn handle_device_event(&mut self, event: &winit::event::DeviceEvent) {
+        if let winit::event::DeviceEvent::MouseMotion { delta } = event {
+            // Apply rotation speed scaling to raw mouse movement for camera control
+            self.mouse_delta = (
+                delta.0 * Self::ROTATION_SPEED,
+                delta.1 * Self::ROTATION_SPEED,
+            );
+        }
     }
 
-    fn process_cursor(&mut self, position: PhysicalPosition<f64>) {
-        let delta = (
-            position.x - self.last_mouse_position.0,
-            position.y - self.last_mouse_position.1,
-        );
-        if delta != (0.0, 0.0) {
-            self.mouse_delta = delta;
-        }
-        self.last_mouse_position = position.into();
+    /// Processes scroll input and adjusts the scroll amount based on delta.
+    fn process_scroll(&mut self, delta: &MouseScrollDelta) {
+        self.scroll = -match delta {
+            // Line scroll (e.g., using a mouse wheel)
+            MouseScrollDelta::LineDelta(_, scroll) => scroll * Self::LINE_SCROLL_SPEED,
+            // Pixel scroll (e.g., using a touchpad)
+            MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => *scroll as f32,
+        };
     }
 }

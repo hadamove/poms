@@ -51,7 +51,7 @@ impl App {
         resources.atoms_resource.update(&context.queue, atoms);
 
         let render_spacefill = true;
-        let render_molecular_surface = true;
+        let render_molecular_surface = false;
 
         let initial_ui_state = UIState {
             target_resolution: settings.target_resolution,
@@ -133,6 +133,10 @@ impl App {
 
     pub fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
         self.ui.handle_window_event(event) || self.mouse.handle_window_event(event)
+    }
+
+    pub fn handle_device_event(&mut self, event: &winit::event::DeviceEvent) {
+        self.mouse.handle_device_event(event);
     }
 
     fn update_buffers(&mut self) {

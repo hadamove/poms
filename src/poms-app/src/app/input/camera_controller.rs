@@ -13,7 +13,6 @@ pub struct CameraController {
     pub view_matrix: Matrix4<f32>,
 }
 
-// TODO: make this more reliable
 // TODO: Add docs
 impl CameraController {
     const ZFAR: f32 = 1000.;
