@@ -1,4 +1,4 @@
-use crate::app::{constants::ColorTheme, data::molecule_parser::ParsedMolecule};
+use crate::app::{data::molecule_parser::ParsedMolecule, theme::ColorTheme};
 
 pub enum UserEvent {
     AnimationSpeedChanged { speed: u32 },

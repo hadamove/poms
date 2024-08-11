@@ -2,7 +2,7 @@ pub mod events;
 
 mod elements;
 mod glue;
-mod state;
+pub mod state;
 
 use state::UIState;
 use winit::event::WindowEvent;
@@ -23,13 +23,12 @@ pub struct UserInterface {
 
 impl UserInterface {
     /// Creates a new `UserInterface` using the provided `GpuContext`.
-    /// The state of the UI is initialized match the settings configured by `AppSettings`. TODO
-    pub fn new(context: &GpuContext) -> Self {
+    pub fn new(context: &GpuContext, initial_state: UIState) -> Self {
         let egui_wrapper = glue::EguiWrapper::new(context);
 
         Self {
             egui_wrapper,
-            state: UIState::default(),
+            state: initial_state,
             file_loader: FileLoader::new(),
         }
     }

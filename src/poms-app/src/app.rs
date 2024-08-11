@@ -1,6 +1,7 @@
-mod constants;
 mod data;
 mod input;
+mod limits;
+mod theme;
 mod ui;
 
 use poms_common::{models::atom::calculate_center, resources::CommonResources};
@@ -8,10 +9,9 @@ use poms_compute::{ComputeJobs, ComputeParameters};
 use poms_render::{RenderJobs, RenderParameters};
 
 use super::gpu_context::GpuContext;
-use constants::ColorTheme;
 use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
 use input::{camera_controller::CameraController, mouse_input::MouseInput};
-use ui::{events::UserEvent, UserInterface};
+use ui::{events::UserEvent, state::UIState, UserInterface};
 
 struct AppSettings {
     pub init_resolution: u32,
@@ -51,6 +51,18 @@ impl App {
         let mut resources = CommonResources::new(&context.device);
         resources.atoms_resource.update(&context.queue, atoms);
 
+        let render_spacefill = true;
+        let render_molecular_surface = true;
+
+        let initial_ui_state = UIState {
+            target_resolution: settings.target_resolution,
+            probe_radius: settings.probe_radius,
+            render_spacefill,
+            render_molecular_surface,
+            animation_speed: 5,
+            ..Default::default()
+        };
+
         App {
             compute: ComputeJobs::new(
                 &context.device,
@@ -67,18 +79,18 @@ impl App {
                 RenderParameters {
                     common_resources: &resources,
                     surface_config: &context.config,
-                    render_spacefill: true,
-                    render_molecular_surface: true,
+                    render_spacefill,
+                    render_molecular_surface,
                     clear_color: wgpu::Color::BLACK,
                 },
             ),
-            settings,
             resources,
             molecule_storage,
-            ui: UserInterface::new(&context),
+            ui: UserInterface::new(&context, initial_ui_state),
             mouse: MouseInput::default(),
             camera: CameraController::from_config(&context.config),
             context,
+            settings,
         }
     }
 
@@ -157,8 +169,8 @@ impl App {
                 }
                 UserEvent::ToggleTheme { theme } => {
                     self.renderer.change_clear_color(match theme {
-                        ColorTheme::Dark => wgpu::Color::BLACK,
-                        ColorTheme::Light => wgpu::Color::WHITE,
+                        theme::ColorTheme::Dark => wgpu::Color::BLACK,
+                        theme::ColorTheme::Light => wgpu::Color::WHITE,
                     });
                 }
                 UserEvent::LoadedMolecule { molecule } => {

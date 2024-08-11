@@ -1,8 +1,6 @@
 use egui::{Button, Checkbox, Pos2, Slider, Window};
 
-use crate::app::constants::{
-    DEFAULT_PROBE_RADIUS, MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS,
-};
+use crate::app::limits::{MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS, MIN_PROBE_RADIUS};
 use crate::app::ui::{events::UserEvent, UIState};
 
 /// Component that displays settings window.
@@ -16,7 +14,7 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
         // Model parameters.
         if ui.add(resolution_slider(state)).changed() {
             state.dispatch_event(UserEvent::DistanceFieldResolutionChanged {
-                resolution: state.df_resolution,
+                resolution: state.target_resolution,
             });
         }
         if ui.add(probe_radius_slider(state)).changed() {
@@ -64,15 +62,15 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
 }
 
 fn resolution_slider(state: &mut UIState) -> Slider {
-    Slider::new(&mut state.df_resolution, 64..=MAX_DISTANCE_FIELD_RESOLUTION).text("SES resolution")
+    Slider::new(
+        &mut state.target_resolution,
+        64..=MAX_DISTANCE_FIELD_RESOLUTION,
+    )
+    .text("SES resolution")
 }
 
 fn probe_radius_slider(state: &mut UIState) -> Slider {
-    Slider::new(
-        &mut state.probe_radius,
-        DEFAULT_PROBE_RADIUS..=MAX_PROBE_RADIUS,
-    )
-    .text("Probe radius")
+    Slider::new(&mut state.probe_radius, MIN_PROBE_RADIUS..=MAX_PROBE_RADIUS).text("Probe radius")
 }
 
 fn spacefill_pass_checkbox(state: &mut UIState) -> Checkbox {

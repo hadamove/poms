@@ -1,7 +1,3 @@
-use crate::app::constants::{
-    ANIMATION_ACTIVE_BY_DEFAULT, DEFAULT_DISTANCE_FIELD_RESOLUTION, DEFAULT_PROBE_RADIUS,
-};
-
 use super::events::UserEvent;
 
 /// Struct that represents an error message that should be displayed to the user.
@@ -12,9 +8,10 @@ pub struct ErrorMessage {
 
 /// Struct that holds current state of the UI.
 /// Also used to store dispatched events that are collected by the main app loop.
+#[derive(Default)]
 pub struct UIState {
     /// Resolution of the distance field used for molecular surface rendering.
-    pub df_resolution: u32,
+    pub target_resolution: u32,
     /// Probe radius used for molecular surface rendering.
     pub probe_radius: f32,
     /// Flag that indicates if spacefill pass should be rendered.
@@ -29,22 +26,7 @@ pub struct UIState {
     pub error_messages: Vec<ErrorMessage>,
 
     /// List of events that were dispatched by the UI.
-    events: Vec<UserEvent>,
-}
-
-impl Default for UIState {
-    fn default() -> Self {
-        Self {
-            df_resolution: DEFAULT_DISTANCE_FIELD_RESOLUTION,
-            probe_radius: DEFAULT_PROBE_RADIUS,
-            render_spacefill: true,
-            render_molecular_surface: true,
-            is_animation_active: ANIMATION_ACTIVE_BY_DEFAULT,
-            animation_speed: 5,
-            error_messages: Vec::new(),
-            events: Vec::new(),
-        }
-    }
+    pub events: Vec<UserEvent>,
 }
 
 impl UIState {
