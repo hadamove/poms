@@ -16,6 +16,10 @@ struct AppSettings {
     pub init_resolution: u32,
     pub target_resolution: u32,
     pub probe_radius: f32,
+
+    pub animation_speed: u32,
+    pub is_animation_active: bool,
+    pub frame_count: u32,
 }
 
 pub struct App {
@@ -39,6 +43,9 @@ impl App {
             init_resolution: 64,
             target_resolution: 256,
             probe_radius: 1.4,
+            animation_speed: 5,
+            is_animation_active: false,
+            frame_count: 0,
         };
 
         // Load the initial molecule.
@@ -58,6 +65,7 @@ impl App {
             probe_radius: settings.probe_radius,
             render_spacefill,
             render_molecular_surface,
+            is_animation_active: false,
             animation_speed: 5,
             ..Default::default()
         };
@@ -117,6 +125,18 @@ impl App {
 
         // Draw a frame.
         output_texture.present();
+
+        self.settings.frame_count += 1;
+        if self.settings.is_animation_active
+            && self.settings.frame_count % (40 / self.settings.animation_speed) == 0
+        {
+            self.molecule_storage.next_frame();
+            self.resources.atoms_resource.update(
+                &self.context.queue,
+                &self.molecule_storage.get_current().atoms,
+            );
+            self.reset_compute_jobs();
+        }
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -176,8 +196,8 @@ impl App {
                         theme::ColorTheme::Light => wgpu::Color::WHITE,
                     });
                 }
-                UserEvent::LoadedMolecule { molecule } => {
-                    self.on_molecule_loaded(molecule);
+                UserEvent::MoleculesLoaded { molecules } => {
+                    self.on_molecules_loaded(molecules);
                     self.reset_compute_jobs();
                 }
                 UserEvent::DistanceFieldResolutionChanged { resolution } => {
@@ -190,28 +210,28 @@ impl App {
                     self.reset_compute_jobs();
                 }
                 UserEvent::ToggleAnimation => {
-                    // TODO: Fix animations (custom module)
-                    // TODO: Recreate ComputeJobs?
+                    self.settings.is_animation_active = !self.settings.is_animation_active;
                 }
-                UserEvent::AnimationSpeedChanged { speed: _ } => {
-                    // TODO: Fix animations
+                UserEvent::AnimationSpeedChanged { speed } => {
+                    self.settings.animation_speed = speed;
                 }
                 UserEvent::OpenFileDialog => self.ui.open_file_dialog(),
             }
         }
     }
 
-    fn on_molecule_loaded(&mut self, molecule: ParsedMolecule) {
-        let processed_molecule = self
-            .molecule_storage
-            .add_from_parsed(molecule, self.settings.probe_radius);
+    fn on_molecules_loaded(&mut self, molecules: Vec<ParsedMolecule>) {
+        self.molecule_storage
+            .add_from_parsed(molecules, self.settings.probe_radius);
+
+        let first_molecule = self.molecule_storage.get_current();
 
         self.camera
-            .set_target(calculate_center(&processed_molecule.atoms.data));
+            .set_target(calculate_center(&first_molecule.atoms.data));
 
         self.resources
             .atoms_resource
-            .update(&self.context.queue, &processed_molecule.atoms);
+            .update(&self.context.queue, &first_molecule.atoms);
     }
 
     fn reset_compute_jobs(&mut self) {

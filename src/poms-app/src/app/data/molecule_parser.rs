@@ -2,8 +2,11 @@ use std::io::{BufReader, Cursor};
 
 use poms_common::models::atom::Atom;
 
+use super::file_loader::RawFile;
+
 /// A parsed molecule from a PDB or mmCIF file.
 pub struct ParsedMolecule {
+    pub filename: String,
     /// The identifier as posed in the PDB Header or mmCIF entry.id.
     pub header: Option<String>,
     /// The atoms parsed from the file.
@@ -13,6 +16,7 @@ pub struct ParsedMolecule {
 impl ParsedMolecule {
     pub fn h2o_demo() -> Self {
         Self {
+            filename: "demo".to_string(),
             header: Some("h2o".to_string()),
             atoms: vec![
                 // Oxygen
@@ -46,8 +50,8 @@ pub enum ParseError {
 }
 
 /// Attempts to parse a PDB or mmCIF file as bytes into a [`ParsedMolecule`].
-pub fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedMolecule, ParseError> {
-    let buffer = BufReader::new(Cursor::new(file));
+pub fn parse_atoms_from_pdb_file(file: RawFile) -> Result<ParsedMolecule, ParseError> {
+    let buffer = BufReader::new(Cursor::new(&file.content));
     let (pdb, _) = pdbtbx::open_raw(buffer, pdbtbx::StrictnessLevel::Loose).map_err(|e| {
         ParseError::Critical {
             full_errors: e.into_iter().map(|e| e.to_string()).collect(),
@@ -67,6 +71,7 @@ pub fn parse_atoms_from_pdb_file(file: &[u8]) -> Result<ParsedMolecule, ParseErr
         .collect::<Vec<_>>();
 
     Ok(ParsedMolecule {
+        filename: file.name,
         header: pdb.identifier,
         atoms,
     })
