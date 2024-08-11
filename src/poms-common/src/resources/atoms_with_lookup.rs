@@ -1,10 +1,7 @@
 use wgpu::util::DeviceExt;
 
+use crate::limits::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
 use crate::models::{atom::AtomsWithLookup, grid::GridUniform};
-
-const MAX_NUM_ATOMS: usize = 1_000_000;
-const MAX_DISTANCE_FIELD_RESOLUTION: u32 = 256;
-const MAX_NUM_GRID_POINTS: usize = u32::pow(MAX_DISTANCE_FIELD_RESOLUTION, 3) as usize;
 
 /// Contains buffers with atoms data and lookup grid for neighbor atoms.
 pub struct AtomsWithLookupResource {

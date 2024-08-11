@@ -1,6 +1,6 @@
 use egui::{Button, Checkbox, Pos2, Slider, Window};
+use poms_common::limits::{MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS, MIN_PROBE_RADIUS};
 
-use crate::app::limits::{MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS, MIN_PROBE_RADIUS};
 use crate::app::ui::{events::UserEvent, UIState};
 
 /// Component that displays settings window.
