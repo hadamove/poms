@@ -5,3 +5,6 @@ pub const MIN_PROBE_RADIUS: f32 = 1.4;
 pub const MAX_PROBE_RADIUS: f32 = 5.0;
 
 pub const MAX_NUM_ATOMS: usize = 1_000_000;
+
+pub const MIN_ANIMATION_SPEED: u32 = 1;
+pub const MAX_ANIMATION_SPEED: u32 = 10;
