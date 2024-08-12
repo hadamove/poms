@@ -1,4 +1,6 @@
 [workspace]
+resolver = "2"
+
 members = [
     "src/poms-app",
     "src/poms-common",
@@ -6,4 +8,8 @@ members = [
     "src/poms-render",
 ]
 
-resolver = "2"
+
+[workspace.dependencies]
+bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
+cgmath = "0.18"
+wgpu = "0.20"

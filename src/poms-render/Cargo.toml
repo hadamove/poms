@@ -6,6 +6,6 @@ edition = "2021"
 [dependencies]
 poms-common = { path = "../poms-common" }
 
-bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
-cgmath = "0.18"
-wgpu = "0.20"
+bytemuck = { workspace = true }
+cgmath = { workspace = true }
+wgpu = { workspace = true }

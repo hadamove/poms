@@ -8,15 +8,13 @@ poms-common = { path = "../poms-common" }
 poms-compute = { path = "../poms-compute" }
 poms-render = { path = "../poms-render" }
 
-bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
-cgmath = "0.18"
+bytemuck = { workspace = true }
+cgmath = { workspace = true }
+wgpu = { workspace = true }
 
-wgpu = "0.20"
-winit = { version = "0.29", features = ["x11"] }
 egui = "0.28"
 egui-wgpu = "0.28"
 egui-winit = "0.28"
-
 futures = "0.3"
 log = "0.4"
 pdbtbx = "0.11"
@@ -24,6 +22,7 @@ rfd = "0.14"
 simple_logger = "5.0"
 thiserror = "1.0.57"
 uuid = { version = "1.7.0", features = ["v4"] }
+winit = { version = "0.29", features = ["x11"] }
 
 [target.wasm32-unknown-unknown.dependencies]
 console_error_panic_hook = "0.1"
