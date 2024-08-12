@@ -1,7 +1,7 @@
 use egui::{Button, Checkbox, Pos2, Slider, Window};
 use poms_common::limits::{
     MAX_ANIMATION_SPEED, MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS, MIN_ANIMATION_SPEED,
-    MIN_PROBE_RADIUS,
+    MIN_DISTANCE_FIELD_RESOLUTION, MIN_PROBE_RADIUS,
 };
 
 use crate::app::ui::{events::UserEvent, UIState};
@@ -73,7 +73,7 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
 fn resolution_slider(state: &mut UIState) -> Slider {
     Slider::new(
         &mut state.target_resolution,
-        64..=MAX_DISTANCE_FIELD_RESOLUTION,
+        MIN_DISTANCE_FIELD_RESOLUTION..=MAX_DISTANCE_FIELD_RESOLUTION,
     )
     .text("SES resolution")
 }

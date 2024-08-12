@@ -1,12 +1,23 @@
 use poms_common::limits::{MAX_ANIMATION_SPEED, MIN_ANIMATION_SPEED};
 
 /// Controls the animation speed and state.
+///
+/// The user may select to upload multiple files at once, in which case the application will
+/// periodically switch between rendering them (if the animation is active).
 pub struct AnimationController {
     pub is_active: bool,
     /// The speed of the animation. The higher the value, the slower the animation.
     pub speed: u32,
     /// The current tick count. Each render frame increments this value. Do not confuse with animation frames.
     pub tick_count: u32,
+}
+
+const DEFAULT_ANIMATION_SPEED: u32 = 5;
+
+impl Default for AnimationController {
+    fn default() -> Self {
+        Self::new(DEFAULT_ANIMATION_SPEED, false)
+    }
 }
 
 impl AnimationController {

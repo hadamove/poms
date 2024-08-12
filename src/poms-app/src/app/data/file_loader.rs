@@ -35,6 +35,7 @@ impl FileLoader {
     /// Opens an async file dialog for selecting files without blocking the main thread.
     ///
     /// The selected files are read and sent over a channel for processing.
+    /// User may select multiple files, which are interpreted not as separate molecules but as frames (animation) of a single molecule.
     pub fn open_file_dialog(&self) {
         let dispatch = self.channel.0.clone();
         execute(async move {
