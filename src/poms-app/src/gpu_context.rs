@@ -2,11 +2,18 @@ use std::sync::Arc;
 
 use winit::window::Window;
 
+/// Represents all the necessary low-level `wgpu` stuff used by the application.
 pub struct GpuContext {
+    /// The window used by the application.
+    /// `std::sync::Arc` is used to allow sharing the reference to the window with user interface, see `EguiWrapper` for more details.
     pub window: Arc<Window>,
+    /// A platform-specific surface onto which the application renders.
     pub surface: wgpu::Surface<'static>,
+    /// Connection to the underlying GPU, used to create resources.
     pub device: wgpu::Device,
+    /// A queue used to submit commands to the GPU.
     pub queue: wgpu::Queue,
+    /// Configuration of the surface.
     pub config: wgpu::SurfaceConfiguration,
 }
 
@@ -27,6 +34,7 @@ impl GpuContext {
             .create_surface(window.clone())
             .expect("Failed to create surface");
 
+        // An adapter is a handle to a physical device on the system.
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
@@ -36,11 +44,13 @@ impl GpuContext {
             .await
             .expect("Failed to find a suitable adapter");
 
+        // From the adapter, we can request a logical device and a queue.
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor::default(), None)
             .await
             .expect("Failed to create device");
 
+        // Check which texture formats are supported by the surface (usually it is okay to just use the first one).
         let supported_format = *surface
             .get_capabilities(&adapter)
             .formats
@@ -48,6 +58,9 @@ impl GpuContext {
             .expect("No supported format");
 
         let size = window.inner_size();
+
+        // Configure the surface with the supported format.
+        // Either use vsync or not, depending on the feature flags. See README.md for more details.
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: supported_format,
@@ -65,7 +78,6 @@ impl GpuContext {
 
         Self {
             window,
-
             surface,
             device,
             queue,
@@ -73,12 +85,14 @@ impl GpuContext {
         }
     }
 
+    /// Resizes the surface to the given size. This method should be called when the window is resized in the main event loop.
     pub fn resize(&mut self, size: winit::dpi::PhysicalSize<u32>) {
         self.config.width = size.width;
         self.config.height = size.height;
         self.surface.configure(&self.device, &self.config);
     }
 
+    /// Creates a new command encoder from `GpuContext::device` and returns it. This is just a shorthand method to avoid boilerplate code.
     pub fn get_command_encoder(&self) -> wgpu::CommandEncoder {
         self.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
