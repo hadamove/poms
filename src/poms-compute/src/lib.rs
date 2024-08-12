@@ -31,11 +31,18 @@ pub struct ComputeJobs {
     last_computed_texture: Option<wgpu::Texture>,
 }
 
+/// Things required to create a new instance of `ComputeJobs`.
 pub struct ComputeParameters<'a> {
+    /// Reference to the molecule to compute the surface of. Required to create the initial grid.
     pub molecule: &'a [Atom],
+    /// Resources shared between the compute and render pipelines. Contains molecule data on the GPU.
     pub common_resources: &'a CommonResources,
+    /// Initial resolution of the molecular surface. At the start the computation will be performed on a grid of this resolution.
+    /// Gradually, the resolution will be increased to the `target_resolution`, which takes more time but produces a more accurate surface.
     pub init_resolution: u32,
+    /// Target resolution of the molecular surface.
     pub target_resolution: u32,
+    /// Radius of the probe used to compute the molecular surface.
     pub probe_radius: f32,
 }
 

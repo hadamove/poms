@@ -32,11 +32,17 @@ pub struct RenderJobs {
     molecular_surface_pass: MolecularSurfacePass,
 }
 
+/// Things required to create a new instance of `RenderJobs`.
 pub struct RenderParameters<'a> {
+    /// Resources shared between the compute and render pipelines. Contains molecule data on the GPU.
     pub common_resources: &'a CommonResources,
+    /// Configuration of the surface to render to. Needed to create the depth texture and initialize the render passes.
     pub surface_config: &'a wgpu::SurfaceConfiguration,
+    /// Flag to enable or disable rendering of the spacefill representation by default. May be changed by calling `toggle_spacefill`.
     pub render_spacefill: bool,
+    /// Flag to enable or disable rendering of the molecular surface representation by default. May be changed by calling `toggle_molecular_surface`.
     pub render_molecular_surface: bool,
+    /// Clear color used by the render passes by default. May be changed by calling `change_clear_color`.
     pub clear_color: wgpu::Color,
 }
 
