@@ -22,6 +22,7 @@ fn create_render_pipeline(
             module: &shader_module,
             entry_point: "vs_main",
             buffers: &[],
+            compilation_options: Default::default(),
         },
         fragment: Some(wgpu::FragmentState {
             module: &shader_module,
@@ -31,8 +32,8 @@ fn create_render_pipeline(
                 blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
+            compilation_options: Default::default(),
         }),
-        primitive: wgpu::PrimitiveState::default(),
         depth_stencil: Some(wgpu::DepthStencilState {
             format: wgpu::TextureFormat::Depth24PlusStencil8,
             depth_write_enabled: true,
@@ -40,6 +41,7 @@ fn create_render_pipeline(
             stencil: wgpu::StencilState::default(),
             bias: wgpu::DepthBiasState::default(),
         }),
+        primitive: wgpu::PrimitiveState::default(),
         multisample: wgpu::MultisampleState::default(),
         multiview: None,
     })

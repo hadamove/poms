@@ -19,5 +19,6 @@ fn create_compute_pipeline(
         layout: Some(&compute_pipeline_layout),
         module: &shader_module,
         entry_point: "main",
+        compilation_options: Default::default(),
     })
 }

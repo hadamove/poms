@@ -119,7 +119,7 @@ impl EguiWrapper {
 
     /// Begins a new `egui` frame, passing the input state to the `egui` context.
     fn begin_frame(&mut self) {
-        let egui_input = self.egui_winit_state.take_egui_input(&self.window);
+        let egui_input = self.egui_winit_state.take_egui_input(self.window.as_ref());
         self.egui_handle.begin_frame(egui_input);
     }
 
