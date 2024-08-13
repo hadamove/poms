@@ -20,14 +20,15 @@ struct LightUniform {
     direction: vec3<f32>,
 };
 
-// Distance Field Resource
-@group(0) @binding(0) var<uniform> df_grid: GridUniform;
-@group(0) @binding(1) var df_texture: texture_3d<f32>;
-@group(0) @binding(2) var df_sampler: sampler;
 
 // Camera & Light Resources
-@group(1) @binding(0) var<uniform> camera: CameraUniform;
-@group(2) @binding(0) var<uniform> light: LightUniform; 
+@group(0) @binding(0) var<uniform> camera: CameraUniform;
+@group(1) @binding(0) var<uniform> light: LightUniform; 
+
+// Distance Field Resource
+@group(2) @binding(0) var<uniform> df_grid: GridUniform;
+@group(2) @binding(1) var df_texture: texture_3d<f32>;
+@group(2) @binding(2) var df_sampler: sampler;
 
 
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {

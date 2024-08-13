@@ -19,17 +19,17 @@ struct AtomSegment {
     atoms_count: u32,
 }
 
-// Atoms Resource
-@group(0) @binding(0) var<storage, read> atoms_sorted: array<Atom>;
-@group(0) @binding(1) var<uniform> atoms_lookup_grid: GridUniform;
-@group(0) @binding(2) var<storage, read> atom_segment_by_voxel: array<AtomSegment>;
+// Distance Field Grid Points Resource
+@group(0) @binding(0) var<storage, read_write> df_grid_point_memory: array<u32>;
+@group(0) @binding(1) var<uniform> df_grid_point_index_offset: u32;
 
 // Distance Field Resource
 @group(1) @binding(0) var<uniform> df_grid: GridUniform;
 
-// Distance Field Grid Points Resource
-@group(2) @binding(0) var<storage, read_write> df_grid_point_memory: array<u32>;
-@group(2) @binding(1) var<uniform> df_grid_point_index_offset: u32;
+// Atoms Resource
+@group(2) @binding(0) var<storage, read> atoms_sorted: array<Atom>;
+@group(2) @binding(1) var<uniform> atoms_lookup_grid: GridUniform;
+@group(2) @binding(2) var<storage, read> atom_segment_by_voxel: array<AtomSegment>;
 
 
 const EXTERIOR_GRID_POINT: u32 = 0u;

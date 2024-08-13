@@ -4,10 +4,11 @@ use crate::ComputeOwnedResources;
 use poms_common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonResources};
 
 /// Contains resources required to execute the probe pass.
+/// Bind groups are sorted by the frequency of change as advised by `wgpu` documentation.
 pub struct ProbeResources<'a> {
-    pub atoms: &'a AtomsWithLookupResource,       // @group(0)
+    pub df_grid_points: &'a GridPointsResource,   // @group(0)
     pub distance_field: &'a DistanceFieldCompute, // @group(1)
-    pub df_grid_points: &'a GridPointsResource,   // @group(2)
+    pub atoms: &'a AtomsWithLookupResource,       // @group(2)
 }
 
 impl<'a> ProbeResources<'a> {
@@ -36,9 +37,9 @@ impl ProbePass {
         let shader = wgpu::include_wgsl!("../shaders/probe.wgsl");
 
         let bind_group_layouts = &[
-            &resources.atoms.bind_group_layout,
-            &resources.distance_field.bind_group_layout,
             &resources.df_grid_points.bind_group_layout,
+            &resources.distance_field.bind_group_layout,
+            &resources.atoms.bind_group_layout,
         ];
 
         let compute_pipeline =
@@ -57,9 +58,9 @@ impl ProbePass {
     ) {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
         compute_pass.set_pipeline(&self.compute_pipeline);
-        compute_pass.set_bind_group(0, &resources.atoms.bind_group, &[]);
+        compute_pass.set_bind_group(0, &resources.df_grid_points.bind_group, &[]);
         compute_pass.set_bind_group(1, &resources.distance_field.bind_group, &[]);
-        compute_pass.set_bind_group(2, &resources.df_grid_points.bind_group, &[]);
+        compute_pass.set_bind_group(2, &resources.atoms.bind_group, &[]);
 
         let work_groups_count = f32::ceil(grid_points_count as f32 / 64.0) as u32;
 

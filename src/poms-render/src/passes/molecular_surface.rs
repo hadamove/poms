@@ -4,10 +4,11 @@ use crate::resources::{
 use crate::RenderOwnedResources;
 
 /// Contains resources that are required to render the molecular surface representation of the molecule.
+/// Bind groups are sorted by the frequency of change as advised by `wgpu` documentation.
 pub struct MolecularSurfaceResources<'a> {
-    pub distance_field: &'a DistanceFieldRender, // @group(0)
-    pub camera: &'a CameraResource,              // @group(1)
-    pub light: &'a LightResource,                // @group(2)
+    pub camera: &'a CameraResource,              // @group(0)
+    pub light: &'a LightResource,                // @group(1)
+    pub distance_field: &'a DistanceFieldRender, // @group(2)
 }
 
 impl<'a> MolecularSurfaceResources<'a> {
@@ -15,9 +16,9 @@ impl<'a> MolecularSurfaceResources<'a> {
     /// It is okay and cheap to construct this each frame, as it only contains references to resources.
     pub fn new(resources: &'a RenderOwnedResources) -> Self {
         Self {
-            distance_field: &resources.distance_field,
             camera: &resources.camera_resource,
             light: &resources.light_resource,
+            distance_field: &resources.distance_field,
         }
     }
 }
@@ -40,9 +41,9 @@ impl MolecularSurfacePass {
         let shader = wgpu::include_wgsl!("../shaders/molecular_surface.wgsl");
 
         let bind_group_layouts = &[
-            &resources.distance_field.bind_group_layout,
             &resources.camera.bind_group_layout,
             &resources.light.bind_group_layout,
+            &resources.distance_field.bind_group_layout,
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
@@ -84,9 +85,9 @@ impl MolecularSurfacePass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, &resources.distance_field.bind_group, &[]);
-        render_pass.set_bind_group(1, &resources.camera.bind_group, &[]);
-        render_pass.set_bind_group(2, &resources.light.bind_group, &[]);
+        render_pass.set_bind_group(0, &resources.camera.bind_group, &[]);
+        render_pass.set_bind_group(1, &resources.light.bind_group, &[]);
+        render_pass.set_bind_group(2, &resources.distance_field.bind_group, &[]);
 
         // Render a full screen quad used for raymarching.
         let number_of_vertices: u32 = 6;

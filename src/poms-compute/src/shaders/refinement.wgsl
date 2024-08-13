@@ -8,13 +8,13 @@ struct GridUniform {
 };
 
 
-// Distance Field Resource
-@group(0) @binding(0) var<uniform> df_grid: GridUniform;
-@group(0) @binding(1) var df_texture: texture_storage_3d<rgba16float, write>;
-
 // Distance Field Grid Points Resource
-@group(1) @binding(0) var<storage, read_write> df_grid_point_memory: array<u32>;
-@group(1) @binding(1) var<uniform> df_grid_point_index_offset: u32;
+@group(0) @binding(0) var<storage, read_write> df_grid_point_memory: array<u32>;
+@group(0) @binding(1) var<uniform> df_grid_point_index_offset: u32;
+
+// Distance Field Resource
+@group(1) @binding(0) var<uniform> df_grid: GridUniform;
+@group(1) @binding(1) var df_texture: texture_storage_3d<rgba16float, write>;
 
 
 const EXTERIOR_GRID_POINT: u32 = 0u;

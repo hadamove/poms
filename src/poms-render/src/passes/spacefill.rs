@@ -3,9 +3,10 @@ use poms_common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonR
 use crate::{resources::camera::CameraResource, RenderOwnedResources};
 
 /// Contains resources that are required to render the spacefill representation of the molecule.
+/// Bind groups are sorted by the frequency of change as advised by `wgpu` documentation.
 pub struct SpacefillResources<'a> {
-    pub molecule: &'a AtomsWithLookupResource, // @group(0)
-    pub camera: &'a CameraResource,            // @group(1)
+    pub camera: &'a CameraResource,            // @group(0)
+    pub molecule: &'a AtomsWithLookupResource, // @group(1)
 }
 
 impl<'a> SpacefillResources<'a> {
@@ -13,8 +14,8 @@ impl<'a> SpacefillResources<'a> {
     /// It is okay and cheap to construct this each frame, as it only contains references to resources.
     pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
         Self {
-            molecule: &common.atoms_resource,
             camera: &resources.camera_resource,
+            molecule: &common.atoms_resource,
         }
     }
 }
@@ -37,8 +38,8 @@ impl SpacefillPass {
         let shader = wgpu::include_wgsl!("../shaders/spacefill.wgsl");
 
         let bind_group_layouts = &[
-            &resources.molecule.bind_group_layout,
             &resources.camera.bind_group_layout,
+            &resources.molecule.bind_group_layout,
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
@@ -80,8 +81,8 @@ impl SpacefillPass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, &resources.molecule.bind_group, &[]);
-        render_pass.set_bind_group(1, &resources.camera.bind_group, &[]);
+        render_pass.set_bind_group(0, &resources.camera.bind_group, &[]);
+        render_pass.set_bind_group(1, &resources.molecule.bind_group, &[]);
 
         let number_of_atoms: u32 = resources.molecule.number_of_atoms;
         // Each atom is drawn as a sphere impostor with 6 vertices.
