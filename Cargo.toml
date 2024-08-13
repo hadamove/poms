@@ -11,5 +11,5 @@ members = [
 
 [workspace.dependencies]
 bytemuck = { version = "1.8", features = ["derive", "extern_crate_alloc"] }
-cgmath = "0.18"
+cgmath = { version = "0.18", default-features = false }
 wgpu = "0.20"

@@ -12,14 +12,16 @@ bytemuck = { workspace = true }
 cgmath = { workspace = true }
 wgpu = { workspace = true }
 
-egui = "0.28"
-egui-wgpu = "0.28"
+egui = { version = "0.28" }
+egui-wgpu = { version = "0.28", default-features = false }
 egui-winit = { version = "0.28", default-features = false }
-futures = "0.3"
+futures = { version = "0.3", default-features = false, features = ["executor"] }
 log = "0.4"
-pdbtbx = "0.11"
-rfd = "0.14"
-simple_logger = "5.0"
+pdbtbx = { version = "0.11", default-features = false, features = [
+    "compression",
+] }
+rfd = { version = "0.14", default-features = false }
+simple_logger = { version = "5.0", default-features = false }
 thiserror = "1.0.57"
 uuid = { version = "1.7.0", features = ["v4", "js"] }
 winit = { version = "0.29", features = ["x11"] }
