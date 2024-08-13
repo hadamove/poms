@@ -62,8 +62,7 @@ async fn run_loop(event_loop: EventLoop<()>, window: Window) {
 /// This module contains utilities specific to the browser environment.
 #[cfg(target_arch = "wasm32")]
 mod wasm {
-    use crate::application::App;
-
+    use super::app::App;
     use winit::platform::web::WindowExtWebSys;
     use winit::window::Window;
 
@@ -77,7 +76,7 @@ mod wasm {
             .and_then(|win| win.document())
             .and_then(|doc| doc.body())
             .and_then(|body| {
-                let canvas = window.canvas();
+                let canvas = window.canvas().unwrap();
                 let style = canvas.style();
                 // Set canvas to fill the whole window
                 style.set_property("width", "100%").unwrap();
@@ -88,7 +87,7 @@ mod wasm {
     }
 
     pub fn resize_app_if_canvas_changed(window: &Window, app: &mut App) {
-        let canvas = window.canvas();
+        let canvas = window.canvas().unwrap();
         let (width, height) = (canvas.client_width(), canvas.client_height());
 
         let logical_size = winit::dpi::LogicalSize { width, height };
@@ -98,7 +97,7 @@ mod wasm {
         if canvas_size != window.inner_size() {
             canvas.set_width(canvas_size.width);
             canvas.set_height(canvas_size.height);
-            application.resize(canvas_size);
+            app.resize(canvas_size);
         }
     }
 }

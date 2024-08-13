@@ -1,7 +1,7 @@
 #!/bin/bash
-ROOT=`dirname "$0"`/..
+ROOT=$(dirname "$0")/..
 ELECTRON_DIR="./src-electron"
-cd ${ROOT}
+cd "${ROOT}" || exit
 
 # Install trunk if it's not already installed
 cargo install --version ^0.16 trunk

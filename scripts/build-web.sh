@@ -1,6 +1,6 @@
 #!/bin/bash
-ROOT=`dirname "$0"`/..
-cd ${ROOT}
+ROOT=$(dirname "$0")/..
+cd "${ROOT}" || exit
 
 # Install trunk if it's not already installed
 cargo install --version ^0.16 trunk

@@ -153,9 +153,6 @@ impl App {
             self.renderer
                 .resize(&self.context.device, &self.context.config);
             self.camera.resize(&self.context.config);
-
-            #[cfg(target_arch = "wasm32")]
-            self.ui.force_resize(new_size, &self.context);
         }
     }
 

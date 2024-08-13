@@ -84,14 +84,4 @@ impl UserInterface {
             FileResponse::NoContent => {}
         }
     }
-
-    #[cfg(target_arch = "wasm32")]
-    // Hot-fix for GUI not resizing with the window in the browser. There is probably a better way to fix this.
-    pub fn force_resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, context: &GpuContext) {
-        let raw_input = self.platform.raw_input_mut();
-        raw_input.screen_rect = Some(egui::Rect::from_min_size(
-            Default::default(),
-            egui::vec2(new_size.width as f32, new_size.height as f32) / context.scale_factor as f32,
-        ));
-    }
 }
