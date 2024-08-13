@@ -30,35 +30,31 @@ struct LightUniform {
 @group(2) @binding(0) var<uniform> light: LightUniform; 
 
 
-const SURFACE_COLOR: vec3<f32> = vec3<f32>(1.0, 0.8, 0.8);
-
-
 fn distance_from_df_trilinear(position: vec3<f32>) -> f32 {
-    // TODO: is this transformation necessary? Can we do without df_grid.origin?
-    var tex_coord: vec3<f32> = (position - df_grid.origin.xyz) / (f32(df_grid.resolution) * df_grid.offset);
+    let tex_coord: vec3<f32> = (position - df_grid.origin.xyz) / (f32(df_grid.resolution) * df_grid.offset);
     return textureSampleLevel(df_texture, df_sampler, tex_coord, 0.).r;
 }
 
 fn distance_from_df_tricubic(position: vec3<f32>) -> f32 {
-    var resolution = f32(df_grid.resolution);
+    let resolution = f32(df_grid.resolution);
 
-    var coord: vec3<f32> = (position - df_grid.origin.xyz) / (resolution * df_grid.offset);
-    var coord_grid = resolution * coord - vec3<f32>(0.5);
-    var index = floor(coord_grid);
+    let coord: vec3<f32> = (position - df_grid.origin.xyz) / (resolution * df_grid.offset);
+    let coord_grid = resolution * coord - vec3<f32>(0.5);
+    let index = floor(coord_grid);
 
-    var fraction = coord_grid - index;
-    var one_minus_fraction = vec3<f32>(1.0) - fraction;
+    let fraction = coord_grid - index;
+    let one_minus_fraction = vec3<f32>(1.0) - fraction;
 
-    var w0 = 1.0/6.0 * one_minus_fraction * one_minus_fraction * one_minus_fraction;
-    var w1 = 2.0/3.0 - 0.5 * fraction * fraction * (2.0 - fraction);
-    var w2 = 2.0/3.0 - 0.5 * one_minus_fraction * one_minus_fraction * (2.0 - one_minus_fraction);
-    var w3 = 1.0/6.0 * fraction * fraction * fraction;
+    let w0 = 1.0/6.0 * one_minus_fraction * one_minus_fraction * one_minus_fraction;
+    let w1 = 2.0/3.0 - 0.5 * fraction * fraction * (2.0 - fraction);
+    let w2 = 2.0/3.0 - 0.5 * one_minus_fraction * one_minus_fraction * (2.0 - one_minus_fraction);
+    let w3 = 1.0/6.0 * fraction * fraction * fraction;
 
-    var g0 = w0 + w1;
-    var g1 = w2 + w3;
+    let g0 = w0 + w1;
+    let g1 = w2 + w3;
 
-    var h0 = (w1 / g0 - 0.5 + index) / resolution;
-    var h1 = (w3 / g1 + 1.5 + index) / resolution;
+    let h0 = (w1 / g0 - 0.5 + index) / resolution;
+    let h1 = (w3 / g1 + 1.5 + index) / resolution;
 
 	// Fetch the eight linear interpolations.
 	var tex000 = textureSampleLevel(df_texture, df_sampler, h0, 0.).r;
@@ -88,78 +84,77 @@ struct RayHit {
     color: vec3<f32>,
 };
 
+const MAX_STEPS: u32 = 160u;
+const MINIMUM_HIT_DISTANCE: f32 = 0.05;
+const TRICUBIC_THRESHOLD: f32 = 0.1;
+
+const NO_HIT: RayHit = RayHit(false, vec3<f32>(0.0), vec3<f32>(0.0));
+const SURFACE_COLOR: vec3<f32> = vec3<f32>(1.0, 0.8, 0.8);
+
 fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
-    var MAX_STEPS = 160u;
-    var MINIMUM_HIT_DISTANCE: f32 = 0.05;
-    var TRICUBIC_THRESHOLD: f32 = 0.1;
-
-    var rayhit: RayHit;
-    rayhit.hit = false;
-
     // Find closest intersection with the bounding box grid.
-    var tmin = (df_grid.origin.xyz - origin) / direction;
-    var tmax = (df_grid.origin.xyz + vec3<f32>(f32(df_grid.resolution) * df_grid.offset) - origin) / direction;
+    let tmin = (df_grid.origin.xyz - origin) / direction;
+    let tmax = (df_grid.origin.xyz + vec3<f32>(f32(df_grid.resolution) * df_grid.offset) - origin) / direction;
 
-    var t0 = min(tmin, tmax);
-    var t1 = max(tmin, tmax);
+    let t0 = min(tmin, tmax);
+    let t1 = max(tmin, tmax);
 
-    var tnear = max(t0.x, max(t0.y, t0.z));
-    var tfar = min(t1.x, min(t1.y, t1.z));
+    let tnear = max(t0.x, max(t0.y, t0.z));
+    let tfar = min(t1.x, min(t1.y, t1.z));
 
     if (tnear > tfar) {
-        return rayhit;
+        return NO_HIT;
     }
 
     var total_distance: f32 = tnear;
 
     for (var i: u32 = 0u; i < MAX_STEPS; i += 1u) {
-        var current_position: vec3<f32> = origin + total_distance * direction;
+        let current_position: vec3<f32> = origin + total_distance * direction;
 
-        // First sample the distance field using trilinear interpolation.
-        var distance_trilinear: f32 = distance_from_df_trilinear(current_position);
+        // First sample the distance field using trilinear interpolation for early termination.
+        let distance_trilinear: f32 = distance_from_df_trilinear(current_position);
         if (distance_trilinear > TRICUBIC_THRESHOLD) {
             total_distance += distance_trilinear;
             continue;
         }
 
         // If the distance is too large, sample the using tricubic interpolation.
-        var distance: f32 = distance_from_df_tricubic(current_position);
+        let distance: f32 = distance_from_df_tricubic(current_position);
 
         if (distance < MINIMUM_HIT_DISTANCE) {
             // Calculate normal.
-            var small_step = vec3<f32>(0.03, 0.0, 0.0) * df_grid.offset;
+            let small_step = vec3<f32>(0.03, 0.0, 0.0) * df_grid.offset;
 
-            var p: vec3<f32> = current_position + distance * direction;
-            // TODO: what would happen if we used trilinear instead of tricubic here?
-            var gradient_x: f32 = distance_from_df_tricubic(p + small_step.xyy) - distance_from_df_tricubic(p - small_step.xyy);
-            var gradient_y: f32 = distance_from_df_tricubic(p + small_step.yxy) - distance_from_df_tricubic(p - small_step.yxy);
-            var gradient_z: f32 = distance_from_df_tricubic(p + small_step.yyx) - distance_from_df_tricubic(p - small_step.yyx);
+            let p: vec3<f32> = current_position + distance * direction;
+            let gradient_x: f32 = distance_from_df_tricubic(p + small_step.xyy) - distance_from_df_tricubic(p - small_step.xyy);
+            let gradient_y: f32 = distance_from_df_tricubic(p + small_step.yxy) - distance_from_df_tricubic(p - small_step.yxy);
+            let gradient_z: f32 = distance_from_df_tricubic(p + small_step.yyx) - distance_from_df_tricubic(p - small_step.yyx);
 
-            var normal: vec3<f32> = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
+            let normal: vec3<f32> = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
 
-            var color = vec3<f32>(1.0);
-            var ambient: f32 = 0.15;
+            let color = vec3<f32>(1.0);
+            let ambient: f32 = 0.15;
 
-            var light_dir: vec3<f32> = normalize(light.direction);
-            var diffuse: f32 =  max(0.0, dot(normal, light_dir));
+            let light_dir: vec3<f32> = normalize(light.direction);
+            let diffuse: f32 =  max(0.0, dot(normal, light_dir));
 
-            var reflect_dir: vec3<f32> = reflect(light_dir, normal);  
-            var specular: f32 = pow(max(dot(direction, reflect_dir), 0.0), 16.0) * 0.3;
+            let reflect_dir: vec3<f32> = reflect(light_dir, normal);  
+            let specular: f32 = pow(max(dot(direction, reflect_dir), 0.0), 16.0) * 0.3;
 
-            rayhit.color = color * (ambient + specular + diffuse) * SURFACE_COLOR;
+            let color_shaded = color * (ambient + specular + diffuse) * SURFACE_COLOR;
 
-            rayhit.hit = true;
-            rayhit.position = p;
-            return rayhit;
+            return RayHit(true, p, color_shaded);
         }
         total_distance += distance;
 
         // Make sure we don't march too far.
         if (total_distance > tfar) {
-            return rayhit;
+            return NO_HIT;
         }
     }
-    return rayhit;
+
+    // Ray missed in the maximum number of steps.
+    return NO_HIT;
 }
 
 struct VertexOutput {
@@ -178,15 +173,13 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
         vec2<f32>( 1.0,  1.0)
     );
 
-    // TODO: is it possible to construct the output struct directly in wgsl now?
-    var out: VertexOutput;
     let x: f32 = quad_vertices[in_vertex_index].x;
     let y: f32 = quad_vertices[in_vertex_index].y;
 
-    out.clip_position = vec4<f32>(x, y, 0.0, 1.0);
-    out.uv = vec2<f32>(x, y);
+    let clip_position = vec4<f32>(x, y, 0.0, 1.0);
+    let uv = vec2<f32>(x, y);
 
-    return out;
+    return VertexOutput(clip_position, uv);
 }
 
 struct FragmentOutput {
@@ -197,29 +190,27 @@ struct FragmentOutput {
 @fragment
 fn fs_main(in: VertexOutput) -> FragmentOutput {
     // Ray starts at the camera position.
-    var ray_origin: vec3<f32> = camera.pos.xyz;
+    let ray_origin: vec3<f32> = camera.pos.xyz;
 
-    var ray_direction_pixel: vec4<f32> = vec4<f32>(in.uv, -1.0, 1.0);
+    let ray_direction_pixel: vec4<f32> = vec4<f32>(in.uv, -1.0, 1.0);
     // Apply inverse projection matrix to get the ray in view space.
-    var ray_direction_view = vec4<f32>(
+    let ray_direction_view = vec4<f32>(
         (camera.proj_inverse * ray_direction_pixel).xyz, 0.0
     );
     // Apply inverse view matrix to get the ray in world space.
-    var ray_direction_world: vec4<f32> = camera.view_inverse * ray_direction_view;
+    let ray_direction_world: vec4<f32> = camera.view_inverse * ray_direction_view;
 
-    var rayhit = ray_march(ray_origin, normalize(ray_direction_world.xyz));
+    let rayhit = ray_march(ray_origin, normalize(ray_direction_world.xyz));
     if (!rayhit.hit) {
         // Ray missed.
         discard;
     }
 
     // Calculate the distance from the camera to the hit position.
-    var rayhit_point_proj: vec4<f32> = camera.proj * camera.view * vec4<f32>(rayhit.position, 1.0);
-    var rayhit_depth: f32 = rayhit_point_proj.z / rayhit_point_proj.w;
+    let rayhit_point_proj: vec4<f32> = camera.proj * camera.view * vec4<f32>(rayhit.position, 1.0);
+    let rayhit_depth: f32 = rayhit_point_proj.z / rayhit_point_proj.w;
 
-    var out: FragmentOutput;
-    out.color = vec4<f32>(rayhit.color, 1.0);
-    out.depth = rayhit_depth;
+    let color = vec4<f32>(rayhit.color, 1.0);
 
-    return out;
+    return FragmentOutput(rayhit_depth, color);
 }
