@@ -79,6 +79,17 @@ fn distance_from_df_tricubic(position: vec3<f32>) -> f32 {
     return mix(tex001, tex000, g0.z);
 }
 
+fn compute_gradient(point: vec3<f32>) -> vec3<f32> {
+    let epsilon: f32 = 0.03 * df_grid.offset;
+    let center: f32 = distance_from_df_tricubic(point);
+
+    return vec3<f32>(
+        distance_from_df_tricubic(point + vec3<f32>(epsilon, 0.0, 0.0)) - center,
+        distance_from_df_tricubic(point + vec3<f32>(0.0, epsilon, 0.0)) - center,
+        distance_from_df_tricubic(point + vec3<f32>(0.0, 0.0, epsilon)) - center
+    ) / epsilon;
+}
+
 struct RayHit {
     hit: bool,
     position: vec3<f32>,
@@ -119,19 +130,15 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
             continue;
         }
 
-        // If the distance is too large, sample the using tricubic interpolation.
+        // If we get close enough to the surface, sample using tricubic interpolation for smoother result.
         let distance: f32 = distance_from_df_tricubic(current_position);
 
         if (distance < MINIMUM_HIT_DISTANCE) {
             // Calculate normal.
             let small_step = vec3<f32>(0.03, 0.0, 0.0) * df_grid.offset;
 
-            let p: vec3<f32> = current_position + distance * direction;
-            let gradient_x: f32 = distance_from_df_tricubic(p + small_step.xyy) - distance_from_df_tricubic(p - small_step.xyy);
-            let gradient_y: f32 = distance_from_df_tricubic(p + small_step.yxy) - distance_from_df_tricubic(p - small_step.yxy);
-            let gradient_z: f32 = distance_from_df_tricubic(p + small_step.yyx) - distance_from_df_tricubic(p - small_step.yyx);
-
-            let normal: vec3<f32> = normalize(vec3<f32>(gradient_x, gradient_y, gradient_z));
+            let point: vec3<f32> = current_position + distance * direction;
+            let normal: vec3<f32> = normalize(compute_gradient(point));
 
             let color = vec3<f32>(1.0);
             let ambient: f32 = 0.15;
@@ -144,7 +151,7 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
 
             let color_shaded = color * (ambient + specular + diffuse) * SURFACE_COLOR;
 
-            return RayHit(true, p, color_shaded);
+            return RayHit(true, point, color_shaded);
         }
         total_distance += distance;
 
