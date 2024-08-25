@@ -9,85 +9,69 @@ use crate::app::ui::{events::UserEvent, UIState};
 /// Component that displays settings window.
 /// Allows to change model parameters and toggle render passes.
 pub fn settings(context: &egui::Context, state: &mut UIState) {
-    let window = Window::new("Settings")
-        .default_pos(Pos2::new(100.0, 100.0))
-        .default_width(100.0);
-
-    let mut clicked_molecule: Option<usize> = None;
-
-    window.show(context, |ui| {
-        // Model parameters.
-        if ui.add(resolution_slider(state)).changed() {
-            state.dispatch_event(UserEvent::DistanceFieldResolutionChanged {
-                resolution: state.target_resolution,
-            });
-        }
-        if ui.add(probe_radius_slider(state)).changed() {
-            state.dispatch_event(UserEvent::ProbeRadiusChanged {
-                probe_radius: state.probe_radius,
-            });
-        }
-        ui.separator();
-
-        ui.collapsing("Render Passes", |ui| {
-            if ui.add(spacefill_pass_checkbox(state)).changed() {
-                state.dispatch_event(UserEvent::RenderSpacefillChanged {
-                    is_enabled: state.render_spacefill,
+    Window::new("Settings")
+        .default_pos(Pos2::new(16.0, 36.0))
+        .anchor(egui::Align2::LEFT_TOP, [16.0, 36.0])
+        .default_width(100.0)
+        .show(context, |ui| {
+            // Model parameters.
+            if ui.add(resolution_slider(state)).changed() {
+                state.dispatch_event(UserEvent::DistanceFieldResolutionChanged {
+                    resolution: state.target_resolution,
                 });
             }
-            if ui.add(molecular_surface_pass_checkbox(state)).changed() {
-                state.dispatch_event(UserEvent::RenderMolecularSurfaceChanged {
-                    is_enabled: state.render_molecular_surface,
+            if ui.add(probe_radius_slider(state)).changed() {
+                state.dispatch_event(UserEvent::ProbeRadiusChanged {
+                    probe_radius: state.probe_radius,
                 });
             }
-        });
+            ui.separator();
 
-        ui.collapsing("Files opened", |ui| {
-            for file in &state.files_loaded {
-                // Highlight the active file
-                let button = if file.index == state.active_file_index {
-                    ui.button(&file.path).highlight()
-                } else {
-                    ui.button(&file.path)
-                };
-
-                if button.clicked() {
-                    clicked_molecule = Some(file.index);
-                }
-            }
-        });
-
-        // Animation.
-        ui.collapsing("Animation", |ui| {
-            if ui
-                .add(
-                    Slider::new(
-                        &mut state.animation_speed,
-                        MIN_ANIMATION_SPEED..=MAX_ANIMATION_SPEED,
-                    )
-                    .text("Speed"),
-                )
-                .changed()
-            {
-                state.dispatch_event(UserEvent::AnimationSpeedChanged {
-                    speed: state.animation_speed,
+            egui::CollapsingHeader::new("Render Passes")
+                .default_open(true)
+                .show(ui, |ui| {
+                    if ui.add(spacefill_pass_checkbox(state)).changed() {
+                        state.dispatch_event(UserEvent::RenderSpacefillChanged {
+                            is_enabled: state.render_spacefill,
+                        });
+                    }
+                    if ui.add(molecular_surface_pass_checkbox(state)).changed() {
+                        state.dispatch_event(UserEvent::RenderMolecularSurfaceChanged {
+                            is_enabled: state.render_molecular_surface,
+                        });
+                    }
                 });
-            }
-            ui.horizontal(|ui| {
-                if ui.add(animation_button(state)).clicked() {
-                    state.dispatch_event(UserEvent::ToggleAnimation);
-                    state.is_animation_active = !state.is_animation_active;
-                }
-                match state.is_animation_active {
-                    true => ui.label("Playing ✅"),
-                    false => ui.label("Paused ❌"),
-                };
-            });
+
+            // Animation.
+            egui::CollapsingHeader::new("Animation")
+                .default_open(true)
+                .show(ui, |ui| {
+                    if ui
+                        .add(
+                            Slider::new(
+                                &mut state.animation_speed,
+                                MIN_ANIMATION_SPEED..=MAX_ANIMATION_SPEED,
+                            )
+                            .text("Speed"),
+                        )
+                        .changed()
+                    {
+                        state.dispatch_event(UserEvent::AnimationSpeedChanged {
+                            speed: state.animation_speed,
+                        });
+                    }
+                    ui.horizontal(|ui| {
+                        if ui.add(animation_button(state)).clicked() {
+                            state.dispatch_event(UserEvent::ToggleAnimation);
+                            state.is_animation_active = !state.is_animation_active;
+                        }
+                        match state.is_animation_active {
+                            true => ui.label("Playing ✅"),
+                            false => ui.label("Paused ❌"),
+                        };
+                    });
+                });
         });
-        if let Some(index) = clicked_molecule {
-            state.dispatch_event(UserEvent::ActivateFile { index });
-        }
-    });
 }
 
 fn resolution_slider(state: &mut UIState) -> Slider {
