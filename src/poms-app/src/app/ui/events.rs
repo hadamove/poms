@@ -1,7 +1,11 @@
-use crate::app::{data::molecule_parser::ParsedMolecule, theme::ColorTheme};
+use crate::app::data::molecule_parser::ParsedMolecule;
+use crate::app::theme::ColorTheme;
 
 /// Represents an event that is triggered by the user interacting with the UI.
 pub enum UserEvent {
+    /// User clicks on a file in the file menu.
+    ActivateFile { index: usize },
+
     /// User changes the speed of the animation using a slider.
     AnimationSpeedChanged { speed: u32 },
 

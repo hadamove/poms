@@ -13,6 +13,8 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
         .default_pos(Pos2::new(100.0, 100.0))
         .default_width(100.0);
 
+    let mut clicked_molecule: Option<usize> = None;
+
     window.show(context, |ui| {
         // Model parameters.
         if ui.add(resolution_slider(state)).changed() {
@@ -37,6 +39,21 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
                 state.dispatch_event(UserEvent::RenderMolecularSurfaceChanged {
                     is_enabled: state.render_molecular_surface,
                 });
+            }
+        });
+
+        ui.collapsing("Files opened", |ui| {
+            for file in &state.files_loaded {
+                // Highlight the active file
+                let button = if file.index == state.active_file_index {
+                    ui.button(&file.path).highlight()
+                } else {
+                    ui.button(&file.path)
+                };
+
+                if button.clicked() {
+                    clicked_molecule = Some(file.index);
+                }
             }
         });
 
@@ -67,6 +84,9 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
                 };
             });
         });
+        if let Some(index) = clicked_molecule {
+            state.dispatch_event(UserEvent::ActivateFile { index });
+        }
     });
 }
 

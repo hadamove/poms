@@ -6,6 +6,14 @@ pub struct ErrorMessage {
     pub message: String,
 }
 
+/// Struct holding metadata about a loaded molecule file.
+pub struct MoleculeFileInfo {
+    /// Index within the `MoleculeStorage::loaded_molecules` vector.
+    pub index: usize,
+    /// Full path within the OS.
+    pub path: String,
+}
+
 /// Struct that holds current state of the UI.
 /// Also used to store dispatched events that are collected by the main app loop.
 #[derive(Default)]
@@ -24,6 +32,11 @@ pub struct UIState {
     pub animation_speed: u32,
     /// List of error messages that should be displayed.
     pub error_messages: Vec<ErrorMessage>,
+
+    /// Index within the `MoleculeStorage::loaded_moleculse` vector, points to currently active file (one that is being rendered).
+    pub active_file_index: usize,
+    /// A vector holding metadata about all of the molecule files.
+    pub files_loaded: Vec<MoleculeFileInfo>,
 
     /// List of events that were dispatched by the UI.
     pub events: Vec<UserEvent>,

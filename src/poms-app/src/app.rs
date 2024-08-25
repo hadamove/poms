@@ -58,11 +58,7 @@ impl App {
 
         let initial_molecule = ParsedMolecule::h2o_demo();
         let molecule_storage = MoleculeStorage::new(initial_molecule, settings.probe_radius);
-        let atoms = &molecule_storage.get_current().atoms;
-
-        // Upload initial molecule data to GPU resources.
-        let mut resources = CommonResources::new(&context.device);
-        resources.atoms_resource.update(&context.queue, atoms);
+        let resources = CommonResources::new(&context.device);
 
         let render_spacefill = true;
         let render_molecular_surface = false;
@@ -72,7 +68,7 @@ impl App {
             compute: ComputeJobs::new(
                 &context.device,
                 ComputeParameters {
-                    molecule: &atoms.data,
+                    molecule: &molecule_storage.get_active().atoms.data,
                     common_resources: &resources,
                     init_resolution: settings.init_resolution,
                     target_resolution: settings.target_resolution,
@@ -100,6 +96,8 @@ impl App {
                     render_molecular_surface,
                     is_animation_active: animation.is_active,
                     animation_speed: animation.speed,
+                    // This ensures the initial molecule is added to the UI state.
+                    events: vec![UserEvent::ActivateFile { index: 0 }],
                     ..Default::default()
                 },
             ),
@@ -136,13 +134,8 @@ impl App {
 
         if self.animation.advance_tick() {
             // Advance to the next frame if the animation is active and due.
-            self.molecule_storage.next_frame();
-            self.resources.atoms_resource.update(
-                &self.context.queue,
-                &self.molecule_storage.get_current().atoms,
-            );
-            // After swapping the molecule data with the next frame, start computing the molecular surface from scratch.
-            self.reset_compute_jobs();
+            self.molecule_storage.increment_active();
+            self.on_active_molecule_changed();
         }
     }
 
@@ -207,8 +200,13 @@ impl App {
                     });
                 }
                 UserEvent::MoleculesLoaded { molecules } => {
-                    self.on_molecules_loaded(molecules);
-                    self.reset_compute_jobs();
+                    self.molecule_storage
+                        .add_from_parsed(molecules, self.settings.probe_radius);
+                    self.on_active_molecule_changed();
+                }
+                UserEvent::ActivateFile { index } => {
+                    self.molecule_storage.set_active(index);
+                    self.on_active_molecule_changed();
                 }
                 UserEvent::DistanceFieldResolutionChanged { resolution } => {
                     self.settings.target_resolution = resolution;
@@ -230,20 +228,24 @@ impl App {
         }
     }
 
-    /// Handles loading of new molecules into the application, updating the storage,
-    /// and setting the camera's focus to the new molecule.
-    fn on_molecules_loaded(&mut self, molecules: Vec<ParsedMolecule>) {
-        self.molecule_storage
-            .add_from_parsed(molecules, self.settings.probe_radius);
-
-        let first_molecule = self.molecule_storage.get_current();
+    /// Handles changes necessary after different molecule was chosen to be displayed,
+    /// updating the GPU resources, UI state, and setting the camera's focus to the new molecule.
+    fn on_active_molecule_changed(&mut self) {
+        let active_molecule = self.molecule_storage.get_active();
 
         self.camera
-            .set_target(calculate_center(&first_molecule.atoms.data));
+            .set_target(calculate_center(&active_molecule.atoms.data));
 
         self.resources
             .atoms_resource
-            .update(&self.context.queue, &first_molecule.atoms);
+            .update(&self.context.queue, &active_molecule.atoms);
+
+        // Update the state of the UI
+        self.ui.set_files(&self.molecule_storage.loaded_molecules);
+        self.ui.activate_file(self.molecule_storage.active_index);
+
+        // Finally, when mocule changes, we need to start computation from the beginning
+        self.reset_compute_jobs();
     }
 
     /// Resets compute jobs with updated parameters when the resolution, probe radius, or rendered molecule changes.
@@ -251,7 +253,7 @@ impl App {
         self.compute = ComputeJobs::new(
             &self.context.device,
             ComputeParameters {
-                molecule: &self.molecule_storage.get_current().atoms.data,
+                molecule: &self.molecule_storage.get_active().atoms.data,
                 common_resources: &self.resources,
                 init_resolution: self.settings.init_resolution,
                 target_resolution: self.settings.target_resolution,

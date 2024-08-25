@@ -4,12 +4,15 @@ mod elements;
 mod glue;
 pub mod state;
 
-use state::UIState;
 use winit::event::WindowEvent;
 
-use super::data::file_loader::{FileLoader, FileResponse};
+use super::data::{
+    file_loader::{FileLoader, FileResponse},
+    molecule_storage::MoleculeData,
+};
 use crate::gpu_context::GpuContext;
 use events::UserEvent;
+use state::{MoleculeFileInfo, UIState};
 
 /// Primary struct for managing and rendering the application's UI and I/O.
 pub struct UserInterface {
@@ -43,6 +46,7 @@ impl UserInterface {
                 elements::menu_bar,
                 elements::settings,
                 elements::error_messages,
+                elements::file_menu,
             ],
         );
 
@@ -71,6 +75,21 @@ impl UserInterface {
     /// The selected files are then processed by the `FileLoader`.
     pub fn open_file_dialog(&mut self) {
         self.file_loader.open_file_dialog();
+    }
+
+    pub fn set_files(&mut self, molecule_files: &[MoleculeData]) {
+        self.state.files_loaded = molecule_files
+            .iter()
+            .enumerate()
+            .map(|(i, file)| MoleculeFileInfo {
+                index: i,
+                path: file.filename.clone(),
+            })
+            .collect();
+    }
+
+    pub fn activate_file(&mut self, index: usize) {
+        self.state.active_file_index = index;
     }
 
     fn process_file_loader_events(&mut self) {
