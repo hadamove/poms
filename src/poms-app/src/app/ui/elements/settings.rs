@@ -11,17 +11,18 @@ use crate::app::ui::{events::UserEvent, UIState};
 pub fn settings(context: &egui::Context, state: &mut UIState) {
     Window::new("Settings")
         .default_pos(Pos2::new(16.0, 36.0))
-        .anchor(egui::Align2::LEFT_TOP, [16.0, 36.0])
+        .pivot(egui::Align2::LEFT_TOP)
         .default_width(100.0)
+        .resizable(false)
         .show(context, |ui| {
             // Model parameters.
             if ui.add(resolution_slider(state)).changed() {
-                state.dispatch_event(UserEvent::DistanceFieldResolutionChanged {
+                state.dispatch_event(UserEvent::ChangeDistanceFieldResolution {
                     resolution: state.target_resolution,
                 });
             }
             if ui.add(probe_radius_slider(state)).changed() {
-                state.dispatch_event(UserEvent::ProbeRadiusChanged {
+                state.dispatch_event(UserEvent::ChangeProbeRadius {
                     probe_radius: state.probe_radius,
                 });
             }
@@ -31,12 +32,12 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
                 .default_open(true)
                 .show(ui, |ui| {
                     if ui.add(spacefill_pass_checkbox(state)).changed() {
-                        state.dispatch_event(UserEvent::RenderSpacefillChanged {
+                        state.dispatch_event(UserEvent::ChangeRenderSpacefill {
                             is_enabled: state.render_spacefill,
                         });
                     }
                     if ui.add(molecular_surface_pass_checkbox(state)).changed() {
-                        state.dispatch_event(UserEvent::RenderMolecularSurfaceChanged {
+                        state.dispatch_event(UserEvent::ChangeRenderMolecularSurface {
                             is_enabled: state.render_molecular_surface,
                         });
                     }
@@ -56,7 +57,7 @@ pub fn settings(context: &egui::Context, state: &mut UIState) {
                         )
                         .changed()
                     {
-                        state.dispatch_event(UserEvent::AnimationSpeedChanged {
+                        state.dispatch_event(UserEvent::ChangeAnimationSpeed {
                             speed: state.animation_speed,
                         });
                     }

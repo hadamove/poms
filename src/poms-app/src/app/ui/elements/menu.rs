@@ -25,7 +25,7 @@ pub fn menu_bar(context: &egui::Context, state: &mut UIState) {
 
             ui.menu_button("File", |ui| {
                 if ui.button("Open").clicked() {
-                    state.dispatch_event(UserEvent::OpenFileDialog);
+                    state.dispatch_event(UserEvent::InitOpenFileDialog);
                 }
             });
         });

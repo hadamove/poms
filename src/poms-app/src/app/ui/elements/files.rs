@@ -1,17 +1,22 @@
-use egui::{RichText, Widget, Window};
+use egui::Widget;
 
 use crate::app::ui::{events::UserEvent, state::UIState};
 
 pub fn file_menu(context: &egui::Context, state: &mut UIState) {
     let mut clicked_molecule: Option<usize> = None;
 
-    Window::new("Files")
-        .default_size([200.0, 100.0])
-        .anchor(egui::Align2::RIGHT_TOP, [-16.0, 36.0])
+    let top_right = [context.screen_rect().width() - 16.0, 36.0];
+
+    egui::Window::new("Loaded Files")
+        .default_size([256.0, 256.0])
+        .pivot(egui::Align2::RIGHT_TOP)
+        .default_pos(top_right)
+        .resizable(false)
         .show(context, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for file in &state.files_loaded {
-                    let mut text = RichText::new(&file.path).small();
+                for (i, file) in state.files_loaded.iter().enumerate() {
+                    let mut text =
+                        egui::RichText::new(format!("{}. {}", i + 1, &file.path)).small();
                     if file.index == state.active_file_index {
                         text = text.strong();
                     }
@@ -32,12 +37,18 @@ pub fn file_menu(context: &egui::Context, state: &mut UIState) {
                 }
             });
 
-            if ui.button("Open...").clicked() {
-                state.dispatch_event(UserEvent::OpenFileDialog);
-            }
+            ui.horizontal(|ui| {
+                if ui.button("Open...").clicked() {
+                    state.dispatch_event(UserEvent::InitOpenFileDialog);
+                }
+
+                if ui.button("Search PDB...").clicked() {
+                    state.is_search_window_shown = true;
+                }
+            });
         });
 
     if let Some(index) = clicked_molecule {
-        state.dispatch_event(UserEvent::ActivateFile { index });
+        state.dispatch_event(UserEvent::ChangeActiveMolecule { index });
     }
 }

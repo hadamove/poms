@@ -1,3 +1,5 @@
+use crate::app::data::pdb_apis::Assembly;
+
 use super::events::UserEvent;
 
 /// Struct that represents an error message that should be displayed to the user.
@@ -38,6 +40,15 @@ pub struct UIState {
     /// A vector holding metadata about all of the molecule files.
     pub files_loaded: Vec<MoleculeFileInfo>,
 
+    /// State of the input field in the search bar.
+    pub search_term: String,
+    /// List of displayed search results. Obtained from the PDB file search API.
+    pub search_results: Vec<Assembly>,
+    /// Flag that indicates if the search window is shown.
+    pub is_search_window_shown: bool,
+    /// Flag that indicates if a search is currently in progress.
+    pub is_search_in_progress: bool,
+
     /// List of events that were dispatched by the UI.
     pub events: Vec<UserEvent>,
 }
@@ -50,7 +61,7 @@ impl UIState {
 
     /// Collects dispatched events and clears the list of events.
     /// Call this method at the end of the frame to collect all events that were dispatched during the frame.
-    pub fn collect_events(&mut self) -> Vec<UserEvent> {
+    pub fn drain_events(&mut self) -> Vec<UserEvent> {
         self.events.drain(..).collect()
     }
 

@@ -13,50 +13,11 @@ pub struct ParsedMolecule {
     pub atoms: Vec<Atom>,
 }
 
-impl ParsedMolecule {
-    pub fn h2o_demo() -> Self {
-        Self {
-            filename: "demo".to_string(),
-            header: Some("h2o".to_string()),
-            atoms: vec![
-                // Oxygen
-                Atom {
-                    position: [0.0, 0.0, 0.0],
-                    radius: 1.4,
-                    color: [1.0, 0.0, 0.0, 1.0],
-                },
-                // Hydrogen 1
-                Atom {
-                    position: [0.9572, 0.0, 0.0],
-                    radius: 1.2,
-                    color: [1.0, 1.0, 1.0, 1.0],
-                },
-                // Hydrogen 2
-                Atom {
-                    position: [-0.2396, 0.927, 0.0],
-                    radius: 1.2,
-                    color: [1.0, 1.0, 1.0, 1.0],
-                },
-            ],
-        }
-    }
-}
-
-/// Internal error type for parsing.
-#[derive(thiserror::Error, Debug)]
-pub enum ParseError {
-    #[error("One or more errors have occured during parsing.")]
-    Critical { full_errors: Vec<String> },
-}
-
 /// Attempts to parse a PDB or mmCIF file as bytes into a [`ParsedMolecule`].
-pub fn parse_atoms_from_pdb_file(file: RawFile) -> Result<ParsedMolecule, ParseError> {
+pub fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule> {
     let buffer = BufReader::new(Cursor::new(&file.content));
-    let (pdb, _) = pdbtbx::open_raw(buffer, pdbtbx::StrictnessLevel::Loose).map_err(|e| {
-        ParseError::Critical {
-            full_errors: e.into_iter().map(|e| e.to_string()).collect(),
-        }
-    })?;
+    let (pdb, _) = pdbtbx::open_raw(buffer, pdbtbx::StrictnessLevel::Loose)
+        .map_err(|errors| anyhow::Error::msg(format!("{:?}", errors)))?;
 
     let atoms = pdb
         .atoms()
@@ -193,5 +154,34 @@ fn get_jmol_color(atom: &pdbtbx::Atom) -> [f32; 4] {
         pdbtbx::Element::No => [0.74, 0.05, 0.53, 1.0],
         pdbtbx::Element::Lr => [0.78, 0.0, 0.41, 1.0],
         _ => DEFAULT_COLOR,
+    }
+}
+
+impl ParsedMolecule {
+    pub fn h2o_demo() -> Self {
+        Self {
+            filename: "demo".to_string(),
+            header: Some("h2o".to_string()),
+            atoms: vec![
+                // Oxygen
+                Atom {
+                    position: [0.0, 0.0, 0.0],
+                    radius: 1.4,
+                    color: [1.0, 0.0, 0.0, 1.0],
+                },
+                // Hydrogen 1
+                Atom {
+                    position: [0.9572, 0.0, 0.0],
+                    radius: 1.2,
+                    color: [1.0, 1.0, 1.0, 1.0],
+                },
+                // Hydrogen 2
+                Atom {
+                    position: [-0.2396, 0.927, 0.0],
+                    radius: 1.2,
+                    color: [1.0, 1.0, 1.0, 1.0],
+                },
+            ],
+        }
     }
 }

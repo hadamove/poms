@@ -4,24 +4,22 @@ mod elements;
 mod glue;
 pub mod state;
 
+use events::UserEvent;
 use winit::event::WindowEvent;
 
-use super::data::{
-    file_loader::{FileLoader, FileResponse},
-    molecule_storage::MoleculeData,
-};
+use super::data::file_loader::{DataEvent, FileLoader};
+use super::data::molecule_storage::MoleculeData;
 use crate::gpu_context::GpuContext;
-use events::UserEvent;
 use state::{MoleculeFileInfo, UIState};
 
 /// Primary struct for managing and rendering the application's UI and I/O.
 pub struct UserInterface {
+    /// An abstraction for loading files from the user's filesystem.
+    pub file_loader: FileLoader,
     /// Holds the state of interactive elements (e.g. buttons, sliders) and user interactions.
     state: UIState,
     /// A thin wrapper around the `egui` library, providing an abstraction for the UI system.
     egui_wrapper: glue::EguiWrapper,
-    /// An abstraction for loading files from the user's filesystem.
-    file_loader: FileLoader,
 }
 
 impl UserInterface {
@@ -47,12 +45,13 @@ impl UserInterface {
                 elements::settings,
                 elements::error_messages,
                 elements::file_menu,
+                elements::search,
             ],
         );
 
         self.process_file_loader_events();
 
-        self.state.collect_events()
+        self.state.drain_events()
     }
 
     /// Renders the current UI frame to the specified texture view.
@@ -71,13 +70,8 @@ impl UserInterface {
         self.egui_wrapper.handle_window_event(window_event)
     }
 
-    /// Initiates the file open dialog, allowing the user to select files to load.
-    /// The selected files are then processed by the `FileLoader`.
-    pub fn open_file_dialog(&mut self) {
-        self.file_loader.open_file_dialog();
-    }
-
-    pub fn set_files(&mut self, molecule_files: &[MoleculeData]) {
+    /// Updates the state of loaded files and the active file index.
+    pub fn update_files_state(&mut self, molecule_files: &[MoleculeData], active_index: usize) {
         self.state.files_loaded = molecule_files
             .iter()
             .enumerate()
@@ -86,21 +80,34 @@ impl UserInterface {
                 path: file.filename.clone(),
             })
             .collect();
-    }
 
-    pub fn activate_file(&mut self, index: usize) {
-        self.state.active_file_index = index;
+        self.state.active_file_index = active_index;
     }
 
     fn process_file_loader_events(&mut self) {
-        match self.file_loader.try_parse_loaded_files() {
-            FileResponse::FilesParsed { result } => self
-                .state
-                .dispatch_event(UserEvent::MoleculesLoaded { molecules: result }),
-            FileResponse::ParsingFailed { error } => self
-                .state
-                .open_error_message(format!("Parsing failed: {}", error)),
-            FileResponse::NoContent => {}
+        let Some(event) = self.file_loader.try_process_single_event() else {
+            return;
+        };
+
+        match event {
+            DataEvent::FilesParsed { result } => match result {
+                Ok(files) => self
+                    .state
+                    .dispatch_event(UserEvent::MoleculesParsed { molecules: files }),
+                Err(error) => self
+                    .state
+                    .open_error_message(format!("Parsing failed: {}", error)),
+            },
+            DataEvent::SearchResultsParsed { result } => match result {
+                Ok(search_results) => {
+                    self.state.search_results = search_results;
+                    self.state.is_search_in_progress = false;
+                }
+                Err(error) => {
+                    self.state.search_results = vec![];
+                    eprintln!("Search failed: {}", error);
+                }
+            },
         }
     }
 }
