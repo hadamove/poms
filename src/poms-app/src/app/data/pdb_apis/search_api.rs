@@ -1,8 +1,10 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 
 use anyhow;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::app::data::file_loader::AsyncWorkResult;
 
 #[derive(Debug, Serialize)]
 struct SearchApiRequest<'a> {
@@ -33,7 +35,8 @@ impl PdbSearchApi {
     pub async fn fulltext_search_debounced(
         &self,
         value: &str,
-    ) -> anyhow::Result<SearchApiResponse> {
+        dispatch: mpsc::Sender<AsyncWorkResult>,
+    ) -> anyhow::Result<()> {
         let value = value.to_string();
         {
             let mut last_query_value = self.last_query_value.lock().unwrap();
@@ -51,11 +54,18 @@ impl PdbSearchApi {
             last_query_value.as_ref() == Some(&value)
         };
 
-        if should_execute {
-            self.fulltext_search(&value).await
-        } else {
-            Err(anyhow::anyhow!("Query was debounced"))
+        if !should_execute {
+            return Err(anyhow::anyhow!("Query was debounced"));
         }
+
+        let response = self.fulltext_search(&value).await?;
+        dispatch
+            .send(AsyncWorkResult::SearchResultsReceived {
+                results: response.result_set,
+            })
+            .ok();
+
+        Ok(())
     }
 
     async fn fulltext_search(&self, value: &str) -> anyhow::Result<SearchApiResponse> {

@@ -5,6 +5,11 @@ use super::{
     pdb_apis::{download_api::PdbDownloadApi, search_api::PdbSearchApi, Assembly},
 };
 
+pub struct DownloadProgress {
+    pub bytes_downloaded: usize,
+    pub is_finished: bool,
+}
+
 /// Represents the possible outcomes when handling files.
 pub enum DataEvent {
     FilesParsed {
@@ -13,11 +18,15 @@ pub enum DataEvent {
     SearchResultsParsed {
         result: anyhow::Result<Vec<Assembly>>,
     },
+    DownloadProgressed {
+        progress: DownloadProgress,
+    },
 }
 
 pub enum AsyncWorkResult {
     FilesReceived { files: Vec<RawFile> },
     SearchResultsReceived { results: Vec<String> },
+    DownloadProgressed { progress: DownloadProgress },
 }
 
 /// Holds the raw content of a loaded file.
@@ -79,36 +88,17 @@ impl FileLoader {
         let dispatch = self.data_channel.0.clone();
         let download_api = self.download_api.clone();
         execute(async move {
-            if let Ok(response) = download_api.download_assembly(&assembly).await {
-                dispatch
-                    .send(AsyncWorkResult::FilesReceived {
-                        files: vec![RawFile {
-                            name: assembly.to_string(),
-                            content: response.raw_data,
-                        }],
-                    })
-                    .ok();
-            }
+            let _ = download_api.download_assembly(&assembly, dispatch).await;
         });
     }
 
     /// Initializes an asychronous task that does full-text search for PDB files using the RCSB's public API.
     /// Fetched results are returned to the main thread via a channel.
     pub fn search_pdb_files(&self, query: String) {
-        if query.is_empty() {
-            return;
-        }
-
         let dispatch = self.data_channel.0.clone();
         let search_api = self.search_api.clone();
         execute(async move {
-            if let Ok(response) = search_api.fulltext_search_debounced(&query).await {
-                dispatch
-                    .send(AsyncWorkResult::SearchResultsReceived {
-                        results: response.result_set,
-                    })
-                    .ok();
-            }
+            let _ = search_api.fulltext_search_debounced(&query, dispatch).await;
         });
     }
 
@@ -124,6 +114,9 @@ impl FileLoader {
                     DataEvent::SearchResultsParsed {
                         result: Self::parse_search_results(results),
                     }
+                }
+                AsyncWorkResult::DownloadProgressed { progress } => {
+                    DataEvent::DownloadProgressed { progress }
                 }
             })
             .collect()

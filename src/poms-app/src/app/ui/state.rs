@@ -49,6 +49,11 @@ pub struct UIState {
     /// Flag that indicates if a search is currently in progress.
     pub is_search_in_progress: bool,
 
+    /// How many bytes have been downloaded so far.
+    pub bytes_downloaded: usize,
+    /// Flag that indicates if a download is currently in progress.
+    pub is_download_in_progress: bool,
+
     /// List of events that were dispatched by the UI.
     pub events: Vec<UserEvent>,
 }

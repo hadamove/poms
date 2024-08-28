@@ -105,6 +105,10 @@ impl UserInterface {
                         eprintln!("Search failed: {}", error);
                     }
                 },
+                DataEvent::DownloadProgressed { progress } => {
+                    self.state.bytes_downloaded = progress.bytes_downloaded;
+                    self.state.is_download_in_progress = !progress.is_finished;
+                }
             }
         }
     }

@@ -22,6 +22,7 @@ pub fn search(context: &egui::Context, state: &mut UIState) {
                     .desired_width(f32::INFINITY)
                     .ui(ui)
                     .changed()
+                    && !state.search_term.is_empty()
                 {
                     state.is_search_in_progress = true;
                     state.dispatch_event(UserEvent::InitMoleculeSearch {
@@ -31,7 +32,7 @@ pub fn search(context: &egui::Context, state: &mut UIState) {
 
                 egui::Separator::default().spacing(6.0).ui(ui);
 
-                if state.is_search_in_progress {
+                if !state.search_term.is_empty() && state.is_search_in_progress {
                     ui.label("Searching...");
                     egui::Separator::default().spacing(3.0).ui(ui);
                 } else if state.search_results.is_empty() && !state.search_term.is_empty() {
@@ -52,13 +53,21 @@ pub fn search(context: &egui::Context, state: &mut UIState) {
                                         .frame(false),
                                 );
 
-                                if button.clicked() {
+                                if button.clicked() && !state.is_download_in_progress {
                                     clicked_result = Some(result.clone());
                                 }
 
                                 egui::Separator::default().spacing(3.0).ui(ui);
                             }
                         });
+                }
+
+                if state.is_download_in_progress {
+                    ui.label(format!(
+                        "Downloading.. {:.2} MB",
+                        state.bytes_downloaded as f64 / 1024. / 1024.
+                    ));
+                    egui::Separator::default().spacing(3.0).ui(ui);
                 }
 
                 if ui.button("Close").clicked() {
@@ -68,6 +77,8 @@ pub fn search(context: &egui::Context, state: &mut UIState) {
         });
 
     if let Some(assembly) = clicked_result {
+        state.bytes_downloaded = 0;
+        state.is_download_in_progress = true;
         state.dispatch_event(UserEvent::InitDownloadMolecule { assembly });
     }
 }
