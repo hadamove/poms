@@ -4,22 +4,17 @@ pub struct DownloadApiResponse {
     pub raw_data: Vec<u8>,
 }
 
+#[derive(Clone, Default)]
 pub struct PdbDownloadApi {
     client: reqwest::Client,
 }
 
 impl PdbDownloadApi {
-    pub fn new() -> Self {
-        PdbDownloadApi {
-            client: reqwest::Client::new(),
-        }
-    }
-
     pub async fn download_assembly(
         &self,
         assembly: &Assembly,
     ) -> anyhow::Result<DownloadApiResponse> {
-        let url = Self::forge_url(&assembly);
+        let url = Self::forge_url(assembly);
 
         let response = self
             .client

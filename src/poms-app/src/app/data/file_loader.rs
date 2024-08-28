@@ -34,14 +34,14 @@ pub struct FileLoader {
         mpsc::Sender<AsyncWorkResult>,
         mpsc::Receiver<AsyncWorkResult>,
     ),
+    download_api: PdbDownloadApi,
+    search_api: PdbSearchApi,
 }
 
 impl FileLoader {
     /// Creates a new instance of `FileLoader`.
     pub fn new() -> Self {
-        Self {
-            channel: mpsc::channel(),
-        }
+        Self::default()
     }
 
     /// Opens an async file dialog for selecting files without blocking the main thread.
@@ -49,7 +49,7 @@ impl FileLoader {
     /// The selected files are read and sent over a channel for processing.
     /// User may select multiple files, which are interpreted not as separate molecules but as frames (animation) of a single molecule.
     pub fn pick_files(&self) {
-        let dispatch = self.channel.0.clone();
+        let dispatch = self.data_channel.0.clone();
         execute(async move {
             let file_dialog = rfd::AsyncFileDialog::new().add_filter("PDB", &["pdb", "cif"]);
             if let Some(files) = file_dialog.pick_files().await {
@@ -76,9 +76,9 @@ impl FileLoader {
     /// Uses a minimal wrapper around the RCSB's public API to fetch the file content.
     /// Fetched files are returned to the main thread via a channel.
     pub fn download_file(&self, assembly: Assembly) {
-        let dispatch = self.channel.0.clone();
+        let dispatch = self.data_channel.0.clone();
+        let download_api = self.download_api.clone();
         execute(async move {
-            let download_api = PdbDownloadApi::new();
             if let Ok(response) = download_api.download_assembly(&assembly).await {
                 dispatch
                     .send(AsyncWorkResult::FilesReceived {
@@ -99,10 +99,10 @@ impl FileLoader {
             return;
         }
 
-        let dispatch = self.channel.0.clone();
+        let dispatch = self.data_channel.0.clone();
+        let search_api = self.search_api.clone();
         execute(async move {
-            let search_api = PdbSearchApi::new();
-            if let Ok(response) = search_api.fulltext_search(&query).await {
+            if let Ok(response) = search_api.fulltext_search_debounced(&query).await {
                 dispatch
                     .send(AsyncWorkResult::SearchResultsReceived {
                         results: response.result_set,
@@ -146,7 +146,11 @@ impl FileLoader {
 
 impl Default for FileLoader {
     fn default() -> Self {
-        Self::new()
+        Self {
+            data_channel: mpsc::channel(),
+            download_api: PdbDownloadApi::default(),
+            search_api: PdbSearchApi::default(),
+        }
     }
 }
 

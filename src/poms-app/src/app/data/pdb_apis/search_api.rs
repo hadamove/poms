@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use anyhow;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -16,21 +18,47 @@ pub struct SearchApiResponse {
     pub total_count: usize,
 }
 
+#[derive(Clone, Default)]
 pub struct PdbSearchApi {
     client: reqwest::Client,
+    /// Remember the last query value to debounce (e.g., to prevent rapid queries)
+    last_query_value: Arc<Mutex<Option<String>>>,
 }
 
 impl PdbSearchApi {
+    const DEBOUNCE_PERIOD_IN_SEC: f64 = 1.;
     const SEARCH_API_URL: &'static str = "https://search.rcsb.org/rcsbsearch/v2/query";
     const MAXIMUM_NUMBER_OF_MATCHES: usize = 20;
 
-    pub fn new() -> Self {
-        PdbSearchApi {
-            client: reqwest::Client::new(),
+    pub async fn fulltext_search_debounced(
+        &self,
+        value: &str,
+    ) -> anyhow::Result<SearchApiResponse> {
+        let value = value.to_string();
+        {
+            let mut last_query_value = self.last_query_value.lock().unwrap();
+            *last_query_value = Some(value.clone());
+        }
+
+        // Wait for the debounce period
+        std::thread::sleep(std::time::Duration::from_secs_f64(
+            Self::DEBOUNCE_PERIOD_IN_SEC,
+        ));
+
+        // After the delay, check if the query value is still the same
+        let should_execute = {
+            let last_query_value = self.last_query_value.lock().unwrap();
+            last_query_value.as_ref() == Some(&value)
+        };
+
+        if should_execute {
+            self.fulltext_search(&value).await
+        } else {
+            Err(anyhow::anyhow!("Query was debounced"))
         }
     }
 
-    pub async fn fulltext_search(&self, value: &str) -> anyhow::Result<SearchApiResponse> {
+    async fn fulltext_search(&self, value: &str) -> anyhow::Result<SearchApiResponse> {
         let generated_id = Self::make_uuid();
 
         let params = SearchApiRequest {
