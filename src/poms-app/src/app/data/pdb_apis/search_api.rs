@@ -91,6 +91,13 @@ impl PdbSearchApi {
             .await
             .map_err(anyhow::Error::new)?;
 
+        if response.status() == reqwest::StatusCode::NO_CONTENT {
+            return Ok(SearchApiResponse {
+                result_set: Vec::new(),
+                total_count: 0,
+            });
+        }
+
         response
             .json::<SearchApiResponse>()
             .await

@@ -34,6 +34,9 @@ pub fn search(context: &egui::Context, state: &mut UIState) {
                 if state.is_search_in_progress {
                     ui.label("Searching...");
                     egui::Separator::default().spacing(3.0).ui(ui);
+                } else if state.search_results.is_empty() && !state.search_term.is_empty() {
+                    ui.label("No results found.");
+                    egui::Separator::default().spacing(3.0).ui(ui);
                 } else {
                     egui::ScrollArea::vertical()
                         .max_height(250.)
