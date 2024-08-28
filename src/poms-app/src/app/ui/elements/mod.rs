@@ -7,4 +7,4 @@ pub mod settings;
 // Re-export the modules
 pub use self::{error::*, files::*, menu::*, search::*, settings::*};
 
-pub type UiElement = fn(&egui::Context, &mut super::UIState);
+pub type UiElement = fn(&mut egui::Context, &mut super::UIState);

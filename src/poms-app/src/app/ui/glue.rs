@@ -40,7 +40,7 @@ impl EguiWrapper {
         self.begin_frame();
 
         for &element in elements {
-            element(&self.egui_handle, state);
+            element(&mut self.egui_handle, state);
         }
 
         self.end_frame();

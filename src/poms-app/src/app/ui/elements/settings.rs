@@ -8,7 +8,7 @@ use crate::app::ui::{events::UserEvent, UIState};
 
 /// Component that displays settings window.
 /// Allows to change model parameters and toggle render passes.
-pub fn settings(context: &egui::Context, state: &mut UIState) {
+pub fn settings(context: &mut egui::Context, state: &mut UIState) {
     Window::new("Settings")
         .default_pos(Pos2::new(16.0, 36.0))
         .pivot(egui::Align2::LEFT_TOP)

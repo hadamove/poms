@@ -5,7 +5,7 @@ use crate::app::{
     ui::{events::UserEvent, state::UIState},
 };
 
-pub fn search(context: &egui::Context, state: &mut UIState) {
+pub fn search(context: &mut egui::Context, state: &mut UIState) {
     let mut clicked_result: Option<Assembly> = None;
 
     if !state.is_search_window_shown {
@@ -17,13 +17,19 @@ pub fn search(context: &egui::Context, state: &mut UIState) {
         .default_size([250., 100.])
         .show(context, |ui| {
             ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                if egui::TextEdit::singleline(&mut state.search_term)
+                let search_bar = egui::TextEdit::singleline(&mut state.search_term)
                     .hint_text("Search and download data from rcsb.org..")
                     .desired_width(f32::INFINITY)
-                    .ui(ui)
-                    .changed()
-                    && !state.search_term.is_empty()
-                {
+                    .ui(ui);
+
+                if state.is_search_first_time_rendered {
+                    context.memory_mut(|m| {
+                        m.request_focus(search_bar.id);
+                    });
+                    state.is_search_first_time_rendered = false;
+                }
+
+                if search_bar.changed() && !state.search_term.is_empty() {
                     state.is_search_in_progress = true;
                     state.dispatch_event(UserEvent::InitMoleculeSearch {
                         query: state.search_term.clone(),

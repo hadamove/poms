@@ -48,6 +48,8 @@ pub struct UIState {
     pub is_search_window_shown: bool,
     /// Flag that indicates if a search is currently in progress.
     pub is_search_in_progress: bool,
+    /// Flag used for forcing focus to the search bar.
+    pub is_search_first_time_rendered: bool,
 
     /// How many bytes have been downloaded so far.
     pub bytes_downloaded: usize,

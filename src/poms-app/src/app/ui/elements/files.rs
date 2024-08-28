@@ -2,7 +2,7 @@ use egui::Widget;
 
 use crate::app::ui::{events::UserEvent, state::UIState};
 
-pub fn file_menu(context: &egui::Context, state: &mut UIState) {
+pub fn file_menu(context: &mut egui::Context, state: &mut UIState) {
     let mut clicked_molecule: Option<usize> = None;
 
     let top_right = [context.screen_rect().width() - 16.0, 36.0];
@@ -44,6 +44,7 @@ pub fn file_menu(context: &egui::Context, state: &mut UIState) {
 
                 if ui.button("Search PDB...").clicked() {
                     state.is_search_window_shown = true;
+                    state.is_search_first_time_rendered = true;
                 }
             });
         });
