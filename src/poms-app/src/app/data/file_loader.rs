@@ -30,7 +30,7 @@ pub struct RawFile {
 /// different platforms, including the web where blocking the main thread is prohibited.
 /// Also blocking the main thread would cause the UI to freeze, which is bad UX.
 pub struct FileLoader {
-    channel: (
+    data_channel: (
         mpsc::Sender<AsyncWorkResult>,
         mpsc::Receiver<AsyncWorkResult>,
     ),
@@ -112,18 +112,21 @@ impl FileLoader {
         });
     }
 
-    /// Retrieves and parses files selected via the file dialog.
-    ///
-    /// Checks for received files, then attempts to parse them, returns a `FileResponse` indicating the result.
-    pub fn try_process_single_event(&mut self) -> Option<DataEvent> {
-        self.channel.1.try_recv().ok().map(|message| match message {
-            AsyncWorkResult::FilesReceived { files } => DataEvent::FilesParsed {
-                result: Self::parse_files(files),
-            },
-            AsyncWorkResult::SearchResultsReceived { results } => DataEvent::SearchResultsParsed {
-                result: Self::parse_search_results(results),
-            },
-        })
+    /// Drains the results of all asynchronous tasks and tries to parse them.
+    /// Returns a vector of parsed events.
+    pub fn collect_data_events(&mut self) -> Vec<DataEvent> {
+        std::iter::from_fn(|| self.data_channel.1.try_recv().ok())
+            .map(|message| match message {
+                AsyncWorkResult::FilesReceived { files } => DataEvent::FilesParsed {
+                    result: Self::parse_files(files),
+                },
+                AsyncWorkResult::SearchResultsReceived { results } => {
+                    DataEvent::SearchResultsParsed {
+                        result: Self::parse_search_results(results),
+                    }
+                }
+            })
+            .collect()
     }
 
     fn parse_search_results(results: Vec<String>) -> anyhow::Result<Vec<Assembly>> {

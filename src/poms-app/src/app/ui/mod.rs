@@ -85,29 +85,27 @@ impl UserInterface {
     }
 
     fn process_file_loader_events(&mut self) {
-        let Some(event) = self.file_loader.try_process_single_event() else {
-            return;
-        };
-
-        match event {
-            DataEvent::FilesParsed { result } => match result {
-                Ok(files) => self
-                    .state
-                    .dispatch_event(UserEvent::MoleculesParsed { molecules: files }),
-                Err(error) => self
-                    .state
-                    .open_error_message(format!("Parsing failed: {}", error)),
-            },
-            DataEvent::SearchResultsParsed { result } => match result {
-                Ok(search_results) => {
-                    self.state.search_results = search_results;
-                    self.state.is_search_in_progress = false;
-                }
-                Err(error) => {
-                    self.state.search_results = vec![];
-                    eprintln!("Search failed: {}", error);
-                }
-            },
+        for event in self.file_loader.collect_data_events() {
+            match event {
+                DataEvent::FilesParsed { result } => match result {
+                    Ok(files) => self
+                        .state
+                        .dispatch_event(UserEvent::MoleculesParsed { molecules: files }),
+                    Err(error) => self
+                        .state
+                        .open_error_message(format!("Parsing failed: {}", error)),
+                },
+                DataEvent::SearchResultsParsed { result } => match result {
+                    Ok(search_results) => {
+                        self.state.search_results = search_results;
+                        self.state.is_search_in_progress = false;
+                    }
+                    Err(error) => {
+                        self.state.search_results = vec![];
+                        eprintln!("Search failed: {}", error);
+                    }
+                },
+            }
         }
     }
 }

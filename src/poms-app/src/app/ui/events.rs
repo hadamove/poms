@@ -40,5 +40,3 @@ pub enum UserEvent {
     /// The files with molecules were successfully loaded and parsed.
     MoleculesParsed { molecules: Vec<ParsedMolecule> },
 }
-
-pub enum AsyncEvent {}
