@@ -14,6 +14,8 @@ pub struct MoleculeFileInfo {
     pub index: usize,
     /// Full path within the OS.
     pub path: String,
+    /// N.o. of atoms in the molecule parsed from the file.
+    pub number_of_atoms: usize,
 }
 
 /// Struct that holds current state of the UI.

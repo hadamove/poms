@@ -78,6 +78,7 @@ impl UserInterface {
             .map(|(i, file)| MoleculeFileInfo {
                 index: i,
                 path: file.filename.clone(),
+                number_of_atoms: file.atoms.data.len(),
             })
             .collect();
 

@@ -25,7 +25,7 @@ pub fn file_menu(context: &mut egui::Context, state: &mut UIState) {
                         [ui.available_width(), 16.0],
                         egui::Button::new(text)
                             .small()
-                            .shortcut_text(".")
+                            .shortcut_text(format!("{} atoms", file.number_of_atoms))
                             .frame(false),
                     );
 
