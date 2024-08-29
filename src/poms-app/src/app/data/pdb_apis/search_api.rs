@@ -28,7 +28,7 @@ pub struct PdbSearchApi {
 }
 
 impl PdbSearchApi {
-    const DEBOUNCE_PERIOD_IN_SEC: f64 = 1.;
+    const DEBOUNCE_PERIOD_IN_MS: u32 = 1_000;
     const SEARCH_API_URL: &'static str = "https://search.rcsb.org/rcsbsearch/v2/query";
     const MAXIMUM_NUMBER_OF_MATCHES: usize = 20;
 
@@ -44,9 +44,7 @@ impl PdbSearchApi {
         }
 
         // Wait for the debounce period
-        std::thread::sleep(std::time::Duration::from_secs_f64(
-            Self::DEBOUNCE_PERIOD_IN_SEC,
-        ));
+        platform_agnostic_sleep(Self::DEBOUNCE_PERIOD_IN_MS).await;
 
         // After the delay, check if the query value is still the same
         let should_execute = {
@@ -150,4 +148,14 @@ struct RequestOptions<'a> {
 struct Paginate {
     start: usize,
     rows: usize,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn platform_agnostic_sleep(duration_in_ms: u32) {
+    std::thread::sleep(std::time::Duration::from_millis(duration_in_ms as u64));
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn platform_agnostic_sleep(duration_in_ms: u32) {
+    gloo_timers::future::TimeoutFuture::new(duration_in_ms).await;
 }
