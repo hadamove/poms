@@ -215,6 +215,7 @@ impl App {
                 UserEvent::ChangeProbeRadius { probe_radius } => {
                     self.settings.probe_radius = probe_radius;
                     self.molecule_storage.on_probe_radius_changed(probe_radius);
+                    self.update_atoms_resource();
                     self.reset_compute_jobs();
                 }
                 UserEvent::ToggleAnimation => {
@@ -239,14 +240,11 @@ impl App {
     /// Handles changes necessary after different molecule was chosen to be displayed,
     /// updating the GPU resources, UI state, and setting the camera's focus to the new molecule.
     fn on_active_molecule_changed(&mut self) {
-        let active_molecule = self.molecule_storage.get_active();
+        self.update_atoms_resource();
 
-        self.camera
-            .set_target(calculate_center(&active_molecule.atoms.data));
-
-        self.resources
-            .atoms_resource
-            .update(&self.context.queue, &active_molecule.atoms);
+        self.camera.set_target(calculate_center(
+            &self.molecule_storage.get_active().atoms.data,
+        ));
 
         // Update the state of the UI
         self.ui.update_files_state(
@@ -270,5 +268,13 @@ impl App {
                 probe_radius: self.settings.probe_radius,
             },
         )
+    }
+
+    /// Updates the atoms resource when the molecule data changes.
+    fn update_atoms_resource(&mut self) {
+        let active_molecule = self.molecule_storage.get_active();
+        self.resources
+            .atoms_resource
+            .update(&self.context.queue, &active_molecule.atoms);
     }
 }
