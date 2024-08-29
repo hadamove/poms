@@ -7,7 +7,7 @@ pub mod state;
 use events::UserEvent;
 use winit::event::WindowEvent;
 
-use super::data::file_loader::{DataEvent, FileLoader};
+use super::data::file_loader::{AsyncWorkResult, FileLoader};
 use super::data::molecule_storage::MoleculeData;
 use crate::gpu_context::GpuContext;
 use state::{MoleculeFileInfo, UIState};
@@ -88,7 +88,7 @@ impl UserInterface {
     fn process_file_loader_events(&mut self) {
         for event in self.file_loader.collect_data_events() {
             match event {
-                DataEvent::FilesParsed { result } => match result {
+                AsyncWorkResult::FilesParsed { result: files } => match files {
                     Ok(files) => self
                         .state
                         .dispatch_event(UserEvent::MoleculesParsed { molecules: files }),
@@ -96,7 +96,7 @@ impl UserInterface {
                         .state
                         .open_error_message(format!("Parsing failed: {}", error)),
                 },
-                DataEvent::SearchResultsParsed { result } => match result {
+                AsyncWorkResult::SearchResultsParsed { result: results } => match results {
                     Ok(search_results) => {
                         self.state.search_results = search_results;
                         self.state.is_search_in_progress = false;
@@ -106,7 +106,7 @@ impl UserInterface {
                         eprintln!("Search failed: {}", error);
                     }
                 },
-                DataEvent::DownloadProgressed { progress } => {
+                AsyncWorkResult::DownloadProgressed { progress } => {
                     self.state.bytes_downloaded = progress.bytes_downloaded;
                     self.state.is_download_in_progress = !progress.is_finished;
                 }

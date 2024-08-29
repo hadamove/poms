@@ -3,6 +3,7 @@ use std::sync::mpsc;
 
 use super::Assembly;
 use crate::app::data::file_loader::{AsyncWorkResult, DownloadProgress, RawFile};
+use crate::app::data::molecule_parser::parse_multiple_files;
 
 #[derive(Clone, Default)]
 pub struct PdbDownloadApi {
@@ -39,13 +40,14 @@ impl PdbDownloadApi {
 
         Self::report_progress(&dispatch, bytes_downloaded, true);
 
+        let raw_file = RawFile {
+            name: assembly.to_string(),
+            content: data,
+        };
+        let parsed = parse_multiple_files(vec![raw_file]);
+
         dispatch
-            .send(AsyncWorkResult::FilesReceived {
-                files: vec![RawFile {
-                    name: assembly.to_string(),
-                    content: data,
-                }],
-            })
+            .send(AsyncWorkResult::FilesParsed { result: parsed })
             .ok();
 
         Ok(())

@@ -46,6 +46,14 @@ pub fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule
     })
 }
 
+/// A convenience function to parse multiple PDB or mmCIF files at once.
+pub fn parse_multiple_files(loaded_files: Vec<RawFile>) -> anyhow::Result<Vec<ParsedMolecule>> {
+    loaded_files
+        .into_iter()
+        .map(parse_atoms_from_pdb_file)
+        .collect::<anyhow::Result<Vec<ParsedMolecule>>>()
+}
+
 fn format_parse_errors(errors: &[pdbtbx::PDBError]) -> String {
     errors
         .iter()

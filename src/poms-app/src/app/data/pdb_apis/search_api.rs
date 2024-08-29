@@ -1,9 +1,11 @@
+use std::str::FromStr;
 use std::sync::{mpsc, Arc, Mutex};
 
 use anyhow;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::Assembly;
 use crate::app::data::file_loader::AsyncWorkResult;
 
 #[derive(Debug, Serialize)]
@@ -58,8 +60,8 @@ impl PdbSearchApi {
 
         let response = self.fulltext_search(&value).await?;
         dispatch
-            .send(AsyncWorkResult::SearchResultsReceived {
-                results: response.result_set,
+            .send(AsyncWorkResult::SearchResultsParsed {
+                result: Self::parse_search_results(response.result_set),
             })
             .ok();
 
@@ -114,6 +116,13 @@ impl PdbSearchApi {
 
     fn make_uuid() -> String {
         Uuid::new_v4().to_string().replace('-', "")
+    }
+
+    fn parse_search_results(results: Vec<String>) -> anyhow::Result<Vec<Assembly>> {
+        results
+            .into_iter()
+            .map(|result_str| Assembly::from_str(&result_str).map_err(anyhow::Error::msg))
+            .collect::<anyhow::Result<Vec<Assembly>>>()
     }
 }
 

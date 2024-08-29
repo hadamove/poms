@@ -1,7 +1,7 @@
-use std::{str::FromStr, sync::mpsc};
+use std::sync::mpsc;
 
 use super::{
-    molecule_parser::{parse_atoms_from_pdb_file, ParsedMolecule},
+    molecule_parser::{parse_multiple_files, ParsedMolecule},
     pdb_apis::{download_api::PdbDownloadApi, search_api::PdbSearchApi, Assembly},
 };
 
@@ -10,8 +10,7 @@ pub struct DownloadProgress {
     pub is_finished: bool,
 }
 
-/// Represents the possible outcomes when handling files.
-pub enum DataEvent {
+pub enum AsyncWorkResult {
     FilesParsed {
         result: anyhow::Result<Vec<ParsedMolecule>>,
     },
@@ -21,12 +20,6 @@ pub enum DataEvent {
     DownloadProgressed {
         progress: DownloadProgress,
     },
-}
-
-pub enum AsyncWorkResult {
-    FilesReceived { files: Vec<RawFile> },
-    SearchResultsReceived { results: Vec<String> },
-    DownloadProgressed { progress: DownloadProgress },
 }
 
 /// Holds the raw content of a loaded file.
@@ -72,9 +65,11 @@ impl FileLoader {
                     }))
                     .await;
 
+                let parsed_files = parse_multiple_files(loaded_files);
+
                 dispatch
-                    .send(AsyncWorkResult::FilesReceived {
-                        files: loaded_files,
+                    .send(AsyncWorkResult::FilesParsed {
+                        result: parsed_files,
                     })
                     .ok();
             }
@@ -102,38 +97,9 @@ impl FileLoader {
         });
     }
 
-    /// Drains the results of all asynchronous tasks and tries to parse them.
-    /// Returns a vector of parsed events.
-    pub fn collect_data_events(&mut self) -> Vec<DataEvent> {
-        std::iter::from_fn(|| self.data_channel.1.try_recv().ok())
-            .map(|message| match message {
-                AsyncWorkResult::FilesReceived { files } => DataEvent::FilesParsed {
-                    result: Self::parse_files(files),
-                },
-                AsyncWorkResult::SearchResultsReceived { results } => {
-                    DataEvent::SearchResultsParsed {
-                        result: Self::parse_search_results(results),
-                    }
-                }
-                AsyncWorkResult::DownloadProgressed { progress } => {
-                    DataEvent::DownloadProgressed { progress }
-                }
-            })
-            .collect()
-    }
-
-    fn parse_search_results(results: Vec<String>) -> anyhow::Result<Vec<Assembly>> {
-        results
-            .into_iter()
-            .map(|result_str| Assembly::from_str(&result_str).map_err(anyhow::Error::msg))
-            .collect::<anyhow::Result<Vec<Assembly>>>()
-    }
-
-    fn parse_files(loaded_files: Vec<RawFile>) -> anyhow::Result<Vec<ParsedMolecule>> {
-        loaded_files
-            .into_iter()
-            .map(parse_atoms_from_pdb_file)
-            .collect::<anyhow::Result<Vec<ParsedMolecule>>>()
+    /// Drains the results of all asynchronous tasks
+    pub fn collect_data_events(&mut self) -> Vec<AsyncWorkResult> {
+        std::iter::from_fn(|| self.data_channel.1.try_recv().ok()).collect()
     }
 }
 
