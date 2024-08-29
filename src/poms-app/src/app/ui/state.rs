@@ -1,4 +1,4 @@
-use crate::app::data::pdb_apis::Assembly;
+use crate::app::data::{file_loader::DownloadProgress, pdb_apis::Assembly};
 
 use super::events::UserEvent;
 
@@ -53,10 +53,8 @@ pub struct UIState {
     /// Flag used for forcing focus to the search bar.
     pub is_search_first_time_rendered: bool,
 
-    /// How many bytes have been downloaded so far.
-    pub bytes_downloaded: usize,
-    /// Flag that indicates if a download is currently in progress.
-    pub is_download_in_progress: bool,
+    /// Keeps track of the download status if there is one in progress.
+    pub download_progress: Option<DownloadProgress>,
 
     /// List of events that were dispatched by the UI.
     pub events: Vec<UserEvent>,

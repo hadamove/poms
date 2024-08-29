@@ -7,7 +7,7 @@ pub mod state;
 use events::UserEvent;
 use winit::event::WindowEvent;
 
-use super::data::file_loader::{AsyncWorkResult, FileLoader};
+use super::data::file_loader::{AsyncWorkResult, DownloadProgress, FileLoader};
 use super::data::molecule_storage::MoleculeData;
 use crate::gpu_context::GpuContext;
 use state::{MoleculeFileInfo, UIState};
@@ -107,8 +107,11 @@ impl UserInterface {
                     }
                 },
                 AsyncWorkResult::DownloadProgressed { progress } => {
-                    self.state.bytes_downloaded = progress.bytes_downloaded;
-                    self.state.is_download_in_progress = !progress.is_finished;
+                    self.state.download_progress = match progress {
+                        // Reset progress if it's already finished
+                        DownloadProgress::Finished => None,
+                        _ => Some(progress),
+                    };
                 }
             }
         }

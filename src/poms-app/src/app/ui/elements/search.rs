@@ -1,7 +1,7 @@
 use egui::{RichText, Widget, Window};
 
 use crate::app::{
-    data::pdb_apis::Assembly,
+    data::{file_loader::DownloadProgress, pdb_apis::Assembly},
     ui::{events::UserEvent, state::UIState},
 };
 
@@ -59,7 +59,7 @@ pub fn search(context: &mut egui::Context, state: &mut UIState) {
                                         .frame(false),
                                 );
 
-                                if button.clicked() && !state.is_download_in_progress {
+                                if button.clicked() && state.download_progress.is_none() {
                                     clicked_result = Some(result.clone());
                                 }
 
@@ -68,11 +68,16 @@ pub fn search(context: &mut egui::Context, state: &mut UIState) {
                         });
                 }
 
-                if state.is_download_in_progress {
+                if let Some(DownloadProgress::Downloading { bytes_downloaded }) =
+                    state.download_progress
+                {
                     ui.label(format!(
                         "Downloading.. {:.2} MB",
-                        state.bytes_downloaded as f64 / 1024. / 1024.
+                        bytes_downloaded as f64 / 1024. / 1024.
                     ));
+                    egui::Separator::default().spacing(3.0).ui(ui);
+                } else if let Some(DownloadProgress::Parsing) = state.download_progress {
+                    ui.label("Downloaded.. Parsing..");
                     egui::Separator::default().spacing(3.0).ui(ui);
                 }
 
@@ -83,8 +88,9 @@ pub fn search(context: &mut egui::Context, state: &mut UIState) {
         });
 
     if let Some(assembly) = clicked_result {
-        state.bytes_downloaded = 0;
-        state.is_download_in_progress = true;
+        state.download_progress = Some(DownloadProgress::Downloading {
+            bytes_downloaded: 0,
+        });
         state.dispatch_event(UserEvent::InitDownloadMolecule { assembly });
     }
 }

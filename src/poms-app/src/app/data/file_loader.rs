@@ -5,9 +5,10 @@ use super::{
     pdb_apis::{download_api::PdbDownloadApi, search_api::PdbSearchApi, Assembly},
 };
 
-pub struct DownloadProgress {
-    pub bytes_downloaded: usize,
-    pub is_finished: bool,
+pub enum DownloadProgress {
+    Downloading { bytes_downloaded: usize },
+    Parsing,
+    Finished,
 }
 
 pub enum AsyncWorkResult {

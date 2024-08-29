@@ -31,20 +31,26 @@ impl PdbDownloadApi {
         let mut stream = response.bytes_stream();
 
         while let Some(chunk) = stream.next().await {
-            Self::report_progress(&dispatch, bytes_downloaded, false);
+            Self::report_progress(
+                &dispatch,
+                DownloadProgress::Downloading { bytes_downloaded },
+            );
 
             let chunk = chunk.map_err(anyhow::Error::new)?;
             data.extend_from_slice(&chunk);
             bytes_downloaded += chunk.len();
         }
 
-        Self::report_progress(&dispatch, bytes_downloaded, true);
+        Self::report_progress(&dispatch, DownloadProgress::Parsing);
 
         let raw_file = RawFile {
             name: assembly.to_string(),
             content: data,
         };
+
         let parsed = parse_multiple_files(vec![raw_file]);
+
+        Self::report_progress(&dispatch, DownloadProgress::Finished);
 
         dispatch
             .send(AsyncWorkResult::FilesParsed { result: parsed })
@@ -60,18 +66,9 @@ impl PdbDownloadApi {
         )
     }
 
-    fn report_progress(
-        dispatch: &mpsc::Sender<AsyncWorkResult>,
-        bytes_downloaded: usize,
-        is_finished: bool,
-    ) {
+    fn report_progress(dispatch: &mpsc::Sender<AsyncWorkResult>, progress: DownloadProgress) {
         dispatch
-            .send(AsyncWorkResult::DownloadProgressed {
-                progress: DownloadProgress {
-                    bytes_downloaded,
-                    is_finished,
-                },
-            })
+            .send(AsyncWorkResult::DownloadProgressed { progress })
             .ok();
     }
 }
