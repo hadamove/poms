@@ -1,7 +1,8 @@
 use wgpu::util::DeviceExt;
 
 use crate::limits::{MAX_NUM_ATOMS, MAX_NUM_GRID_POINTS};
-use crate::models::{atom::AtomsWithLookup, grid::GridUniform};
+use crate::models::atom::{Atom, AtomsWithLookup};
+use crate::models::grid::GridUniform;
 
 /// Contains buffers with atoms data and lookup grid for neighbor atoms.
 pub struct AtomsWithLookupResource {
@@ -23,7 +24,7 @@ impl AtomsWithLookupResource {
     pub fn new(device: &wgpu::Device) -> Self {
         let atoms_data_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Sorted Atoms Buffer"),
-            contents: bytemuck::cast_slice(&[0u32; MAX_NUM_ATOMS]),
+            contents: bytemuck::cast_slice(&[0u32; MAX_NUM_ATOMS * std::mem::size_of::<Atom>()]),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
 

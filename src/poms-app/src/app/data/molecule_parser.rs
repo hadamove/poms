@@ -1,5 +1,6 @@
 use std::io::{BufReader, Cursor};
 
+use poms_common::limits::MAX_NUM_ATOMS;
 use poms_common::models::atom::Atom;
 
 use super::file_loader::RawFile;
@@ -30,6 +31,13 @@ pub fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule
             color: get_jmol_color(atom),
         })
         .collect::<Vec<_>>();
+
+    if atoms.len() > MAX_NUM_ATOMS {
+        return Err(anyhow::Error::msg(format!(
+            "Number of atoms in the file exceeds the limit ({}).",
+            MAX_NUM_ATOMS
+        )));
+    }
 
     Ok(ParsedMolecule {
         filename: file.name,
