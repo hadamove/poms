@@ -17,7 +17,7 @@ pub struct ParsedMolecule {
 pub fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule> {
     let buffer = BufReader::new(Cursor::new(&file.content));
     let (pdb, _) = pdbtbx::open_raw(buffer, pdbtbx::StrictnessLevel::Loose)
-        .map_err(|errors| anyhow::Error::msg(format!("{:?}", errors)))?;
+        .map_err(|errors| anyhow::Error::msg(format_parse_errors(&errors)))?;
 
     let atoms = pdb
         .atoms()
@@ -36,6 +36,14 @@ pub fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule
         header: pdb.identifier,
         atoms,
     })
+}
+
+fn format_parse_errors(errors: &[pdbtbx::PDBError]) -> String {
+    errors
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn get_vdw_radius(atom: &pdbtbx::Atom) -> f32 {
