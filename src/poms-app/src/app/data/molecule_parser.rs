@@ -1,21 +1,17 @@
 use std::io::{BufReader, Cursor};
 
+use super::RawFile;
 use poms_common::limits::MAX_NUM_ATOMS;
 use poms_common::models::atom::Atom;
 
-use super::file_loader::RawFile;
-
 /// A parsed molecule from a PDB or mmCIF file.
-pub struct ParsedMolecule {
-    pub filename: String,
-    /// The identifier as posed in the PDB Header or mmCIF entry.id.
-    pub header: Option<String>,
-    /// The atoms parsed from the file.
-    pub atoms: Vec<Atom>,
+pub(crate) struct ParsedMolecule {
+    pub(crate) filename: String,
+    pub(crate) atoms: Vec<Atom>,
 }
 
 /// Attempts to parse a PDB or mmCIF file as bytes into a [`ParsedMolecule`].
-pub fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule> {
+pub(crate) fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule> {
     let buffer = BufReader::new(Cursor::new(&file.content));
     let (pdb, _) = pdbtbx::open_raw(buffer, pdbtbx::StrictnessLevel::Loose)
         .map_err(|errors| anyhow::Error::msg(format_parse_errors(&errors)))?;
@@ -41,13 +37,14 @@ pub fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule
 
     Ok(ParsedMolecule {
         filename: file.name,
-        header: pdb.identifier,
         atoms,
     })
 }
 
 /// A convenience function to parse multiple PDB or mmCIF files at once.
-pub fn parse_multiple_files(loaded_files: Vec<RawFile>) -> anyhow::Result<Vec<ParsedMolecule>> {
+pub(crate) fn parse_multiple_files(
+    loaded_files: Vec<RawFile>,
+) -> anyhow::Result<Vec<ParsedMolecule>> {
     loaded_files
         .into_iter()
         .map(parse_atoms_from_pdb_file)
@@ -182,10 +179,9 @@ fn get_jmol_color(atom: &pdbtbx::Atom) -> [f32; 4] {
 }
 
 impl ParsedMolecule {
-    pub fn h2o_demo() -> Self {
+    pub(crate) fn h2o_demo() -> Self {
         Self {
             filename: "demo".to_string(),
-            header: Some("h2o".to_string()),
             atoms: vec![
                 // Oxygen
                 Atom {

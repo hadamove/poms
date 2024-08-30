@@ -1,17 +1,17 @@
 use futures::StreamExt;
 use std::sync::mpsc;
 
-use super::Assembly;
-use crate::app::data::file_loader::{AsyncWorkResult, DownloadProgress, RawFile};
+use crate::app::data::file_loader::{AsyncWorkResult, DownloadProgress};
 use crate::app::data::molecule_parser::parse_multiple_files;
+use crate::app::data::{Assembly, RawFile};
 
 #[derive(Clone, Default)]
-pub struct PdbDownloadApi {
+pub(crate) struct PdbDownloadApi {
     client: reqwest::Client,
 }
 
 impl PdbDownloadApi {
-    pub async fn download_assembly(
+    pub(crate) async fn download_assembly(
         &self,
         assembly: &Assembly,
         dispatch: mpsc::Sender<AsyncWorkResult>,

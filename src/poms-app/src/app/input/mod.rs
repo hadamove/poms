@@ -1,2 +1,2 @@
-pub mod camera_controller;
-pub mod mouse_input;
+pub(crate) mod camera_controller;
+pub(crate) mod mouse_input;

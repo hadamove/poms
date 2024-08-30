@@ -4,8 +4,8 @@ use super::{elements::UiElement, UIState};
 use crate::gpu_context::GpuContext;
 
 /// Serves as a glue between `winit`, `wgpu`, and `egui`, providing an abstraction used by the UI system.
-pub struct EguiWrapper {
-    pub egui_handle: egui::Context,
+pub(crate) struct EguiWrapper {
+    egui_handle: egui::Context,
     egui_winit_state: egui_winit::State,
     window: Arc<winit::window::Window>,
     renderer: egui_wgpu::Renderer,
@@ -14,7 +14,7 @@ pub struct EguiWrapper {
 
 impl EguiWrapper {
     /// Creates a new `EguiWrapper` using the provided `GpuContext`.
-    pub fn new(context: &GpuContext) -> Self {
+    pub(crate) fn new(context: &GpuContext) -> Self {
         let egui_handle = egui::Context::default();
         let egui_winit_state = egui_winit::State::new(
             egui_handle.clone(),
@@ -36,7 +36,7 @@ impl EguiWrapper {
 
     /// Adds UI elements to the current frame, processing their logic and preparing them for rendering.
     /// Call this method before calling `render`.
-    pub fn add_elements(&mut self, state: &mut UIState, elements: &[UiElement]) {
+    pub(crate) fn add_elements(&mut self, state: &mut UIState, elements: &[UiElement]) {
         self.begin_frame();
 
         for &element in elements {
@@ -47,14 +47,14 @@ impl EguiWrapper {
     }
 
     /// Handles window events, forwarding them to `egui`. Returns `true` if the event was consumed.
-    pub fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
+    pub(crate) fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
         self.egui_winit_state
             .on_window_event(&self.window, event)
             .consumed
     }
 
     /// Renders the current UI frame to the given texture view, using the provided GPU context.
-    pub fn render(
+    pub(crate) fn render(
         &mut self,
         context: &GpuContext,
         view: &wgpu::TextureView,

@@ -5,7 +5,7 @@ use crate::app::ui::{events::UserEvent, state::UIState};
 
 /// Component that displays the menu bar.
 /// Contains buttons for opening files and changing visual theme.
-pub fn menu_bar(context: &mut egui::Context, state: &mut UIState) {
+pub(crate) fn menu_bar(context: &mut egui::Context, state: &mut UIState) {
     TopBottomPanel::top("menu_bar").show(context, |ui| {
         menu::bar(ui, |ui| {
             // Visual theme toggle

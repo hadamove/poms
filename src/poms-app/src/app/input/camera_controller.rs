@@ -6,17 +6,17 @@ use super::mouse_input::MouseInput;
 
 /// A typical ArcBall camera controller, reacts to mouse input to rotate and zoom the camera.
 #[derive(Debug)]
-pub struct CameraController {
+pub(crate) struct CameraController {
     /// The Z-axis offset of the camera from the target.
-    pub offset: f32,
+    pub(crate) offset: f32,
     /// The position the camera is looking at.
-    pub target: Point3<f32>,
+    pub(crate) target: Point3<f32>,
     /// The current position of the camera.
-    pub position: Point3<f32>,
+    pub(crate) position: Point3<f32>,
     /// The current screen size. Used for calculating the aspect ratio of the camera.
-    pub screen_size: (u32, u32),
+    pub(crate) screen_size: (u32, u32),
     /// The view matrix of the camera, used for rendering.
-    pub view_matrix: Matrix4<f32>,
+    pub(crate) view_matrix: Matrix4<f32>,
 }
 
 impl CameraController {
@@ -36,7 +36,7 @@ impl CameraController {
     );
 
     /// Creates a new `CameraController` based on the given surface configuration.
-    pub fn from_config(config: &wgpu::SurfaceConfiguration) -> Self {
+    pub(crate) fn from_config(config: &wgpu::SurfaceConfiguration) -> Self {
         Self {
             offset: Self::INITIAL_OFFSET,
             target: Point3::new(0.0, 0.0, 0.0),
@@ -47,18 +47,18 @@ impl CameraController {
     }
 
     /// Returns the current direction the camera is looking at.
-    pub fn look_direction(&self) -> Vector3<f32> {
+    pub(crate) fn look_direction(&self) -> Vector3<f32> {
         (self.position - self.target).normalize()
     }
 
     /// Generates and returns the projection matrix based on the current camera settings.
-    pub fn projection_matrix(&self) -> Matrix4<f32> {
+    pub(crate) fn projection_matrix(&self) -> Matrix4<f32> {
         Self::OPENGL_TO_WGPU_MATRIX
             * cgmath::perspective(Rad(Self::FOVY), self.get_aspect(), Self::ZNEAR, Self::ZFAR)
     }
 
     /// Updates the target position the camera is focusing on, adjusting the camera's position accordingly.
-    pub fn set_target(&mut self, target: Point3<f32>) {
+    pub(crate) fn set_target(&mut self, target: Point3<f32>) {
         if target.distance(self.target) > Self::DISTANCE_THRESHOLD {
             self.target = target;
             self.set_position(target + Vector3::unit_z() * self.offset);
@@ -66,12 +66,12 @@ impl CameraController {
     }
 
     /// Updates the camera's screen size based on the new surface configuration.
-    pub fn resize(&mut self, config: &wgpu::SurfaceConfiguration) {
+    pub(crate) fn resize(&mut self, config: &wgpu::SurfaceConfiguration) {
         self.screen_size = (config.width, config.height);
     }
 
     /// Updates the camera's position based on the user's mouse input. Call this every frame.
-    pub fn update(&mut self, input: &MouseInput) {
+    pub(crate) fn update(&mut self, input: &MouseInput) {
         if input.mouse_pressed {
             self.update_on_mouse_drag(input.mouse_delta);
         }

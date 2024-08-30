@@ -19,9 +19,9 @@ use ui::{events::UserEvent, state::UIState, UserInterface};
 
 /// Settings for the application, controlling resolution and probe radius.
 struct AppSettings {
-    pub init_resolution: u32,
-    pub target_resolution: u32,
-    pub probe_radius: f32,
+    init_resolution: u32,
+    target_resolution: u32,
+    probe_radius: f32,
 }
 
 impl Default for AppSettings {
@@ -35,7 +35,7 @@ impl Default for AppSettings {
 }
 
 /// Represents the main application, managing rendering, compute jobs, and user interactions.
-pub struct App {
+pub(crate) struct App {
     context: GpuContext,
     settings: AppSettings,
 
@@ -53,7 +53,7 @@ pub struct App {
 
 impl App {
     /// Initializes the application with default settings and sets up rendering and compute jobs.
-    pub fn new(context: GpuContext) -> Self {
+    pub(crate) fn new(context: GpuContext) -> Self {
         let settings = AppSettings::default();
 
         let initial_molecule = ParsedMolecule::h2o_demo();
@@ -111,7 +111,7 @@ impl App {
 
     /// Handles the rendering of each frame, processing user interactions,
     /// updating buffers, and submitting commands to the GPU.
-    pub fn redraw(&mut self) {
+    pub(crate) fn redraw(&mut self) {
         self.update_buffers();
 
         let user_events = self.ui.process_frame();
@@ -140,7 +140,7 @@ impl App {
     }
 
     /// Resizes the application when the window size changes, updating the renderer and camera.
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.context.resize(new_size);
             self.renderer
@@ -150,12 +150,12 @@ impl App {
     }
 
     /// Handles window events like resizing or input, returning true if the event was consumed.
-    pub fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
+    pub(crate) fn handle_window_event(&mut self, event: &winit::event::WindowEvent) -> bool {
         self.ui.handle_window_event(event) || self.mouse.handle_window_event(event)
     }
 
     /// Handles device events (e.g., mouse motion) that are not tied to a specific window.
-    pub fn handle_device_event(&mut self, event: &winit::event::DeviceEvent) {
+    pub(crate) fn handle_device_event(&mut self, event: &winit::event::DeviceEvent) {
         self.mouse.handle_device_event(event);
     }
 

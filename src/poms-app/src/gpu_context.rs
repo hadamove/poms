@@ -3,22 +3,22 @@ use std::sync::Arc;
 use winit::window::Window;
 
 /// Represents all the necessary low-level `wgpu` stuff used by the application.
-pub struct GpuContext {
+pub(crate) struct GpuContext {
     /// The window used by the application.
     /// `std::sync::Arc` is used to allow sharing the reference to the window with user interface, see `EguiWrapper` for more details.
-    pub window: Arc<Window>,
+    pub(crate) window: Arc<Window>,
     /// A platform-specific surface onto which the application renders.
-    pub surface: wgpu::Surface<'static>,
+    pub(crate) surface: wgpu::Surface<'static>,
     /// Connection to the underlying GPU, used to create resources.
-    pub device: wgpu::Device,
+    pub(crate) device: wgpu::Device,
     /// A queue used to submit commands to the GPU.
-    pub queue: wgpu::Queue,
+    pub(crate) queue: wgpu::Queue,
     /// Configuration of the surface.
-    pub config: wgpu::SurfaceConfiguration,
+    pub(crate) config: wgpu::SurfaceConfiguration,
 }
 
 impl GpuContext {
-    pub async fn initialize(window: Arc<Window>) -> Self {
+    pub(crate) async fn initialize(window: Arc<Window>) -> Self {
         #[cfg(feature = "vulkan")]
         let backends = wgpu::Backends::all();
 
@@ -86,14 +86,14 @@ impl GpuContext {
     }
 
     /// Resizes the surface to the given size. This method should be called when the window is resized in the main event loop.
-    pub fn resize(&mut self, size: winit::dpi::PhysicalSize<u32>) {
+    pub(crate) fn resize(&mut self, size: winit::dpi::PhysicalSize<u32>) {
         self.config.width = size.width;
         self.config.height = size.height;
         self.surface.configure(&self.device, &self.config);
     }
 
     /// Creates a new command encoder from `GpuContext::device` and returns it. This is just a shorthand method to avoid boilerplate code.
-    pub fn get_command_encoder(&self) -> wgpu::CommandEncoder {
+    pub(crate) fn get_command_encoder(&self) -> wgpu::CommandEncoder {
         self.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Command Encoder"),

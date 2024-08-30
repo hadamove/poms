@@ -5,10 +5,10 @@ use winit::{
 
 /// Represents mouse input, including scroll, button presses, and cursor movement.
 #[derive(Debug, Default)]
-pub struct MouseInput {
-    pub scroll: f32,
-    pub mouse_pressed: bool,
-    pub mouse_delta: (f64, f64),
+pub(crate) struct MouseInput {
+    pub(crate) scroll: f32,
+    pub(crate) mouse_pressed: bool,
+    pub(crate) mouse_delta: (f64, f64),
 }
 
 impl MouseInput {
@@ -17,14 +17,14 @@ impl MouseInput {
 
     /// Instead of resetting the mouse input back to zero each frame,
     /// slowly decay the input values to zero to allow for smoother camera movement free of jitter.
-    pub fn decay_input(&mut self) {
+    pub(crate) fn decay_input(&mut self) {
         let smooth = 0.8;
         self.scroll *= smooth as f32;
         self.mouse_delta = (self.mouse_delta.0 * smooth, self.mouse_delta.1 * smooth);
     }
 
     /// Handles window-related events, such as mouse input and scrolling.
-    pub fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
+    pub(crate) fn handle_window_event(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::MouseWheel { delta, .. } => self.process_scroll(delta),
             // Updates mouse pressed state when the left mouse button is pressed/released
@@ -46,7 +46,7 @@ impl MouseInput {
     /// Using `WindowEvent` for camera rotation is not ideal because `WindowEvent::CursorMoved`
     /// is influenced by the OS, including cursor acceleration and screen boundaries, which
     /// can lead to inconsistent and less precise camera movements.
-    pub fn handle_device_event(&mut self, event: &winit::event::DeviceEvent) {
+    pub(crate) fn handle_device_event(&mut self, event: &winit::event::DeviceEvent) {
         if let winit::event::DeviceEvent::MouseMotion { delta } = event {
             // Apply rotation speed scaling to raw mouse movement for camera control
             self.mouse_delta = (

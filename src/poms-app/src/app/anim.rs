@@ -4,12 +4,12 @@ use poms_common::limits::{MAX_ANIMATION_SPEED, MIN_ANIMATION_SPEED};
 ///
 /// The user may select to upload multiple files at once, in which case the application will
 /// periodically switch between rendering them (if the animation is active).
-pub struct AnimationController {
-    pub is_active: bool,
+pub(crate) struct AnimationController {
+    pub(crate) is_active: bool,
     /// The speed of the animation. The higher the value, the slower the animation.
-    pub speed: u32,
+    pub(crate) speed: u32,
     /// The current tick count. Each render frame increments this value. Do not confuse with animation frames.
-    pub tick_count: u32,
+    tick_count: u32,
 }
 
 const DEFAULT_ANIMATION_SPEED: u32 = 5;
@@ -37,7 +37,7 @@ impl AnimationController {
     /// Increments the tick count and returns `true` if the next frame is due.
     ///
     /// We need `TICKS_PER_ANIMATION_FRAME / self.speed` render frames (ticks) to advance to the next animation frame.
-    pub fn advance_tick(&mut self) -> bool {
+    pub(crate) fn advance_tick(&mut self) -> bool {
         const TICKS_PER_ANIMATION_FRAME: u32 = 40;
         if self.is_active {
             self.tick_count += 1;

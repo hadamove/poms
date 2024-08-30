@@ -1,12 +1,11 @@
 use std::str::FromStr;
 use std::sync::{mpsc, Arc, Mutex};
 
-use anyhow;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::Assembly;
 use crate::app::data::file_loader::AsyncWorkResult;
+use crate::app::data::Assembly;
 
 #[derive(Debug, Serialize)]
 struct SearchApiRequest<'a> {
@@ -17,13 +16,12 @@ struct SearchApiRequest<'a> {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct SearchApiResponse {
-    pub result_set: Vec<String>,
-    pub total_count: usize,
+struct SearchApiResponse {
+    result_set: Vec<String>,
 }
 
 #[derive(Clone, Default)]
-pub struct PdbSearchApi {
+pub(crate) struct PdbSearchApi {
     client: reqwest::Client,
     /// Remember the last query value to debounce (e.g., to prevent rapid queries)
     last_query_value: Arc<Mutex<Option<String>>>,
@@ -34,7 +32,7 @@ impl PdbSearchApi {
     const SEARCH_API_URL: &'static str = "https://search.rcsb.org/rcsbsearch/v2/query";
     const MAXIMUM_NUMBER_OF_MATCHES: usize = 20;
 
-    pub async fn fulltext_search_debounced(
+    pub(crate) async fn fulltext_search_debounced(
         &self,
         value: &str,
         dispatch: mpsc::Sender<AsyncWorkResult>,
@@ -104,7 +102,6 @@ impl PdbSearchApi {
         if response.status() == reqwest::StatusCode::NO_CONTENT {
             return Ok(SearchApiResponse {
                 result_set: Vec::new(),
-                total_count: 0,
             });
         }
 

@@ -1,11 +1,11 @@
 use egui::{RichText, Widget, Window};
 
 use crate::app::{
-    data::{file_loader::DownloadProgress, pdb_apis::Assembly},
+    data::{file_loader::DownloadProgress, Assembly},
     ui::{events::UserEvent, state::UIState},
 };
 
-pub fn search(context: &mut egui::Context, state: &mut UIState) {
+pub(crate) fn search(context: &mut egui::Context, state: &mut UIState) {
     let mut clicked_result: Option<Assembly> = None;
 
     if !state.is_search_window_shown {

@@ -2,7 +2,7 @@ use egui::Widget;
 
 use crate::app::ui::{events::UserEvent, state::UIState};
 
-pub fn file_menu(context: &mut egui::Context, state: &mut UIState) {
+pub(crate) fn file_menu(context: &mut egui::Context, state: &mut UIState) {
     let mut clicked_molecule: Option<usize> = None;
 
     let top_right = [context.screen_rect().width() - 16.0, 36.0];

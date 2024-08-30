@@ -1,9 +1,9 @@
 use crate::app::data::molecule_parser::ParsedMolecule;
-use crate::app::data::pdb_apis::Assembly;
+use crate::app::data::Assembly;
 use crate::app::theme::ColorTheme;
 
 /// Represents an event that is triggered by the user interacting with the UI.
-pub enum UserEvent {
+pub(crate) enum UserEvent {
     /// User clicks on a file in the file menu.
     ChangeActiveMolecule { index: usize },
 

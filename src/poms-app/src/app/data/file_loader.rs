@@ -1,17 +1,16 @@
 use std::sync::mpsc;
 
-use super::{
-    molecule_parser::{parse_multiple_files, ParsedMolecule},
-    pdb_apis::{download_api::PdbDownloadApi, search_api::PdbSearchApi, Assembly},
-};
+use super::molecule_parser::{parse_multiple_files, ParsedMolecule};
+use super::pdb_apis::{download_api::PdbDownloadApi, search_api::PdbSearchApi};
+use super::{Assembly, RawFile};
 
-pub enum DownloadProgress {
+pub(crate) enum DownloadProgress {
     Downloading { bytes_downloaded: usize },
     Parsing,
     Finished,
 }
 
-pub enum AsyncWorkResult {
+pub(crate) enum AsyncWorkResult {
     FilesParsed {
         result: anyhow::Result<Vec<ParsedMolecule>>,
     },
@@ -23,16 +22,10 @@ pub enum AsyncWorkResult {
     },
 }
 
-/// Holds the raw content of a loaded file.
-pub struct RawFile {
-    pub name: String,
-    pub content: Vec<u8>,
-}
-
 /// Asynchronously loads and downloads files. This design ensures compatibility across
 /// different platforms, including the web where blocking the main thread is prohibited.
 /// Also blocking the main thread would cause the UI to freeze, which is bad UX.
-pub struct FileLoader {
+pub(crate) struct FileLoader {
     data_channel: (
         mpsc::Sender<AsyncWorkResult>,
         mpsc::Receiver<AsyncWorkResult>,
@@ -43,7 +36,7 @@ pub struct FileLoader {
 
 impl FileLoader {
     /// Creates a new instance of `FileLoader`.
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self::default()
     }
 
@@ -51,7 +44,7 @@ impl FileLoader {
     ///
     /// The selected files are read and sent over a channel for processing.
     /// User may select multiple files, which are interpreted not as separate molecules but as frames (animation) of a single molecule.
-    pub fn pick_files(&self) {
+    pub(crate) fn pick_files(&self) {
         let dispatch = self.data_channel.0.clone();
         execute(async move {
             let file_dialog = rfd::AsyncFileDialog::new().add_filter("PDB", &["pdb", "cif"]);
@@ -80,7 +73,7 @@ impl FileLoader {
     /// Downloads a file on an asynchronous basis using the provided `Assembly` object used to identify the file to download.
     /// Uses a minimal wrapper around the RCSB's public API to fetch the file content.
     /// Fetched files are returned to the main thread via a channel.
-    pub fn download_file(&self, assembly: Assembly) {
+    pub(crate) fn download_file(&self, assembly: Assembly) {
         let dispatch = self.data_channel.0.clone();
         let download_api = self.download_api.clone();
         execute(async move {
@@ -90,7 +83,7 @@ impl FileLoader {
 
     /// Initializes an asychronous task that does full-text search for PDB files using the RCSB's public API.
     /// Fetched results are returned to the main thread via a channel.
-    pub fn search_pdb_files(&self, query: String) {
+    pub(crate) fn search_pdb_files(&self, query: String) {
         let dispatch = self.data_channel.0.clone();
         let search_api = self.search_api.clone();
         execute(async move {
@@ -99,7 +92,7 @@ impl FileLoader {
     }
 
     /// Drains the results of all asynchronous tasks
-    pub fn collect_data_events(&mut self) -> Vec<AsyncWorkResult> {
+    pub(crate) fn collect_data_events(&mut self) -> Vec<AsyncWorkResult> {
         std::iter::from_fn(|| self.data_channel.1.try_recv().ok()).collect()
     }
 }

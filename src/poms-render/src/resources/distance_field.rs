@@ -69,11 +69,6 @@ impl DistanceFieldRender {
         }
     }
 
-    /// Updates the grid buffer with the new grid data.
-    pub fn update_grid(&self, queue: &wgpu::Queue, grid: &GridUniform) {
-        queue.write_buffer(&self.grid_buffer, 0, bytemuck::cast_slice(&[*grid]));
-    }
-
     const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
         wgpu::BindGroupLayoutDescriptor {
             entries: &[

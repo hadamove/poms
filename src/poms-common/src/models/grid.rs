@@ -9,7 +9,7 @@ pub struct GridUniform {
     pub origin: [f32; 4],
     /// Number of grid points in each direction.
     pub resolution: u32,
-    ///
+    /// The offset between two grid points in each direction.
     pub spacing: f32,
     /// Probe radius associated with the grid.
     pub probe_radius: f32,
@@ -18,6 +18,7 @@ pub struct GridUniform {
 }
 
 impl GridUniform {
+    /// Changes the resolution of the grid and adjusts the spacing accordingly.
     pub fn change_resolution(&mut self, new_resolution: u32) {
         let size = self.resolution as f32 * self.spacing;
         self.resolution = new_resolution;

@@ -1,8 +1,7 @@
-pub mod events;
-
 mod elements;
+pub(crate) mod events;
 mod glue;
-pub mod state;
+pub(crate) mod state;
 
 use events::UserEvent;
 use winit::event::WindowEvent;
@@ -13,9 +12,9 @@ use crate::gpu_context::GpuContext;
 use state::{MoleculeFileInfo, UIState};
 
 /// Primary struct for managing and rendering the application's UI and I/O.
-pub struct UserInterface {
+pub(crate) struct UserInterface {
     /// An abstraction for loading files from the user's filesystem.
-    pub file_loader: FileLoader,
+    pub(crate) file_loader: FileLoader,
     /// Holds the state of interactive elements (e.g. buttons, sliders) and user interactions.
     state: UIState,
     /// A thin wrapper around the `egui` library, providing an abstraction for the UI system.
@@ -24,7 +23,7 @@ pub struct UserInterface {
 
 impl UserInterface {
     /// Creates a new `UserInterface` using the provided `GpuContext`.
-    pub fn new(context: &GpuContext, initial_state: UIState) -> Self {
+    pub(crate) fn new(context: &GpuContext, initial_state: UIState) -> Self {
         let egui_wrapper = glue::EguiWrapper::new(context);
 
         Self {
@@ -37,7 +36,7 @@ impl UserInterface {
     /// Processes a single UI frame, updating all registered UI elements and handling file loader events.
     /// The method also gathers and returns a list of events that were generated during the frame,
     /// which can be used to trigger further application logic.
-    pub fn process_frame(&mut self) -> Vec<UserEvent> {
+    pub(crate) fn process_frame(&mut self) -> Vec<UserEvent> {
         self.egui_wrapper.add_elements(
             &mut self.state,
             &[
@@ -56,7 +55,7 @@ impl UserInterface {
 
     /// Renders the current UI frame to the specified texture view.
     /// Call this method after processing the frame using `process_frame`.
-    pub fn render(
+    pub(crate) fn render(
         &mut self,
         context: &GpuContext,
         view: &wgpu::TextureView,
@@ -66,12 +65,16 @@ impl UserInterface {
     }
 
     /// Handles a window event, routing them to the `egui` wrapper. Returns `true` if the event was consumed.
-    pub fn handle_window_event(&mut self, window_event: &WindowEvent) -> bool {
+    pub(crate) fn handle_window_event(&mut self, window_event: &WindowEvent) -> bool {
         self.egui_wrapper.handle_window_event(window_event)
     }
 
     /// Updates the state of loaded files and the active file index.
-    pub fn update_files_state(&mut self, molecule_files: &[MoleculeData], active_index: usize) {
+    pub(crate) fn update_files_state(
+        &mut self,
+        molecule_files: &[MoleculeData],
+        active_index: usize,
+    ) {
         self.state.files_loaded = molecule_files
             .iter()
             .enumerate()

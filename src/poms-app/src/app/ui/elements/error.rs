@@ -5,7 +5,7 @@ use egui::{Align, Layout, Window};
 use crate::app::ui::state::UIState;
 
 /// Component that displays error messages and allows to close them.
-pub fn error_messages(context: &mut egui::Context, state: &mut UIState) {
+pub(crate) fn error_messages(context: &mut egui::Context, state: &mut UIState) {
     let mut closed_errors = HashSet::new();
     for error in &state.error_messages {
         Window::new("Error")

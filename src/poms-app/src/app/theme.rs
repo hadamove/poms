@@ -1,4 +1,4 @@
-pub enum ColorTheme {
+pub(crate) enum ColorTheme {
     Light,
     Dark,
 }

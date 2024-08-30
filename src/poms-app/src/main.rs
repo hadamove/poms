@@ -66,7 +66,7 @@ mod wasm {
     use winit::platform::web::WindowExtWebSys;
     use winit::window::Window;
 
-    pub fn init_browser_window(window: &Window) {
+    pub(crate) fn init_browser_window(window: &Window) {
         // Log detailed error info to browser's dev console
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
         wasm_logger::init(wasm_logger::Config::default());
@@ -86,7 +86,7 @@ mod wasm {
             .expect("Failed to append canvas to body");
     }
 
-    pub fn resize_app_if_canvas_changed(window: &Window, app: &mut App) {
+    pub(crate) fn resize_app_if_canvas_changed(window: &Window, app: &mut App) {
         let canvas = window.canvas().unwrap();
         let (width, height) = (canvas.client_width(), canvas.client_height());
 
