@@ -9,7 +9,7 @@ use poms_common::limits::{
 };
 use poms_common::{models::atom::calculate_center, resources::CommonResources};
 use poms_compute::{ComputeJobs, ComputeParameters};
-use poms_render::{RenderJobs, RenderParameters};
+use poms_render::{PostprocessSettings, RenderJobs, RenderParameters};
 
 use super::gpu_context::GpuContext;
 use anim::AnimationController;
@@ -62,6 +62,7 @@ impl App {
 
         let render_spacefill = true;
         let render_molecular_surface = false;
+        let postprocess_settings = PostprocessSettings::default();
         let animation = AnimationController::default();
 
         App {
@@ -80,8 +81,10 @@ impl App {
                 RenderParameters {
                     common_resources: &resources,
                     surface_config: &context.config,
+                    queue: &context.queue,
                     render_spacefill,
                     render_molecular_surface,
+                    postprocess_settings,
                     clear_color: wgpu::Color::BLACK,
                 },
             ),
@@ -123,10 +126,12 @@ impl App {
             .execute(&mut encoder, &self.context.device, &self.resources);
 
         let output_texture = self.context.surface.get_current_texture().unwrap();
-        let view = output_texture.texture.create_view(&Default::default());
+        let output_texture_view = output_texture.texture.create_view(&Default::default());
 
-        self.renderer.render(&view, &mut encoder, &self.resources);
-        self.ui.render(&self.context, &view, &mut encoder);
+        self.renderer
+            .render(&output_texture_view, &mut encoder, &self.resources);
+        self.ui
+            .render(&self.context, &output_texture_view, &mut encoder);
 
         self.context.queue.submit(Some(encoder.finish()));
 
@@ -159,7 +164,6 @@ impl App {
         self.mouse.handle_device_event(event);
     }
 
-    /// Updates various buffers before rendering, including camera and lighting information.
     fn update_buffers(&mut self) {
         self.camera.update(&self.mouse);
         self.mouse.decay_input();
@@ -188,13 +192,16 @@ impl App {
         for event in ui_events {
             match event {
                 UserEvent::ChangeRenderMolecularSurface { is_enabled } => {
-                    self.renderer.toggle_molecular_surface(is_enabled);
+                    self.renderer.toggle_molecular_surface_pass(is_enabled);
                 }
                 UserEvent::ChangeRenderSpacefill { is_enabled } => {
-                    self.renderer.toggle_spacefill(is_enabled);
+                    self.renderer.toggle_spacefill_pass(is_enabled);
+                }
+                UserEvent::UpdatePostprocessSettings { settings } => {
+                    self.renderer.update_postprocess_settings(settings);
                 }
                 UserEvent::ToggleTheme { theme } => {
-                    self.renderer.change_clear_color(match theme {
+                    self.renderer.update_clear_color(match theme {
                         theme::ColorTheme::Dark => wgpu::Color::BLACK,
                         theme::ColorTheme::Light => wgpu::Color::WHITE,
                     });

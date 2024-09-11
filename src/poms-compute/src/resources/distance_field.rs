@@ -1,4 +1,5 @@
-use poms_common::{models::grid::GridUniform, resources::df_texture::create_distance_field_texture};
+use poms_common::models::grid::GridUniform;
+use poms_common::resources::df_texture::{create_distance_field_texture, DF_TEXTURE_FORMAT};
 use wgpu::util::DeviceExt;
 
 /// The signed distance field produced by the probe and refinement steps.
@@ -74,7 +75,7 @@ impl DistanceFieldCompute {
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::WriteOnly,
-                        format: wgpu::TextureFormat::Rgba16Float,
+                        format: DF_TEXTURE_FORMAT,
                         view_dimension: wgpu::TextureViewDimension::D3,
                     },
                     count: None,

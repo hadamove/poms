@@ -6,7 +6,7 @@ use wgpu::util::DeviceExt;
 /// The signed distance field that is used for rendering of the molecular surface using raymarching.
 /// Each voxel in the distance field is a signed distance to the nearest surface.
 /// The distance field can either be provided externally or generated using the `poms-compute` crate.
-pub struct DistanceFieldRender {
+pub struct DistanceField {
     pub grid_buffer: wgpu::Buffer,
     pub texture: wgpu::Texture,
 
@@ -14,7 +14,7 @@ pub struct DistanceFieldRender {
     pub bind_group: wgpu::BindGroup,
 }
 
-impl DistanceFieldRender {
+impl DistanceField {
     /// Creates a new instance of `DistanceFieldRender` with a new distance field texture.
     /// The resolution, origin, and scale of the grid are provided in the `GridUniform` struct.
     pub fn new(device: &wgpu::Device, grid: GridUniform) -> Self {

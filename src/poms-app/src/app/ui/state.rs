@@ -1,6 +1,7 @@
+use super::events::UserEvent;
 use crate::app::data::{file_loader::DownloadProgress, Assembly};
 
-use super::events::UserEvent;
+use poms_render::PostprocessSettings;
 
 /// Struct that represents an error message that should be displayed to the user.
 pub(crate) struct ErrorMessage {
@@ -30,6 +31,9 @@ pub(crate) struct UIState {
     pub(crate) render_spacefill: bool,
     /// Flag that indicates if molecular surface pass should be rendered.
     pub(crate) render_molecular_surface: bool,
+    /// Settings for postprocessing effects.
+    pub(crate) postprocess_settings: PostprocessSettings,
+
     /// Flag that indicates if animation is active.
     pub(crate) is_animation_active: bool,
     /// Speed of the animation.

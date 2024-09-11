@@ -1,24 +1,6 @@
-use poms_common::resources::{atoms_with_lookup::AtomsWithLookupResource, CommonResources};
+use crate::RenderResources;
 
-use crate::{resources::camera::CameraResource, RenderOwnedResources};
-
-/// Contains resources that are required to render the spacefill representation of the molecule.
-/// Bind groups are sorted by the frequency of change as advised by `wgpu` documentation.
-pub struct SpacefillResources<'a> {
-    pub camera: &'a CameraResource,            // @group(0)
-    pub molecule: &'a AtomsWithLookupResource, // @group(1)
-}
-
-impl<'a> SpacefillResources<'a> {
-    /// Creates a new instance of `SpacefillResources`.
-    /// It is okay and cheap to construct this each frame, as it only contains references to resources.
-    pub fn new(resources: &'a RenderOwnedResources, common: &'a CommonResources) -> Self {
-        Self {
-            camera: &resources.camera_resource,
-            molecule: &common.atoms_resource,
-        }
-    }
-}
+use poms_common::resources::CommonResources;
 
 /// Wrapper around `wgpu::RenderPipeline` that is used to render the spacefill representation of the molecule.
 pub struct SpacefillPass {
@@ -32,18 +14,18 @@ impl SpacefillPass {
     /// The spacefill representation is rendered using sphere impostors.
     pub fn new(
         device: &wgpu::Device,
-        config: &wgpu::SurfaceConfiguration,
-        resources: SpacefillResources,
+        render_resources: &RenderResources,
+        common_resources: &CommonResources,
     ) -> Self {
         let shader = wgpu::include_wgsl!("../shaders/spacefill.wgsl");
 
         let bind_group_layouts = &[
-            &resources.camera.bind_group_layout,
-            &resources.molecule.bind_group_layout,
+            &render_resources.camera.bind_group_layout,
+            &common_resources.atoms_resource.bind_group_layout,
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
-            super::create_render_pipeline(WGPU_LABEL, device, config, shader, bind_group_layouts);
+            super::create_render_pipeline(WGPU_LABEL, device, shader, bind_group_layouts);
 
         Self { render_pipeline }
     }
@@ -52,24 +34,32 @@ impl SpacefillPass {
     /// Call this every frame to render the spacefill representation.
     pub fn render(
         &self,
-        view: &wgpu::TextureView,
-        depth_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        clear_color: wgpu::Color,
-        resources: SpacefillResources,
+        render_resources: &RenderResources,
+        common_resources: &CommonResources,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some(WGPU_LABEL),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(clear_color),
-                    store: wgpu::StoreOp::Store,
-                },
-            })],
+            color_attachments: &[
+                Some(wgpu::RenderPassColorAttachment {
+                    view: &render_resources.color_texture.view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(render_resources.clear_color),
+                        store: wgpu::StoreOp::Store,
+                    },
+                }),
+                Some(wgpu::RenderPassColorAttachment {
+                    view: &render_resources.normal_texture.view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                        store: wgpu::StoreOp::Store,
+                    },
+                }),
+            ],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                view: depth_view,
+                view: &render_resources.depth_texture.view,
                 depth_ops: Some(wgpu::Operations {
                     load: wgpu::LoadOp::Clear(1.0),
                     store: wgpu::StoreOp::Store,
@@ -81,10 +71,10 @@ impl SpacefillPass {
         });
 
         render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_bind_group(0, &resources.camera.bind_group, &[]);
-        render_pass.set_bind_group(1, &resources.molecule.bind_group, &[]);
+        render_pass.set_bind_group(0, &render_resources.camera.bind_group, &[]);
+        render_pass.set_bind_group(1, &common_resources.atoms_resource.bind_group, &[]);
 
-        let number_of_atoms: u32 = resources.molecule.number_of_atoms;
+        let number_of_atoms: u32 = common_resources.atoms_resource.number_of_atoms;
         // Each atom is drawn as a sphere impostor with 6 vertices.
         let vertices_per_atom: u32 = 6;
         let number_of_vertices: u32 = number_of_atoms * vertices_per_atom;

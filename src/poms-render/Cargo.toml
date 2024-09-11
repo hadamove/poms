@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 poms-common = { path = "../poms-common" }
+wgrepp = { git = "https://github.com/hadamove/wgrepp", branch = "web" }
+
 
 bytemuck = { workspace = true }
 cgmath = { workspace = true }

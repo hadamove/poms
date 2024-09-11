@@ -72,6 +72,9 @@ pub(crate) fn settings(context: &mut egui::Context, state: &mut UIState) {
                         };
                     });
                 });
+
+            // Postprocess settings.
+            postprocess_settings(ui, state);
         });
 }
 
@@ -100,4 +103,69 @@ fn animation_button(state: &mut UIState) -> Button {
         true => Button::new("⏸"),
         false => Button::new("▶"),
     }
+}
+
+fn postprocess_settings(ui: &mut egui::Ui, state: &mut UIState) {
+    egui::CollapsingHeader::new("Postprocess")
+        .default_open(true)
+        .show(ui, |ui| {
+            egui::CollapsingHeader::new("SSAO")
+                .default_open(true)
+                .show(ui, |ui| {
+                    let dispatch_settings_changed = |state: &mut UIState| {
+                        state.dispatch_event(UserEvent::UpdatePostprocessSettings {
+                            settings: state.postprocess_settings,
+                        });
+                    };
+
+                    // Enable/disable SSAO checkbox.
+                    if ui
+                        .add(Checkbox::new(
+                            &mut state.postprocess_settings.is_ssao_enabled,
+                            "Enabled",
+                        ))
+                        .changed()
+                    {
+                        dispatch_settings_changed(state);
+                    }
+
+                    // Radius slider.
+                    if ui
+                        .add_enabled(
+                            state.postprocess_settings.is_ssao_enabled,
+                            Slider::new(&mut state.postprocess_settings.ssao_radius, 0.0..=10.0)
+                                .text("Radius"),
+                        )
+                        .changed()
+                    {
+                        dispatch_settings_changed(state);
+                    }
+
+                    // Bias slider.
+                    if ui
+                        .add_enabled(
+                            state.postprocess_settings.is_ssao_enabled,
+                            Slider::new(&mut state.postprocess_settings.ssao_bias, 0.0..=10.0)
+                                .text("Bias"),
+                        )
+                        .changed()
+                    {
+                        dispatch_settings_changed(state);
+                    }
+
+                    // Blur checkbox.
+                    if ui
+                        .add_enabled(
+                            state.postprocess_settings.is_ssao_enabled,
+                            Checkbox::new(
+                                &mut state.postprocess_settings.ssao_is_blur_enabled,
+                                "Blur",
+                            ),
+                        )
+                        .changed()
+                    {
+                        dispatch_settings_changed(state);
+                    }
+                });
+        });
 }

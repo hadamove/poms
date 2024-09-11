@@ -181,7 +181,7 @@ fn get_jmol_color(atom: &pdbtbx::Atom) -> [f32; 4] {
 impl ParsedMolecule {
     pub(crate) fn h2o_demo() -> Self {
         Self {
-            filename: "demo".to_string(),
+            filename: "[demo] h2o".to_string(),
             atoms: vec![
                 // Oxygen
                 Atom {

@@ -1,3 +1,5 @@
+use poms_render::PostprocessSettings;
+
 use crate::app::data::molecule_parser::ParsedMolecule;
 use crate::app::data::Assembly;
 use crate::app::theme::ColorTheme;
@@ -36,6 +38,9 @@ pub(crate) enum UserEvent {
 
     /// User toggles the color theme of the application.
     ToggleTheme { theme: ColorTheme },
+
+    /// User changes a subset of postprocess settings.
+    UpdatePostprocessSettings { settings: PostprocessSettings },
 
     /// The files with molecules were successfully loaded and parsed.
     MoleculesParsed { molecules: Vec<ParsedMolecule> },

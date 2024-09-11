@@ -94,13 +94,14 @@ struct RayHit {
     hit: bool,
     position: vec3<f32>,
     color: vec3<f32>,
+    normal: vec3<f32>,
 };
 
 const MAX_STEPS: u32 = 160u;
 const MINIMUM_HIT_DISTANCE: f32 = 0.05;
 const TRICUBIC_THRESHOLD: f32 = 0.1;
 
-const NO_HIT: RayHit = RayHit(false, vec3<f32>(0.0), vec3<f32>(0.0));
+const NO_HIT: RayHit = RayHit(false, vec3<f32>(0.0), vec3<f32>(0.0), vec3<f32>(0.0));
 const SURFACE_COLOR: vec3<f32> = vec3<f32>(1.0, 0.8, 0.8);
 
 fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
@@ -150,8 +151,9 @@ fn ray_march(origin: vec3<f32>, direction: vec3<f32>) -> RayHit {
             let specular: f32 = pow(max(dot(direction, reflect_dir), 0.0), 16.0) * 0.3;
 
             let color_shaded = color * (ambient + specular + diffuse) * SURFACE_COLOR;
+            let normal_view: vec3<f32> = normalize((camera.view * vec4<f32>(normal, 0.0)).xyz);
 
-            return RayHit(true, point, color_shaded);
+            return RayHit(true, point, color_shaded, normal_view);
         }
         total_distance += distance;
 
@@ -193,6 +195,7 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
 struct FragmentOutput {
     @builtin(frag_depth) depth: f32,
     @location(0) color: vec4<f32>,
+    @location(1) normal: vec4<f32>,
 };
 
 @fragment
@@ -219,6 +222,7 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     let rayhit_depth: f32 = rayhit_point_proj.z / rayhit_point_proj.w;
 
     let color = vec4<f32>(rayhit.color, 1.0);
+    let normal = vec4<f32>(rayhit.normal, 0.0);
 
-    return FragmentOutput(rayhit_depth, color);
+    return FragmentOutput(rayhit_depth, color, normal);
 }

@@ -1,3 +1,5 @@
+pub const DF_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba16Float;
+
 /// Creates a new distance field texture with the given resolution.
 /// Used both by the compute pipeline and the rendering pipeline.
 pub fn create_distance_field_texture(device: &wgpu::Device, resolution: u32) -> wgpu::Texture {
@@ -15,8 +17,8 @@ pub fn create_distance_field_texture(device: &wgpu::Device, resolution: u32) -> 
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D3,
-        format: wgpu::TextureFormat::Rgba16Float,
+        format: DF_TEXTURE_FORMAT,
         usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
-        view_formats: &[wgpu::TextureFormat::Rgba16Float],
+        view_formats: &[],
     })
 }

@@ -79,6 +79,7 @@ fn vs_main(
 struct FragmentOutput {
     @builtin(frag_depth) depth: f32,
     @location(0) color: vec4<f32>,
+    @location(1) normal: vec4<f32>,
 };
 
 @fragment
@@ -108,8 +109,8 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     let reflect_dir: vec3<f32> = reflect(light_dir, normal);  
     let specular: f32 = pow(max(dot(view_dir, reflect_dir), 0.0), 16.0) * 0.3;
 
-    let color = vec4<f32>(in.color.xyz * (ambient + specular + diffuse), 1.0);
     let depth = proj_surface_position.z / proj_surface_position.w;
+    let color = vec4<f32>(in.color.xyz * (ambient + specular + diffuse), 1.0);
 
-    return FragmentOutput(depth, color);
+    return FragmentOutput(depth, color, vec4<f32>(normalize(normal), 0.0));
 }

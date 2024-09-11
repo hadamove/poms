@@ -1,10 +1,14 @@
 pub mod molecular_surface;
+pub mod postprocess;
 pub mod spacefill;
+
+use super::resources::color_texture::COLOR_TEXTURE_FORMAT;
+use super::resources::depth_texture::DEPTH_TEXTURE_FORMAT;
+use super::resources::normal_texture::NORMAL_TEXTURE_FORMAT;
 
 fn create_render_pipeline(
     label: &'static str,
     device: &wgpu::Device,
-    config: &wgpu::SurfaceConfiguration,
     shader_desc: wgpu::ShaderModuleDescriptor,
     bind_group_layouts: &[&wgpu::BindGroupLayout],
 ) -> wgpu::RenderPipeline {
@@ -27,15 +31,22 @@ fn create_render_pipeline(
         fragment: Some(wgpu::FragmentState {
             module: &shader_module,
             entry_point: "fs_main",
-            targets: &[Some(wgpu::ColorTargetState {
-                format: config.format,
-                blend: Some(wgpu::BlendState::ALPHA_BLENDING),
-                write_mask: wgpu::ColorWrites::ALL,
-            })],
+            targets: &[
+                Some(wgpu::ColorTargetState {
+                    format: COLOR_TEXTURE_FORMAT,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                }),
+                Some(wgpu::ColorTargetState {
+                    format: NORMAL_TEXTURE_FORMAT,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::ALL,
+                }),
+            ],
             compilation_options: Default::default(),
         }),
         depth_stencil: Some(wgpu::DepthStencilState {
-            format: wgpu::TextureFormat::Depth24PlusStencil8,
+            format: DEPTH_TEXTURE_FORMAT,
             depth_write_enabled: true,
             depth_compare: wgpu::CompareFunction::Less,
             stencil: wgpu::StencilState::default(),

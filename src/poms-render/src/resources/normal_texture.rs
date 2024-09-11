@@ -1,10 +1,10 @@
-pub const DEPTH_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth24Plus;
+pub const NORMAL_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba16Float;
 
-pub struct DepthTexture {
+pub struct NormalTexture {
     pub view: wgpu::TextureView,
 }
 
-impl DepthTexture {
+impl NormalTexture {
     pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self {
         let size = wgpu::Extent3d {
             width: config.width,
@@ -13,12 +13,12 @@ impl DepthTexture {
         };
 
         let desc = wgpu::TextureDescriptor {
-            label: Some("Depth texture"),
+            label: Some("Normal texture"),
             size,
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: DEPTH_TEXTURE_FORMAT,
+            format: NORMAL_TEXTURE_FORMAT,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
             view_formats: &[],
         };
