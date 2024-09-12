@@ -7,9 +7,9 @@ pub struct SpacefillPass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-const WGPU_LABEL: &str = "Render Spacefill Pass";
-
 impl SpacefillPass {
+    const WGPU_LABEL: &'static str = "spacefill_pass";
+
     /// Creates a new instance of `SpacefillPass` using the provided resources.
     /// The spacefill representation is rendered using sphere impostors.
     pub fn new(
@@ -25,7 +25,7 @@ impl SpacefillPass {
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
-            super::create_render_pipeline(WGPU_LABEL, device, shader, bind_group_layouts);
+            super::create_render_pipeline(Self::WGPU_LABEL, device, shader, bind_group_layouts);
 
         Self { render_pipeline }
     }
@@ -39,7 +39,7 @@ impl SpacefillPass {
         common_resources: &CommonResources,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some(WGPU_LABEL),
+            label: Some(Self::WGPU_LABEL),
             color_attachments: &[
                 Some(wgpu::RenderPassColorAttachment {
                     view: &render_resources.color_texture.view,

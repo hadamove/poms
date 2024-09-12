@@ -19,14 +19,14 @@ impl GridPointsResource {
 
         let grid_point_memory_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Grid point memory"),
+                label: Some("grid_point_memory_storage_buffer"),
                 contents: bytemuck::cast_slice(&vec![0u32; grid_points_memory_size]),
                 usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
 
         let grid_point_index_offset_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Grid point index offset"),
+                label: Some("grid_point_index_offset_uniform_buffer"),
                 contents: bytemuck::cast_slice(&[0u32]),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             });
@@ -45,7 +45,7 @@ impl GridPointsResource {
                     resource: grid_point_index_offset_buffer.as_entire_binding(),
                 },
             ],
-            label: Some("Shared Bind Group"),
+            label: Some("grid_points_bind_group"),
         });
 
         Self {
@@ -89,5 +89,5 @@ const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
                 count: None,
             },
         ],
-        label: Some("Grid Points Bind Group Layout"),
+        label: Some("grid_points_bind_group_layout"),
     };

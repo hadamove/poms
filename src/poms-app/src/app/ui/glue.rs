@@ -91,7 +91,7 @@ impl EguiWrapper {
 
             {
                 let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    label: Some("Egui Render Pass"),
+                    label: Some("egui_render_pass"),
                     color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                         view,
                         resolve_target: None,

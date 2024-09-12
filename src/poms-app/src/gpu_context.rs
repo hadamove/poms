@@ -96,7 +96,7 @@ impl GpuContext {
     pub(crate) fn get_command_encoder(&self) -> wgpu::CommandEncoder {
         self.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Command Encoder"),
+                label: Some("command_encoder"),
             })
     }
 }

@@ -35,7 +35,7 @@ impl CameraResource {
     /// This resource is used to store the camera's position and matrices.
     pub fn new(device: &wgpu::Device) -> Self {
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Camera Uniform Buffer"),
+            label: Some("camera_uniform_buffer"),
             contents: bytemuck::cast_slice(&[CameraUniform::default()]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
@@ -52,11 +52,11 @@ impl CameraResource {
                     },
                     count: None,
                 }],
-                label: Some("Camera Bind Group Layout"),
+                label: Some("camera_bind_group_layout"),
             });
 
         let camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Camera Bind Group"),
+            label: Some("camera_bind_group"),
             layout: &camera_bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,

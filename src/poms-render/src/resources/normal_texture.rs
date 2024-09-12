@@ -13,7 +13,7 @@ impl NormalTexture {
         };
 
         let desc = wgpu::TextureDescriptor {
-            label: Some("Normal texture"),
+            label: Some("normal_texture"),
             size,
             mip_level_count: 1,
             sample_count: 1,

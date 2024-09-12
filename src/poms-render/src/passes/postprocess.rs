@@ -42,9 +42,9 @@ pub struct PostprocessPass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-const WGPU_LABEL: &str = "Render Postprocess Pass";
-
 impl PostprocessPass {
+    const WGPU_LABEL: &'static str = "postprocess_pass";
+
     /// Creates a new instance of `PostprocessPass` using the provided resources.
     pub fn new(
         device: &wgpu::Device,
@@ -66,7 +66,7 @@ impl PostprocessPass {
         );
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Postprocess Uniforms Buffer"),
+            label: Some("postprocess_uniform_buffer"),
             contents: bytemuck::cast_slice(&[PostprocessUniforms {
                 is_ssao_enabled: settings.is_ssao_enabled as u32,
             }]),
@@ -113,7 +113,7 @@ impl PostprocessPass {
         }
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some(WGPU_LABEL),
+            label: Some(Self::WGPU_LABEL),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view,
                 resolve_target: None,
@@ -185,7 +185,7 @@ impl PostprocessPass {
         ssao_resources: &wgrepp::ssao::SsaoResources,
     ) -> wgpu::BindGroup {
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Postprocess bind group"),
+            label: Some("postprocess_bind_group"),
             layout: bind_group_layout,
             entries: &[
                 wgpu::BindGroupEntry {
@@ -211,7 +211,7 @@ impl PostprocessPass {
 
     fn create_postprocess_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Postprocess bind group layout"),
+            label: Some("postprocess_bind_group_layout"),
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
@@ -254,7 +254,7 @@ impl PostprocessPass {
     ) -> wgpu::RenderPipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some(WGPU_LABEL),
+                label: Some(Self::WGPU_LABEL),
                 bind_group_layouts: &[bind_group_layout],
                 ..Default::default()
             });
@@ -262,7 +262,7 @@ impl PostprocessPass {
         let shader_module = device.create_shader_module(shader_desc);
 
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(WGPU_LABEL),
+            label: Some(Self::WGPU_LABEL),
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &shader_module,

@@ -27,7 +27,7 @@ impl DistanceField {
         let view = texture.create_view(&Default::default());
 
         let grid_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Grid Buffer"),
+            label: Some("grid_uniform_buffer"),
             contents: bytemuck::cast_slice(&[grid]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
@@ -58,7 +58,7 @@ impl DistanceField {
                     resource: wgpu::BindingResource::Sampler(&sampler),
                 },
             ],
-            label: Some("Distance Field Texture Render Bind Group"),
+            label: Some("distance_field_render_bind_group"),
         });
 
         Self {
@@ -99,6 +99,6 @@ impl DistanceField {
                     count: None,
                 },
             ],
-            label: Some("Distance Field Texture Render Bind Group Layout"),
+            label: Some("distance_field_render_bind_group_layout"),
         };
 }

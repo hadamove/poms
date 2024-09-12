@@ -7,8 +7,6 @@ pub struct ProbePass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
-const WGPU_LABEL: &str = "Compute Probe Pass";
-
 impl ProbePass {
     /// Creates a new instance of `ProbePass` using the provided resources.
     /// The probe step is executed to classify each grid point (inside, outside, or on the boundary of the molecular surface).
@@ -26,7 +24,7 @@ impl ProbePass {
         ];
 
         let compute_pipeline =
-            super::create_compute_pipeline(WGPU_LABEL, device, shader, bind_group_layouts);
+            super::create_compute_pipeline("probe_pass", device, shader, bind_group_layouts);
 
         Self { compute_pipeline }
     }

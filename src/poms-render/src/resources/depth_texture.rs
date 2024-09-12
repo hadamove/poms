@@ -13,7 +13,7 @@ impl DepthTexture {
         };
 
         let desc = wgpu::TextureDescriptor {
-            label: Some("Depth texture"),
+            label: Some("depth_texture"),
             size,
             mip_level_count: 1,
             sample_count: 1,

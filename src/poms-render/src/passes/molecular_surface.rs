@@ -5,9 +5,9 @@ pub struct MolecularSurfacePass {
     render_pipeline: wgpu::RenderPipeline,
 }
 
-const WGPU_LABEL: &str = "Render Molecular Surface Pass";
-
 impl MolecularSurfacePass {
+    const WGPU_LABEL: &'static str = "molecular_surface_pass";
+
     /// Creates a new instance of `MolecularSurfacePass` using the provided resources.
     /// The surface is rendered using raymarching and the signed distance field.
     pub fn new(device: &wgpu::Device, render_resources: &RenderResources) -> Self {
@@ -20,7 +20,7 @@ impl MolecularSurfacePass {
         ];
 
         let render_pipeline: wgpu::RenderPipeline =
-            super::create_render_pipeline(WGPU_LABEL, device, shader, bind_group_layouts);
+            super::create_render_pipeline(Self::WGPU_LABEL, device, shader, bind_group_layouts);
 
         Self { render_pipeline }
     }
@@ -29,7 +29,7 @@ impl MolecularSurfacePass {
     /// Call this every frame to render the molecular surface.
     pub fn render(&self, encoder: &mut wgpu::CommandEncoder, render_resources: &RenderResources) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some(WGPU_LABEL),
+            label: Some(Self::WGPU_LABEL),
             color_attachments: &[
                 Some(wgpu::RenderPassColorAttachment {
                     view: &render_resources.color_texture.view,

@@ -23,20 +23,20 @@ impl AtomsWithLookupResource {
     /// Buffers of size `MAX_NUM_ATOMS` and `MAX_NUM_GRID_POINTS` are created to avoid resizing them later.
     pub fn new(device: &wgpu::Device) -> Self {
         let atoms_data_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Sorted Atoms Buffer"),
+            label: Some("atoms_data_buffer"),
             contents: bytemuck::cast_slice(&[0u32; MAX_NUM_ATOMS * std::mem::size_of::<Atom>()]),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
 
         let atoms_lookup_grid_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Neighbor Atoms Grid Uniform Buffer"),
+                label: Some("atoms_lookup_grid_buffer"),
                 contents: bytemuck::cast_slice(&[GridUniform::default()]),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             });
 
         let atoms_by_voxel_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Segment by Voxel buffer"),
+            label: Some("atoms_by_voxel_buffer"),
             contents: bytemuck::cast_slice(&[0u32; MAX_NUM_GRID_POINTS]),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
@@ -59,7 +59,7 @@ impl AtomsWithLookupResource {
                     resource: atoms_by_voxel_buffer.as_entire_binding(),
                 },
             ],
-            label: Some("Molecule Grid Bind Group"),
+            label: Some("atoms_with_lookup_bind_group"),
         });
 
         Self {
@@ -127,5 +127,5 @@ const LAYOUT_DESCRIPTOR: wgpu::BindGroupLayoutDescriptor<'static> =
                 count: None,
             },
         ],
-        label: Some("Molecule Grid Bind Group Layout"),
+        label: Some("atoms_with_lookup_bind_group_layout"),
     };

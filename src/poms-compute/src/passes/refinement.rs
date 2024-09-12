@@ -8,8 +8,6 @@ pub struct RefinementPass {
     compute_pipeline: wgpu::ComputePipeline,
 }
 
-const WGPU_LABEL: &str = "Compute Refinement Pass";
-
 impl RefinementPass {
     /// Creates a new instance of `RefinementPass` using the provided resources.
     /// The refinement step computes the distance field for grid points classified as on the boundary of the molecular surface.
@@ -22,7 +20,7 @@ impl RefinementPass {
         ];
 
         let compute_pipeline =
-            super::create_compute_pipeline(WGPU_LABEL, device, shader, bind_group_layouts);
+            super::create_compute_pipeline("refine_pass", device, shader, bind_group_layouts);
 
         Self { compute_pipeline }
     }

@@ -13,7 +13,7 @@ impl ColorTexture {
         };
 
         let desc = wgpu::TextureDescriptor {
-            label: Some("Color texture"),
+            label: Some("color_texture"),
             size,
             mip_level_count: 1,
             sample_count: 1,
