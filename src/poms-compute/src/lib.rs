@@ -6,15 +6,15 @@ use poms_common::models::atom::Atom;
 use poms_common::models::grid::{create_compute_grid_around_molecule, GridUniform};
 use poms_common::resources::CommonResources;
 
-use passes::probe::{ProbePass, ProbeResources};
-use passes::refinement::{RefinementPass, RefinementResources};
-use resources::distance_field::DistanceFieldCompute;
+use passes::probe::ProbePass;
+use passes::refinement::RefinementPass;
+use resources::distance_field::DistanceField;
 use resources::grid_points::GridPointsResource;
 use state::{ComputePhase, ComputeState};
 
 /// Contains all resources that are owned by the compute pipeline.
-pub struct ComputeOwnedResources {
-    pub distance_field: DistanceFieldCompute,
+pub struct ComputeResources {
+    pub distance_field: DistanceField,
     pub df_grid_points: GridPointsResource,
 }
 
@@ -22,7 +22,7 @@ pub struct ComputeOwnedResources {
 /// For further details, see the `ComputeState` struct.
 pub struct ComputeJobs {
     state: ComputeState,
-    resources: ComputeOwnedResources,
+    resources: ComputeResources,
 
     probe_pass: ProbePass,
     refinement_pass: RefinementPass,
@@ -55,16 +55,14 @@ impl ComputeJobs {
             params.init_resolution,
             params.probe_radius,
         );
-        let resources = ComputeOwnedResources {
-            distance_field: DistanceFieldCompute::new(device, grid),
+        let resources = ComputeResources {
+            distance_field: DistanceField::new(device, grid),
             df_grid_points: GridPointsResource::new(device, params.target_resolution),
         };
-        let probe_resources = ProbeResources::new(&resources, params.common_resources);
-        let refinement_resources = RefinementResources::new(&resources);
 
         Self {
-            probe_pass: ProbePass::new(device, probe_resources),
-            refinement_pass: RefinementPass::new(device, refinement_resources),
+            probe_pass: ProbePass::new(device, &resources, params.common_resources),
+            refinement_pass: RefinementPass::new(device, &resources),
             state: ComputeState::new(params.target_resolution, grid),
             resources,
             last_computed_texture: None,
@@ -80,7 +78,7 @@ impl ComputeJobs {
         &mut self,
         encoder: &mut wgpu::CommandEncoder,
         device: &wgpu::Device,
-        common: &CommonResources,
+        common_resources: &CommonResources,
     ) {
         // Determine the number of grid points to process in this frame.
         let grid_points_count = self.state.grid_points_this_frame_count();
@@ -88,14 +86,16 @@ impl ComputeJobs {
         // Execute the appropriate compute pass based on the current phase.
         match self.state.current_phase {
             ComputePhase::Probe => {
-                let probe_resources = ProbeResources::new(&self.resources, common);
-                self.probe_pass
-                    .execute(encoder, grid_points_count, probe_resources);
+                self.probe_pass.execute(
+                    encoder,
+                    grid_points_count,
+                    &self.resources,
+                    common_resources,
+                );
             }
             ComputePhase::Refinement => {
-                let refinement_resources = RefinementResources::new(&self.resources);
                 self.refinement_pass
-                    .execute(encoder, grid_points_count, refinement_resources);
+                    .execute(encoder, grid_points_count, &self.resources);
             }
             ComputePhase::Finished => {}
         };
@@ -141,7 +141,7 @@ impl ComputeJobs {
     /// Called after a refinement phase to swap the texture with upscaled resolution
     /// while keeping the old texture for potential rendering
     fn swap_out_df_texture(&mut self, device: &wgpu::Device) {
-        let new_df_texture = DistanceFieldCompute::new(device, self.state.grid);
+        let new_df_texture = DistanceField::new(device, self.state.grid);
 
         let old_df_texture = std::mem::replace(&mut self.resources.distance_field, new_df_texture);
 

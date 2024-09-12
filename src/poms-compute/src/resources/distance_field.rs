@@ -4,7 +4,7 @@ use wgpu::util::DeviceExt;
 
 /// The signed distance field produced by the probe and refinement steps.
 /// Each voxel in the distance field is a signed distance to the nearest surface.
-pub struct DistanceFieldCompute {
+pub struct DistanceField {
     pub grid_buffer: wgpu::Buffer,
     pub texture: wgpu::Texture,
 
@@ -12,7 +12,7 @@ pub struct DistanceFieldCompute {
     pub bind_group: wgpu::BindGroup,
 }
 
-impl DistanceFieldCompute {
+impl DistanceField {
     /// Creates a new instance of `DistanceFieldCompute` with a new distance field texture.
     /// The resolution, origin, and scale of the grid are provided in the `GridUniform` struct.
     pub fn new(device: &wgpu::Device, grid: GridUniform) -> Self {
