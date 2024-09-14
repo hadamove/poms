@@ -8,6 +8,7 @@ pub struct PostprocessSettings {
     pub is_ssao_enabled: bool,
     pub ssao_radius: f32,
     pub ssao_bias: f32,
+    pub ssao_samples_count: u32,
     pub ssao_is_blur_enabled: bool,
 }
 
@@ -17,6 +18,7 @@ impl Default for PostprocessSettings {
             is_ssao_enabled: true,
             ssao_radius: 5.0,
             ssao_bias: 1.0,
+            ssao_samples_count: 32,
             ssao_is_blur_enabled: false,
         }
     }
@@ -62,7 +64,7 @@ impl PostprocessPass {
             &resources.depth_texture.view,
             &resources.normal_texture.view,
             [config.width, config.height],
-            32,
+            settings.ssao_samples_count,
         );
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -174,6 +176,29 @@ impl PostprocessPass {
             bytemuck::cast_slice(&[PostprocessUniforms {
                 is_ssao_enabled: self.settings.is_ssao_enabled as u32,
             }]),
+        );
+    }
+
+    pub fn update_sampels_count(
+        &mut self,
+        samples_count: u32,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        resources: &RenderResources,
+    ) {
+        self.ssao_resources.update_samples_count(
+            samples_count,
+            device,
+            queue,
+            &resources.depth_texture.view,
+            &resources.normal_texture.view,
+        );
+        self.bind_group = Self::create_postprocess_bind_group(
+            device,
+            &self.bind_group_layout,
+            &self.uniform_buffer,
+            resources,
+            &self.ssao_resources,
         );
     }
 

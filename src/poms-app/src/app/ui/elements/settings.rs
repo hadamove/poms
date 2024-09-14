@@ -166,6 +166,17 @@ fn postprocess_settings(ui: &mut egui::Ui, state: &mut UIState) {
                     {
                         dispatch_settings_changed(state);
                     }
+
+                    // Number of samples slider.
+                    if ui
+                        .add(
+                            Slider::new(&mut state.postprocess_settings.ssao_samples_count, 1..=64)
+                                .text("Samples count"),
+                        )
+                        .changed()
+                    {
+                        dispatch_settings_changed(state);
+                    }
                 });
         });
 }

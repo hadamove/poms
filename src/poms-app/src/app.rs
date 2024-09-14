@@ -198,7 +198,11 @@ impl App {
                     self.renderer.toggle_spacefill_pass(is_enabled);
                 }
                 UserEvent::UpdatePostprocessSettings { settings } => {
-                    self.renderer.update_postprocess_settings(settings);
+                    self.renderer.update_postprocess_settings(
+                        &self.context.device,
+                        &self.context.queue,
+                        settings,
+                    );
                 }
                 UserEvent::ToggleTheme { theme } => {
                     self.renderer.update_clear_color(match theme {

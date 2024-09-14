@@ -145,7 +145,20 @@ impl RenderJobs {
     }
 
     /// Changes parameters of the postprocessing effects (e.g. ssao).
-    pub fn update_postprocess_settings(&mut self, settings: PostprocessSettings) {
+    pub fn update_postprocess_settings(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        settings: PostprocessSettings,
+    ) {
+        if self.postprocess_pass.settings.ssao_samples_count != settings.ssao_samples_count {
+            self.postprocess_pass.update_sampels_count(
+                settings.ssao_samples_count,
+                device,
+                queue,
+                &self.resources,
+            );
+        }
         self.postprocess_pass.settings = settings;
     }
 
