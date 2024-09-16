@@ -51,6 +51,27 @@ pub(crate) fn parse_multiple_files(
         .collect::<anyhow::Result<Vec<ParsedMolecule>>>()
 }
 
+macro_rules! extract_file_name {
+    ($path:expr) => {{
+        $path.split('/').last().unwrap()
+    }};
+}
+
+/// A convenience macro to parse a single PDB or mmCIF file from path.
+macro_rules! include_molecule {
+    ($file_path:expr) => {{
+        use crate::app::data::RawFile;
+        let file_name = extract_file_name!($file_path);
+        let demo_file = include_bytes!($file_path);
+        let initial_molecule = data::molecule_parser::parse_atoms_from_pdb_file(RawFile {
+            name: file_name.to_string(),
+            content: demo_file.to_vec(),
+        })
+        .unwrap();
+        initial_molecule
+    }};
+}
+
 fn format_parse_errors(errors: &[pdbtbx::PDBError]) -> String {
     errors
         .iter()
@@ -175,33 +196,5 @@ fn get_jmol_color(atom: &pdbtbx::Atom) -> [f32; 4] {
         pdbtbx::Element::No => [0.74, 0.05, 0.53, 1.0],
         pdbtbx::Element::Lr => [0.78, 0.0, 0.41, 1.0],
         _ => DEFAULT_COLOR,
-    }
-}
-
-impl ParsedMolecule {
-    pub(crate) fn h2o_demo() -> Self {
-        Self {
-            filename: "[demo] h2o".to_string(),
-            atoms: vec![
-                // Oxygen
-                Atom {
-                    position: [0.0, 0.0, 0.0],
-                    radius: 1.4,
-                    color: [1.0, 0.0, 0.0, 1.0],
-                },
-                // Hydrogen 1
-                Atom {
-                    position: [0.9572, 0.0, 0.0],
-                    radius: 1.2,
-                    color: [1.0, 1.0, 1.0, 1.0],
-                },
-                // Hydrogen 2
-                Atom {
-                    position: [-0.2396, 0.927, 0.0],
-                    radius: 1.2,
-                    color: [1.0, 1.0, 1.0, 1.0],
-                },
-            ],
-        }
     }
 }

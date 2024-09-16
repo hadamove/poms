@@ -1,4 +1,5 @@
 mod anim;
+#[macro_use]
 mod data;
 mod input;
 mod theme;
@@ -13,7 +14,7 @@ use poms_render::{PostprocessSettings, RenderJobs, RenderParameters};
 
 use super::gpu_context::GpuContext;
 use anim::AnimationController;
-use data::{molecule_parser::ParsedMolecule, molecule_storage::MoleculeStorage};
+use data::molecule_storage::MoleculeStorage;
 use input::{camera_controller::CameraController, mouse_input::MouseInput};
 use ui::{events::UserEvent, state::UIState, UserInterface};
 
@@ -56,7 +57,7 @@ impl App {
     pub(crate) fn new(context: GpuContext) -> Self {
         let settings = AppSettings::default();
 
-        let initial_molecule = ParsedMolecule::h2o_demo();
+        let initial_molecule = include_molecule!("../../../data/pdb/1cqw.pdb");
         let molecule_storage = MoleculeStorage::new(initial_molecule, settings.probe_radius);
         let resources = CommonResources::new(&context.device);
 

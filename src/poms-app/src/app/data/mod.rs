@@ -1,6 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 pub(crate) mod file_loader;
+#[macro_use]
 pub(crate) mod molecule_parser;
 pub(crate) mod molecule_storage;
 mod pdb_apis;
