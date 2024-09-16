@@ -1,4 +1,4 @@
-use egui::{Button, Checkbox, Pos2, Slider, Window};
+use egui::{Button, Checkbox, Pos2, Slider, Widget, Window};
 use poms_common::limits::{
     MAX_ANIMATION_SPEED, MAX_DISTANCE_FIELD_RESOLUTION, MAX_PROBE_RADIUS, MIN_ANIMATION_SPEED,
     MIN_DISTANCE_FIELD_RESOLUTION, MIN_PROBE_RADIUS,
@@ -92,6 +92,15 @@ fn molecular_surface_render_settings(ui: &mut egui::Ui, state: &mut UIState) {
                     state.dispatch_event(UserEvent::ChangeProbeRadius {
                         probe_radius: state.probe_radius,
                     });
+                }
+
+                if let Some(compute_progress) = &state.compute_progress {
+                    egui::widgets::ProgressBar::new(compute_progress.progress)
+                        .text(format!(
+                            "computing {} / {}",
+                            compute_progress.current_resolution, compute_progress.target_resolution
+                        ))
+                        .ui(ui);
                 }
             });
         });

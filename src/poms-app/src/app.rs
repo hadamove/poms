@@ -122,8 +122,10 @@ impl App {
 
         let mut encoder = self.context.get_command_encoder();
 
-        self.compute
-            .execute(&mut encoder, &self.context.device, &self.resources);
+        if self.renderer.is_molecular_surface_pass_enabled() {
+            self.compute
+                .execute(&mut encoder, &self.context.device, &self.resources);
+        }
 
         let output_texture = self.context.surface.get_current_texture().unwrap();
         let output_texture_view = output_texture.texture.create_view(&Default::default());
@@ -179,6 +181,7 @@ impl App {
             .update_light(&self.context.queue, self.camera.look_direction());
 
         self.compute.update_buffers(&self.context.queue);
+        self.ui.update_compute_progress(self.compute.progress());
 
         // Update the molecular surface texture if a new one is computed.
         if let Some((texture, grid)) = self.compute.last_computed_distance_field() {

@@ -187,4 +187,9 @@ impl RenderJobs {
     pub fn update_light(&self, queue: &wgpu::Queue, direction: cgmath::Vector3<f32>) {
         self.resources.light.update(queue, direction);
     }
+
+    /// Returns the current state of molecular surface rendering. Used to determine whether or not trigger the compute pipeline.
+    pub fn is_molecular_surface_pass_enabled(&self) -> bool {
+        self.settings.render_molecular_surface
+    }
 }

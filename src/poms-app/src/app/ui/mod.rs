@@ -3,12 +3,13 @@ pub(crate) mod events;
 mod glue;
 pub(crate) mod state;
 
-use events::UserEvent;
+use poms_compute::ComputeProgress;
 use winit::event::WindowEvent;
 
 use super::data::file_loader::{AsyncWorkResult, DownloadProgress, FileLoader};
 use super::data::molecule_storage::MoleculeData;
 use crate::gpu_context::GpuContext;
+use events::UserEvent;
 use state::{MoleculeFileInfo, UIState};
 
 /// Primary struct for managing and rendering the application's UI and I/O.
@@ -86,6 +87,11 @@ impl UserInterface {
             .collect();
 
         self.state.active_file_index = active_index;
+    }
+
+    /// Updates the displayed progress of the compute pipeline.
+    pub(crate) fn update_compute_progress(&mut self, progress: Option<ComputeProgress>) {
+        self.state.compute_progress = progress;
     }
 
     fn process_file_loader_events(&mut self) {

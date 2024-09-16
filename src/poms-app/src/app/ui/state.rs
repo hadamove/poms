@@ -1,8 +1,6 @@
 use super::events::UserEvent;
 use crate::app::data::{file_loader::DownloadProgress, Assembly};
 
-use poms_render::PostprocessSettings;
-
 /// Struct that represents an error message that should be displayed to the user.
 pub(crate) struct ErrorMessage {
     pub(crate) id: uuid::Uuid,
@@ -32,7 +30,7 @@ pub(crate) struct UIState {
     /// Flag that indicates if molecular surface pass should be rendered.
     pub(crate) render_molecular_surface: bool,
     /// Settings for postprocessing effects.
-    pub(crate) postprocess_settings: PostprocessSettings,
+    pub(crate) postprocess_settings: poms_render::PostprocessSettings,
 
     /// Flag that indicates if animation is active.
     pub(crate) is_animation_active: bool,
@@ -59,6 +57,9 @@ pub(crate) struct UIState {
 
     /// Keeps track of the download status if there is one in progress.
     pub(crate) download_progress: Option<DownloadProgress>,
+
+    /// Keeps track of the progress of the compute process.
+    pub(crate) compute_progress: Option<poms_compute::ComputeProgress>,
 
     /// List of events that were dispatched by the UI.
     pub(crate) events: Vec<UserEvent>,

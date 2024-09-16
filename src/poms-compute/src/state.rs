@@ -98,10 +98,45 @@ impl ComputeState {
         self.grid.resolution.pow(3)
     }
 
+    /// Returns the progress of the current phase as a value between 0.0 and 1.0.
+    /// If there is no computation in progress, returns `None`.
+    /// Can be used to display progress information to the user.
+    pub fn progress(&self) -> Option<ComputeProgress> {
+        match self.current_phase {
+            ComputePhase::Probe => match self.grid_points_computed_count {
+                0 => None,
+                _ => Some(ComputeProgress {
+                    progress: 0.0,
+                    current_resolution: self.grid.resolution,
+                    target_resolution: self.target_resolution,
+                }),
+            },
+            ComputePhase::Refinement => {
+                let total_cycles = self.refinement_cycles_count();
+                let current_cycle_index = self.grid_points_computed_count
+                    / self.grid_points_count_of_current_resolution();
+
+                Some(ComputeProgress {
+                    progress: current_cycle_index as f32 / total_cycles as f32,
+                    current_resolution: self.grid.resolution,
+                    target_resolution: self.target_resolution,
+                })
+            }
+            ComputePhase::Finished => None,
+        }
+    }
+
     /// Calculates the number of refinement cycles needed for the current grid resolution.
     /// Each cycle refines a single layer of grid points to improve surface accuracy.
     fn refinement_cycles_count(&self) -> u32 {
         // The number of cycles depends on the ratio of the probe radius to the grid spacing.
         (self.grid.probe_radius / self.grid.spacing) as u32 + 1
     }
+}
+
+/// Struct holding metadata about copute progress
+pub struct ComputeProgress {
+    pub progress: f32,
+    pub current_resolution: u32,
+    pub target_resolution: u32,
 }

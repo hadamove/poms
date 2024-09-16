@@ -10,6 +10,7 @@ use passes::probe::ProbePass;
 use passes::refinement::RefinementPass;
 use resources::distance_field::DistanceField;
 use resources::grid_points::GridPointsResource;
+pub use state::ComputeProgress;
 use state::{ComputePhase, ComputeState};
 
 /// Contains all resources that are owned by the compute pipeline.
@@ -136,6 +137,11 @@ impl ComputeJobs {
         grid.change_resolution(texture.depth_or_array_layers());
 
         Some((texture, grid))
+    }
+
+    /// Returns the current progress of the computation.
+    pub fn progress(&self) -> Option<state::ComputeProgress> {
+        self.state.progress()
     }
 
     /// Called after a refinement phase to swap the texture with upscaled resolution
