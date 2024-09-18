@@ -67,24 +67,10 @@ which installs [`Trunk`](https://trunkrs.dev) and runs it with necessary configu
 - Bundles the application into a single HTML file that can be hosted on a web server.
 - Starts a web server that hosts the application.
 
-## 🐧 Building on Linux (Ubuntu)
+## 🐧 Building on Linux
 
-TODO: is this still necessary?
-
-Due to occasional issues with Vulkan on Windows (see [1](https://github.com/rust-windowing/winit/issues/2094) and [2](https://github.com/gfx-rs/wgpu/issues/2286)), the Vulkan backend has been turned off by default. To enable it, you need to build/run the application with `--features vulkan` flag:
+On linux, you might need to install some additional supporting libraries to build and run. On `Ubuntu 22.04`, the following packages are required:
 
 ```bash
-cargo build --features vulkan
-cargo run --features vulkan
-```
-
-### Requirements
-
-TODO: is this still necessary?
-
-`libgtk-3-dev` and `gio-2.0` must be installed to be able to compile. To install them, run:
-
-```bash
-sudo apt install libgtk-3-dev
-sudo apt install libglib2.0-dev
+sudo apt install libgtk-3-dev libglib2.0-dev libssl-dev
 ```

@@ -19,12 +19,7 @@ pub(crate) struct GpuContext {
 
 impl GpuContext {
     pub(crate) async fn initialize(window: Arc<Window>) -> Self {
-        #[cfg(feature = "vulkan")]
         let backends = wgpu::Backends::all();
-
-        #[cfg(not(feature = "vulkan"))]
-        let backends = wgpu::Backends::all() & !wgpu::Backends::VULKAN;
-
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
             ..Default::default()
