@@ -14,12 +14,13 @@ pub(crate) fn file_menu(context: &mut egui::Context, state: &mut UIState) {
         .resizable(false)
         .show(context, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for (i, file) in state.files_loaded.iter().enumerate() {
-                    let mut text =
-                        egui::RichText::new(format!("{}. {}", i + 1, &file.path)).small();
-                    if file.index == state.active_file_index {
-                        text = text.strong();
-                    }
+                for file in state.files_loaded.iter() {
+                    let prefix = if file.index == state.active_file_index {
+                        "▶"
+                    } else {
+                        " "
+                    };
+                    let text = egui::RichText::new(format!("{}{}", prefix, &file.path)).small();
 
                     let button = ui.add_sized(
                         [ui.available_width(), 16.0],
