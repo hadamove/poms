@@ -36,10 +36,24 @@ To build for the web, we first need to add `wasm32-unknown-unknown` platform tar
 rustup target add wasm32-unknown-unknown
 ```
 
-After that, you can use the following script:
+Next, install `Trunk` (if you haven't already):
 
 ```bash
-./scripts/build-web.sh
+cargo install --version ^0.16 trunk
+```
+
+After that, to build the application for the web, run:
+
+```bash
+trunk build --release
+```
+
+This will generate a `dist` directory with the necessary files to host the application on a web server.
+
+Alternatively, to build and run the application on a local web server, run:
+
+```bash
+trunk serve --release
 ```
 
 which installs [`Trunk`](https://trunkrs.dev) and runs it with necessary configuration. This should build our WASM code and start a web server that hosts the application at `localhost:8080`.
