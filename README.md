@@ -30,17 +30,14 @@ cargo run
 
 ## ️🌐 Building for the Web
 
-To build for the web, we first need to add `wasm32-unknown-unknown` platform target to our Rust toolchain, which allows us to compile Rust code to WASM bytecode:
+To build the application for the web, we use [`Trunk`](https://trunkrs.dev), a tool for building WebAssembly (WASM) applications in Rust.
 
-```bash
-rustup target add wasm32-unknown-unknown
-```
-
-Next, install `Trunk` (if you haven't already):
+First install `Trunk` (if you haven't already):
 
 ```bash
 cargo install --version ^0.16 trunk
 ```
+> This might take a few minutes as it is built from source.
 
 After that, to build the application for the web, run:
 
@@ -62,10 +59,12 @@ which installs [`Trunk`](https://trunkrs.dev) and runs it with necessary configu
 
 `Trunk` takes care of several things, which would have to be done manually otherwise:
 
-- Builds our Rust code to WASM bytecode using `wasm32-unknown-unknown` platform target.
-- Generates necessarry glue between WASM and JavaScript using [wasm-bindgen](https://rustwasm.github.io/docs/wasm-bindgen/).
-- Bundles the application into a single HTML file that can be hosted on a web server.
-- Starts a web server that hosts the application.
+- Builds our Rust code to WASM bytecode using `wasm32-unknown-unknown` platform target, generating a `.wasm` file.
+- Optimizes the WASM code using `wasm-opt`.
+- Generates necessarry glue between WASM and JavaScript using [wasm-bindgen](https://rustwasm.github.io/docs/wasm-bindgen/), generating a `.js` file.
+- Compiles an `index.html` file that loads the WASM code and JavaScript glue.
+- Places all generated files in `dist` directory (you may use `--dist` argument to change the output directory).
+- Starts a simple dev web server that hosts the application from this directory (in case of `trunk serve`).
 
 ## 🐧 Building on Linux
 
