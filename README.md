@@ -4,6 +4,9 @@ An implementation of [Molecular Surface](https://en.wikipedia.org/wiki/Accessibl
 
 \[1\]  *Hermosilla, Pedro, et al. "Interactive GPU-based generation of solvent-excluded surfaces." The Visual Computer 33.6 (2017): 869-881.*
 
+## Screenshots
+
+![Demo](./data/demo.png)
 
 ## Requirements
 
