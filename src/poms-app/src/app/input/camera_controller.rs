@@ -24,6 +24,7 @@ impl CameraController {
     const ZNEAR: f32 = 0.1;
     const FOVY: f32 = PI / 4.0;
 
+    const ZOOM_SPEED: f32 = 2.0;
     const INITIAL_OFFSET: f32 = 100.0;
     const DISTANCE_THRESHOLD: f32 = 0.1;
 
@@ -80,8 +81,11 @@ impl CameraController {
 
     /// Adjusts the camera's distance from the target based on the scroll input.
     fn update_on_mouse_scroll(&mut self, delta: f32) {
-        self.offset = (self.offset + delta).clamp(0.3, Self::ZFAR / 2.);
-        self.set_position(self.target + self.get_forward_vector() * self.offset);
+        if delta != 0. {
+            self.offset =
+                (self.offset + delta.signum() * Self::ZOOM_SPEED).clamp(0.3, Self::ZFAR / 2.);
+            self.set_position(self.target + self.get_forward_vector() * self.offset);
+        }
     }
 
     /// Rotates the camera around the target based on the mouse drag input.
