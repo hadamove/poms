@@ -53,7 +53,7 @@ This will generate a `dist` directory with the necessary files to host the appli
 Alternatively, to build and run the application on a local web server, run:
 
 ```bash
-trunk serve --release
+trunk serve --release --public-url "/"
 ```
 
 which installs [`Trunk`](https://trunkrs.dev) and runs it with necessary configuration. This should build our WASM code and start a web server that hosts the application at `localhost:8080`.
