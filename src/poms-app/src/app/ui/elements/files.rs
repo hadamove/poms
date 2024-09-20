@@ -9,6 +9,7 @@ pub(crate) fn file_menu(context: &mut egui::Context, state: &mut UIState) {
 
     egui::Window::new("Loaded Files")
         .default_size([256.0, 256.0])
+        .max_height(512.0)
         .pivot(egui::Align2::RIGHT_TOP)
         .default_pos(top_right)
         .resizable(false)
