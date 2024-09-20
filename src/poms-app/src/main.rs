@@ -94,7 +94,18 @@ mod wasm {
         let scale_factor = window.scale_factor();
         let canvas_size = logical_size.to_physical(scale_factor);
 
-        if canvas_size != window.inner_size() {
+        let window_size: winit::dpi::PhysicalSize<u32> = window.inner_size();
+
+        // When converting to physical size, there might be a small difference due to rounding. Use a tolerance value to ignore it.
+        const TOLERANCE_IN_PX: u32 = 1;
+
+        fn abs_diff(a: u32, b: u32) -> u32 {
+            a.max(b) - a.min(b)
+        }
+
+        if abs_diff(canvas_size.width, window_size.width) > TOLERANCE_IN_PX
+            || abs_diff(canvas_size.height, window_size.height) > TOLERANCE_IN_PX
+        {
             canvas.set_width(canvas_size.width);
             canvas.set_height(canvas_size.height);
             app.resize(canvas_size);
