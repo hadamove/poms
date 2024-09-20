@@ -13,20 +13,12 @@ pub(crate) struct ParsedMolecule {
 /// Attempts to parse a PDB or mmCIF file as bytes into a [`ParsedMolecule`].
 pub(crate) fn parse_atoms_from_pdb_file(file: RawFile) -> anyhow::Result<ParsedMolecule> {
     let buffer = BufReader::new(Cursor::new(&file.content));
-    let (pdb, _) = pdbtbx::open_raw(buffer, pdbtbx::StrictnessLevel::Loose)
-        .map_err(|errors| anyhow::Error::msg(format_parse_errors(&errors)))?;
 
-    let atoms = pdb
-        .atoms()
-        .map(|atom| Atom {
-            position: {
-                let (x, y, z) = atom.pos();
-                [x as f32, y as f32, z as f32]
-            },
-            radius: get_vdw_radius(atom),
-            color: get_jmol_color(atom),
-        })
-        .collect::<Vec<_>>();
+    let atoms = match pdbtbx::open_raw(buffer, pdbtbx::StrictnessLevel::Loose) {
+        Ok((pdb, _)) => pdb.atoms().map(convert_to_internal_atom).collect(),
+        // If pdbtbx fails to parse the file (e.g. due to missing header), fallback to a simple parser.
+        Err(_) => simple_parser::try_parse_pdb(file.content)?,
+    };
 
     if atoms.len() > MAX_NUM_ATOMS {
         return Err(anyhow::Error::msg(format!(
@@ -72,23 +64,28 @@ macro_rules! include_molecule {
     }};
 }
 
-fn format_parse_errors(errors: &[pdbtbx::PDBError]) -> String {
-    errors
-        .iter()
-        .map(ToString::to_string)
-        .collect::<Vec<_>>()
-        .join("\n")
+/// Converts `pdbtbx::Atom` to our internal `Atom` struct.
+fn convert_to_internal_atom(atom: &pdbtbx::Atom) -> Atom {
+    Atom {
+        position: {
+            let (x, y, z) = atom.pos();
+            [x as f32, y as f32, z as f32]
+        },
+        radius: get_vdw_radius(atom.element()),
+        color: get_jmol_color(atom.element()),
+    }
 }
 
-fn get_vdw_radius(atom: &pdbtbx::Atom) -> f32 {
-    atom.element()
-        .and_then(|e| e.atomic_radius().van_der_waals)
-        .unwrap_or(1.0) as f32
+fn get_vdw_radius(element: Option<&pdbtbx::Element>) -> f32 {
+    const DEFAULT_RADIUS: f64 = 1.0;
+    element
+        .map(|e| e.atomic_radius().van_der_waals.unwrap_or(DEFAULT_RADIUS))
+        .unwrap_or(DEFAULT_RADIUS) as f32
 }
 
-fn get_jmol_color(atom: &pdbtbx::Atom) -> [f32; 4] {
+fn get_jmol_color(element: Option<&pdbtbx::Element>) -> [f32; 4] {
     const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-    let Some(element) = atom.element() else {
+    let Some(element) = element else {
         return DEFAULT_COLOR;
     };
     match element {
@@ -196,5 +193,51 @@ fn get_jmol_color(atom: &pdbtbx::Atom) -> [f32; 4] {
         pdbtbx::Element::No => [0.74, 0.05, 0.53, 1.0],
         pdbtbx::Element::Lr => [0.78, 0.0, 0.41, 1.0],
         _ => DEFAULT_COLOR,
+    }
+}
+
+mod simple_parser {
+
+    use super::Atom;
+    use std::ops::Range;
+
+    const MIN_LINE_LENGTH: usize = 78;
+    const LINE_PREFIX: Range<usize> = 0..4;
+    const LINE_POSITION_X: Range<usize> = 30..38;
+    const LINE_POSITION_Y: Range<usize> = 38..46;
+    const LINE_POSITION_Z: Range<usize> = 46..54;
+    const LINE_ELEMENT_SYMBOL: Range<usize> = 77..78;
+
+    pub(crate) fn try_parse_pdb(content: Vec<u8>) -> anyhow::Result<Vec<Atom>> {
+        let mut atoms: Vec<Atom> = vec![];
+        let content = std::str::from_utf8(&content)?;
+
+        for line in content.split('\n') {
+            if line.len() < MIN_LINE_LENGTH {
+                continue;
+            }
+            if &line[LINE_PREFIX] == "ATOM" {
+                let symbol = &line[LINE_ELEMENT_SYMBOL];
+                let element = pdbtbx::Element::try_from(symbol).ok();
+
+                atoms.push(Atom {
+                    position: parse_position_from_line(line)?,
+                    radius: super::get_vdw_radius(element.as_ref()),
+                    color: super::get_jmol_color(element.as_ref()),
+                });
+            }
+        }
+        match atoms.len() {
+            0 => anyhow::bail!("No atoms found in file"),
+            _ => Ok(atoms),
+        }
+    }
+
+    fn parse_position_from_line(line: &str) -> anyhow::Result<[f32; 3]> {
+        Ok([
+            line[LINE_POSITION_X].trim().parse::<f32>()?,
+            line[LINE_POSITION_Y].trim().parse::<f32>()?,
+            line[LINE_POSITION_Z].trim().parse::<f32>()?,
+        ])
     }
 }
