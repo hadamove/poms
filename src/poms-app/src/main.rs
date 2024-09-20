@@ -32,7 +32,17 @@ fn main() {
 
 async fn run_loop(event_loop: EventLoop<()>, window: Window) {
     let window = Arc::new(window);
-    let context = GpuContext::initialize(window.clone()).await;
+
+    let context = match GpuContext::initialize(window.clone()).await {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            log::error!("Failed to initialize GPU context: {:?}", e);
+            #[cfg(target_arch = "wasm32")]
+            wasm::show_webgpu_error();
+            return;
+        }
+    };
+
     let mut app = App::new(context);
 
     event_loop
@@ -66,26 +76,25 @@ mod wasm {
     use winit::platform::web::WindowExtWebSys;
     use winit::window::Window;
 
+    /// Initialize the browser window by setting up logging and creating a canvas element.
     pub(crate) fn init_browser_window(window: &Window) {
         // Log detailed error info to browser's dev console
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
         wasm_logger::init(wasm_logger::Config::default());
 
-        // Append window to document body
-        web_sys::window()
-            .and_then(|win| win.document())
-            .and_then(|doc| doc.body())
-            .and_then(|body| {
-                let canvas = window.canvas().unwrap();
-                let style = canvas.style();
-                // Set canvas to fill the whole window
-                style.set_property("width", "100%").unwrap();
-                style.set_property("height", "100%").unwrap();
-                body.append_child(&web_sys::Element::from(canvas)).ok()
-            })
-            .expect("Failed to append canvas to body");
+        // Create canvas that will be used for rendering
+        let canvas = window.canvas().unwrap();
+        // Set canvas style to fill the window
+        canvas
+            .set_attribute("style", "width: 100%; height: 100%;")
+            .unwrap();
+
+        append_node_to_body(&web_sys::Element::from(canvas));
+
+        log::info!("Initialized browser window");
     }
 
+    /// In case browser window is resized, adjust the canvas and app size (e.g. texture size) accordingly.
     pub(crate) fn resize_app_if_canvas_changed(window: &Window, app: &mut App) {
         let canvas = window.canvas().unwrap();
         let (width, height) = (canvas.client_width(), canvas.client_height());
@@ -110,5 +119,52 @@ mod wasm {
             canvas.set_height(canvas_size.height);
             app.resize(canvas_size);
         }
+    }
+
+    /// Show an error message in the browser window if WebGPU is not supported or some other error occurred.
+    pub(crate) fn show_webgpu_error() {
+        let error_element = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .create_element("div")
+            .unwrap();
+
+        let compatibility_link =
+            "https://developer.mozilla.org/en-US/docs/Web/API/GPU#browser_compatibility";
+
+        error_element.set_inner_html(&format!(
+            r#"<h1>Error.</h1>
+            <a href='{}' style='text-decoration: underline;'>Please make sure your browser supports WebGPU.</a>
+            <p>See console for more details.</p>"#,
+            compatibility_link
+        ));
+
+        error_element
+            .set_attribute(
+                "style",
+                r#"position: absolute; 
+                top: 50%; 
+                left: 50%; 
+                transform: translate(-50%, -50%); 
+                background-color: #f0f0f0; 
+                color: #333; 
+                border: 1px solid #333; 
+                padding: 20px; 
+                z-index: 10; 
+                text-align: center; 
+                font-family: monospace;"#,
+            )
+            .unwrap();
+
+        append_node_to_body(&error_element);
+    }
+
+    fn append_node_to_body(node: &web_sys::Node) {
+        web_sys::window()
+            .and_then(|win| win.document())
+            .and_then(|doc| doc.body())
+            .and_then(|body| body.append_child(node).ok())
+            .expect("Failed to append element to body");
     }
 }

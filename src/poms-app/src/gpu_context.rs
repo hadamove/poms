@@ -18,7 +18,8 @@ pub(crate) struct GpuContext {
 }
 
 impl GpuContext {
-    pub(crate) async fn initialize(window: Arc<Window>) -> Self {
+    /// Attempts to initialize the GPU context. If successful, returns a new instance of `GpuContext`, otherwise returns a generic error.
+    pub(crate) async fn initialize(window: Arc<Window>) -> anyhow::Result<Self> {
         let backends = wgpu::Backends::all();
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
@@ -27,7 +28,7 @@ impl GpuContext {
 
         let surface = instance
             .create_surface(window.clone())
-            .expect("Failed to create surface");
+            .map_err(|_| anyhow::anyhow!("Failed to create surface"))?;
 
         // An adapter is a handle to a physical device on the system.
         let adapter = instance
@@ -37,20 +38,25 @@ impl GpuContext {
                 force_fallback_adapter: false,
             })
             .await
-            .expect("Failed to find a suitable adapter");
+            .ok_or(anyhow::anyhow!(
+                "Failed to find an adapter with a compatible surface."
+            ))?;
 
         // From the adapter, we can request a logical device and a queue.
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor::default(), None)
             .await
-            .expect("Failed to create device");
+            .map_err(|e| anyhow::anyhow!("Failed to create device: {:?}", e))?;
 
         // Check which texture formats are supported by the surface (usually it is okay to just use the first one).
-        let supported_format = *surface
-            .get_capabilities(&adapter)
-            .formats
-            .first()
-            .expect("No supported format");
+        let supported_format =
+            *surface
+                .get_capabilities(&adapter)
+                .formats
+                .first()
+                .ok_or(anyhow::anyhow!(
+                    "Surface is not compatible with the adapter"
+                ))?;
 
         let size = window.inner_size();
 
@@ -71,13 +77,13 @@ impl GpuContext {
         };
         surface.configure(&device, &config);
 
-        Self {
+        Ok(Self {
             window,
             surface,
             device,
             queue,
             config,
-        }
+        })
     }
 
     /// Resizes the surface to the given size. This method should be called when the window is resized in the main event loop.
