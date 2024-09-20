@@ -6,7 +6,7 @@ use poms_common::limits::{MAX_ANIMATION_SPEED, MIN_ANIMATION_SPEED};
 /// periodically switch between rendering them (if the animation is active).
 pub(crate) struct AnimationController {
     pub(crate) is_active: bool,
-    /// The speed of the animation. The higher the value, the slower the animation.
+    /// The speed of the animation. The higher the value faster the animation.
     pub(crate) speed: u32,
     /// The current tick count. Each render frame increments this value. Do not confuse with animation frames.
     tick_count: u32,

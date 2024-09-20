@@ -70,7 +70,7 @@ impl FileLoader {
         })
     }
 
-    /// Downloads a file on an asynchronous basis using the provided `Assembly` object used to identify the file to download.
+    /// Downloads a file asynchronously using the provided `Assembly` object used to identify the file to download.
     /// Uses a minimal wrapper around the RCSB's public API to fetch the file content.
     /// Fetched files are returned to the main thread via a channel.
     pub(crate) fn download_file(&self, assembly: Assembly) {

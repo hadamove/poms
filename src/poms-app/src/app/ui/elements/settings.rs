@@ -13,7 +13,6 @@ pub(crate) fn settings(context: &mut egui::Context, state: &mut UIState) {
         .default_pos(Pos2::new(16.0, 36.0))
         .pivot(egui::Align2::LEFT_TOP)
         .max_width(256.)
-        // .min_width(400.)
         .resizable(false)
         .show(context, |ui| {
             egui::CollapsingHeader::new("Render Passes")
