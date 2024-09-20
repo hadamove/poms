@@ -233,6 +233,10 @@ impl App {
                     self.update_atoms_resource();
                     self.reset_compute_jobs();
                 }
+                UserEvent::DeleteActiveMolecule => {
+                    self.molecule_storage.delete_active();
+                    self.on_active_molecule_changed();
+                }
                 UserEvent::ToggleAnimation => {
                     self.animation.is_active = !self.animation.is_active;
                 }

@@ -48,6 +48,13 @@ pub(crate) fn file_menu(context: &mut egui::Context, state: &mut UIState) {
                     state.is_search_window_shown = true;
                     state.is_search_first_time_rendered = true;
                 }
+
+                // Show the delete button only if there are more than one molecules loaded.
+                ui.add_enabled_ui(state.files_loaded.len() > 1, |ui| {
+                    if ui.button("🗑").clicked() {
+                        state.dispatch_event(UserEvent::DeleteActiveMolecule);
+                    }
+                })
             });
         });
 

@@ -24,6 +24,9 @@ pub(crate) enum UserEvent {
     /// User changes the visibility of the spacefill pass.
     ChangeRenderSpacefill { is_enabled: bool },
 
+    /// User clicks the "🗑️" button in the UI. Deletes the active molecule.
+    DeleteActiveMolecule,
+
     /// User clicks the "Open file" button in the UI. Opens a file dialog.
     InitOpenFileDialog,
 

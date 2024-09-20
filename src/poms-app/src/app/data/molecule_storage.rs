@@ -43,6 +43,14 @@ impl MoleculeStorage {
         self.active_index = (self.active_index + 1) % self.loaded_molecules.len();
     }
 
+    /// Deletes the active molecule. If there is only one molecule loaded, it is not deleted. `active_index` is updated to point to the next molecule.
+    pub(crate) fn delete_active(&mut self) {
+        if self.loaded_molecules.len() > 1 {
+            self.loaded_molecules.remove(self.active_index);
+            self.active_index %= self.loaded_molecules.len();
+        }
+    }
+
     /// Adds a new molecule to the storage. The molecule is preprocessed for fast neighbor look up. Returns a reference to the molecule data.
     pub(crate) fn add_from_parsed(
         &mut self,
